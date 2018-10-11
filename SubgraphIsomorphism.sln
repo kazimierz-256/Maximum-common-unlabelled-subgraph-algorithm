@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubgraphIsomorphismBenchmark", "SubgraphIsomorphismBenchmark\SubgraphIsomorphismBenchmark.csproj", "{550B98DF-33F0-4569-B654-99C1B50E6BFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismBenchmark", "SubgraphIsomorphismBenchmark\SubgraphIsomorphismBenchmark.csproj", "{550B98DF-33F0-4569-B654-99C1B50E6BFC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graph", "Graph\Graph.csproj", "{6F2C2907-C04C-4CC5-B9A9-75E6C5DF483A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismExactAlgorithm", "SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj", "{942636B2-40B6-4018-8B7C-D075863CAD26}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{550B98DF-33F0-4569-B654-99C1B50E6BFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{550B98DF-33F0-4569-B654-99C1B50E6BFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{550B98DF-33F0-4569-B654-99C1B50E6BFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F2C2907-C04C-4CC5-B9A9-75E6C5DF483A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F2C2907-C04C-4CC5-B9A9-75E6C5DF483A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F2C2907-C04C-4CC5-B9A9-75E6C5DF483A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F2C2907-C04C-4CC5-B9A9-75E6C5DF483A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{942636B2-40B6-4018-8B7C-D075863CAD26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942636B2-40B6-4018-8B7C-D075863CAD26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942636B2-40B6-4018-8B7C-D075863CAD26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942636B2-40B6-4018-8B7C-D075863CAD26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
