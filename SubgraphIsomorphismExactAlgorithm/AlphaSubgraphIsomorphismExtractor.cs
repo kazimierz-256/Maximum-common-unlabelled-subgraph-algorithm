@@ -71,18 +71,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 var gVertex = gCopy.EnumerateConnections().First().Key;
 
-                for (int hVertex = 0; hVertex < h.VertexCount; hVertex++)
+                foreach (var hConnection in h.EnumerateConnections())
                 {
                     MatchAndExpand(
                         gVertex,
-                        hVertex,
+                        hConnection.Key,
                         g,
                         h,
                         new Dictionary<int, int>(),
                         new Dictionary<int, int>(),
                         new Dictionary<int, List<int>>() { { gVertex, new List<int>() } },
                         new Dictionary<int, long>() { { gVertex, 0L } },
-                        new Dictionary<int, long>() { { hVertex, 0L } },
+                        new Dictionary<int, long>() { { hConnection.Key, 0L } },
                         new Dictionary<int, int>(),
                         0
                         );
