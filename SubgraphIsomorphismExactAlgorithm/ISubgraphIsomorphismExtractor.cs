@@ -10,11 +10,12 @@ namespace SubgraphIsomorphismExactAlgorithm
         void Extract(
                Graph argG,
                Graph argH,
-               Func<Graph, int, T> vertexScore,
+               Func<int, int, T> graphScore,
+               Func<Graph, int, T> extremumConditionClassifier,
                T initialScore,
                out T score,
-               out int[] gBestSolution,
-               out int[] hBestSolution
+               out Dictionary<int, int> gBestSolution,
+               out Dictionary<int, int> hBestSolution
                );
     }
 }
