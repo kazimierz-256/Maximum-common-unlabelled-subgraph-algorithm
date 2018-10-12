@@ -26,7 +26,34 @@ namespace SubgraphIsomorphismTests
 
         private bool VerifySubgraphIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
-            // todo: implement
+
+            // all edges in g egsist in h
+            foreach (var connection in g.EnumerateConnections())
+            {
+                var gFromVertex = connection.Key;
+                foreach (var gToVertex in connection.Value)
+                {
+                    if (!h.ExistsConnectionBetween(gToH[gFromVertex], gToH[gToVertex]))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // all edges in h egsist in g
+            foreach (var connection in h.EnumerateConnections())
+            {
+                var hFromVertex = connection.Key;
+                foreach (var hToVertex in connection.Value)
+                {
+                    if (!g.ExistsConnectionBetween(hToG[hFromVertex], hToG[hToVertex]))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

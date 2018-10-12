@@ -26,19 +26,50 @@ namespace SubgraphIsomorphismExactAlgorithm
             )
         {
             this.vertexScore = vertexScore;
+            this.graphScore = graphScore;
             bestScore = initialScore;
 
-            // todo: make the initial connection
-            // remove vertices based on extremum condition itself!
+            var ignoredHashSet = new HashSet<int>();
 
-            for (int i = 0; i < argG.; i++)
+            // todo: generate the proper order (each time smallest-last)
+            var vertices = Enumerable.Range(0, argG.VertexCount).ToArray();
+            // note: the mapping is onto negative degrees
+            var degrees = Enumerable.Range(0, argG.VertexCount).Select(v => -1 * argG.Degree(v)).ToArray();
+            Array.Sort(degrees, vertices);
+
+            foreach (var gVertex in vertices)
             {
+                for (int j = 0; j < argH.VertexCount; j++)
+                {
+                    MatchAndExpand(
+                        gVertex,
+                        j,
+                        argG,
+                        argH,
+                        new Dictionary<int, int>()
+                        {
+                            { gVertex, j }
+                        },
+                        new Dictionary<int, int>()
+                        {
+                            { j, gVertex }
+                        },
+                        new Dictionary<int, List<int>>(),
+                        new Dictionary<int, long>(),
+                        new Dictionary<int, long>(),
+                        0,
+                        ignoredHashSet
+                        );
+                }
 
+                // ignore previous g-vertices
+                // todo: remove vertices based on extremum condition itself!
+                ignoredHashSet.Add(gVertex);
             }
 
-            // return
+
+            // return the solution
             score = bestScore;
-            this.graphScore = graphScore;
             gToH = this.gToH;
             hToG = this.hToG;
         }
