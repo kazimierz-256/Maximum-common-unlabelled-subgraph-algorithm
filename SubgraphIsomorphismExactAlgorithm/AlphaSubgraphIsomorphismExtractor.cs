@@ -69,7 +69,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     gCopy.RemoveVertex(minVertex);
                 }
-                var gVertex = g.EnumerateConnections().First().Key;
+                var gVertex = gCopy.EnumerateConnections().First().Key;
 
                 for (int hVertex = 0; hVertex < h.VertexCount; hVertex++)
                 {
@@ -195,40 +195,36 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            // verify extremum condition right now!
-            if (VerifyExtremumCondition(gMatchingVertex, ghSubgraphTransitionFunction, gEdgeConnections))
+            // spread the id to all neighbours on the envelope & discover new neighbours
+            foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
             {
-                // spread the id to all neighbours on the envelope & discover new neighbours
-                foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
+                // if the neighbour is outside the subgraph
+                if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour))
                 {
-                    // if the neighbour is outside the subgraph
-                    if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour))
+                    if (hEnvelopeWithHashes.ContainsKey(hNeighbour))
                     {
-                        if (hEnvelopeWithHashes.ContainsKey(hNeighbour))
+                        // if it is already on the envelope
+                        hEnvelopeWithHashes[hNeighbour] *= prime;
+                        hToDivide.Add(new Tuple<int, int>(hNeighbour, prime));
+                    }
+                    else
+                    {
+                        hToRemove.Add(hNeighbour);
+                        // if it is new to the envelope
+                        hEnvelopeWithHashes.Add(hNeighbour, 1L);
+                        // the new neighbour needs to update their hash
+                        foreach (var hVertexInSubgraph in hgSubgraphTransitionFunction.Keys)
                         {
-                            // if it is already on the envelope
-                            hEnvelopeWithHashes[hNeighbour] *= prime;
-                            hToDivide.Add(new Tuple<int, int>(hNeighbour, prime));
-                        }
-                        else
-                        {
-                            hToRemove.Add(hNeighbour);
-                            // if it is new to the envelope
-                            hEnvelopeWithHashes.Add(hNeighbour, 1L);
-                            // the new neighbour needs to update their hash
-                            foreach (var hVertexInSubgraph in hgSubgraphTransitionFunction.Keys)
+                            if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
                             {
-                                if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
-                                {
-                                    hEnvelopeWithHashes[hNeighbour] *= gSubgraphPrimes[hgSubgraphTransitionFunction[hVertexInSubgraph]];
-                                }
+                                hEnvelopeWithHashes[hNeighbour] *= gSubgraphPrimes[hgSubgraphTransitionFunction[hVertexInSubgraph]];
                             }
                         }
                     }
                 }
-
-                Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
             }
+
+            Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
 
             // restore
             ghSubgraphTransitionFunction.Remove(gMatchingVertex);
@@ -270,60 +266,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             int edgeCountInSubgraph
             )
         {
-            // toconsider: the hash analysis is indepentent of the envelope, then the analysis should be made only once
-            var gHashRepresentatives = new Dictionary<long, List<int>>();
-            var hHashRepresentatives = new Dictionary<long, List<int>>();
-
-            // place vertices into hash baskets
-            foreach (var gHashMapping in gEnvelopeWithHashes)
-            {
-                if (gHashRepresentatives.ContainsKey(gHashMapping.Value))
-                {
-                    gHashRepresentatives[gHashMapping.Value].Add(gHashMapping.Key);
-                }
-                else
-                {
-                    gHashRepresentatives[gHashMapping.Value] = new List<int>()
-                    {
-                        gHashMapping.Key
-                    };
-                }
-            }
-            foreach (var hHashMapping in hEnvelopeWithHashes)
-            {
-                if (hHashRepresentatives.ContainsKey(hHashMapping.Value))
-                {
-                    hHashRepresentatives[hHashMapping.Value].Add(hHashMapping.Key);
-                }
-                else
-                {
-                    hHashRepresentatives[hHashMapping.Value] = new List<int>()
-                    {
-                        hHashMapping.Key
-                    };
-                }
-            }
-
-            var gBestCandidate = -1;
-
-            // prepare to sort h hashes based on collisions
-            var hHashes = new long[hHashRepresentatives.Keys.Count];
-            hHashRepresentatives.Keys.CopyTo(hHashes, 0);
-            var hRepetitions = hHashes.Select(hash => hHashRepresentatives[hash].Count).ToArray();
-            // should be in ascending order
-            Array.Sort(hRepetitions, hHashes);
-
-            foreach (var hHashCondidate in hHashes)
-            {
-                // make sure the extremum condition is satisfied
-                if (gHashRepresentatives.ContainsKey(hHashCondidate))
-                {
-                    // just get the first one from the list
-                    gBestCandidate = gHashRepresentatives[hHashCondidate][0];
-                }
-            }
-
-            if (gBestCandidate == -1)
+            if (gEnvelopeWithHashes.Count == 0)
             {
                 // no more connections could be found
                 // check for optimality
@@ -332,8 +275,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
+                var gBestCandidate = gEnvelopeWithHashes.First().Key;
 
-                var hCandidates = hHashRepresentatives[gEnvelopeWithHashes[gBestCandidate]];
+                var hCandidates = hEnvelopeWithHashes.Keys.ToArray();
                 foreach (var hCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
@@ -395,37 +339,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 g.RestoreVertex(gBestCandidate, restoreOperation);
             }
-        }
-
-        private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
-        {
-            return true;
-            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
-        }
-
-        private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
-        {
-            // assume gBestCandidate is indeed part of graph
-            var assumedMinimum = int.MaxValue;
-            var minimumSet = new HashSet<int>();
-
-            // todo: use vertexScore
-            foreach (var gVertex in gEdgeConnections)
-            {
-                if (gVertex.Value.Count < assumedMinimum)
-                {
-                    minimumSet = new HashSet<int>()
-                    {
-                        gVertex.Key
-                    };
-                }
-                else if (gVertex.Value.Count == assumedMinimum)
-                {
-                    minimumSet.Add(gVertex.Key);
-                }
-            }
-
-            return minimumSet;
         }
 
         private void LocalMaximumEnding(
