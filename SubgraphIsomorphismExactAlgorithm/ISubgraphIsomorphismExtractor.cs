@@ -11,7 +11,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                UndirectedGraph argG,
                UndirectedGraph argH,
                Func<int, int, T> graphScore,
-               Func<UndirectedGraph, int, T> extremumConditionClassifier,
                T initialScore,
                out T score,
                out Dictionary<int, int> gBestSolution,

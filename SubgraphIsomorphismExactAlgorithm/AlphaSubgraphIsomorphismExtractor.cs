@@ -9,7 +9,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         where T : IComparable
     {
         private Func<int, int, T> graphScore = null;
-        private Func<UndirectedGraph, int, T> vertexScore = null;
         private T bestScore = default(T);
         private Dictionary<int, int> gToH = null;
         private Dictionary<int, int> hToG = null;
@@ -18,7 +17,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph argG,
             UndirectedGraph argH,
             Func<int, int, T> graphScore,
-            Func<UndirectedGraph, int, T> vertexScore,
             T initialScore,
             out T score,
             out Dictionary<int, int> gToH,
@@ -42,7 +40,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = argH.DeepClone();
             }
 
-            this.vertexScore = vertexScore;
             this.graphScore = graphScore;
             bestScore = initialScore;
 
@@ -70,7 +67,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
 
                 // ignore previous g-vertices
-                // todo: remove vertices based on extremum condition itself!
                 g.RemoveVertex(gVertex);
             }
 
@@ -247,14 +243,15 @@ namespace SubgraphIsomorphismExactAlgorithm
             int edgeCountInSubgraph
             )
         {
-            if (gEnvelopeWithHashes.Count == 0)
-            {
-                // no more connections could be found
-                // check for optimality
+            //if (gEnvelopeWithHashes.Count == 0)
+            //{
+            // no more connections could be found
+            // check for optimality
 
-                LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, edgeCountInSubgraph);
-            }
-            else
+            LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, edgeCountInSubgraph);
+            //}
+            //else
+            if (gEnvelopeWithHashes.Count > 0)
             {
                 var gBestCandidate = gEnvelopeWithHashes.First().Key;
 
@@ -329,7 +326,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             int edgesInSubgraph
             )
         {
-            var vertices = ghSubgraphTransitionFunction.Count;
+            var vertices = gEdgeConnections.Keys.Count;
             var result = graphScore(vertices, edgesInSubgraph);
             var comparison = result.CompareTo(bestScore);
             if (comparison > 0)

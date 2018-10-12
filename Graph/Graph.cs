@@ -27,14 +27,9 @@ namespace GraphDataStructure
         public IEnumerable<int> NeighboursOf(int gMatchingVertex)
         {
             foreach (var neighbour in neighbours[gMatchingVertex])
-            {
                 yield return neighbour;
-            }
         }
-        public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour)
-        {
-            return neighbours[gVertexInSubgraph].Contains(gNeighbour);
-        }
+        public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour) => neighbours[gVertexInSubgraph].Contains(gNeighbour);
 
         public int Degree(int v) => neighbours[v].Count;
 
