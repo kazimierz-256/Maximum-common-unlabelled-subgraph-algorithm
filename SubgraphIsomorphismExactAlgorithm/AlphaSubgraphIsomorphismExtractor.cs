@@ -46,6 +46,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.graphScore = graphScore;
             bestScore = initialScore;
 
+            // note: work even faster without this fancy order...
+
             while (g.VertexCount > 0)
             {
                 // get largest vertex according to smallest-last order
@@ -69,18 +71,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 var gVertex = g.EnumerateConnections().First().Key;
 
-                for (int j = 0; j < h.VertexCount; j++)
+                for (int hVertex = 0; hVertex < h.VertexCount; hVertex++)
                 {
                     MatchAndExpand(
                         gVertex,
-                        j,
+                        hVertex,
                         g,
                         h,
                         new Dictionary<int, int>(),
                         new Dictionary<int, int>(),
                         new Dictionary<int, List<int>>() { { gVertex, new List<int>() } },
-                        new Dictionary<int, long>(),
-                        new Dictionary<int, long>(),
+                        new Dictionary<int, long>() { { gVertex, 0L } },
+                        new Dictionary<int, long>() { { hVertex, 0L } },
                         new Dictionary<int, int>(),
                         0
                         );
@@ -119,7 +121,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, List<int>> gEdgeConnections,
             Dictionary<int, long> gEnvelopeWithHashes,
             Dictionary<int, long> hEnvelopeWithHashes,
-            Dictionary<int, int> gSubgraphPrimes,//TODO: implement primes
+            Dictionary<int, int> gSubgraphPrimes,
             int edgeCount
             )
         {
@@ -127,65 +129,66 @@ namespace SubgraphIsomorphismExactAlgorithm
             var prime = Primes.GetNthPrime(gSubgraphPrimes.Count);
 
             // make a modifiable copy of arguments
-            var ghLocalSubgraphTransitionFunction = new Dictionary<int, int>(ghSubgraphTransitionFunction);
-            var hgLocalSubgraphTransitionFunction = new Dictionary<int, int>(hgSubgraphTransitionFunction);
-            var gLocalEnvelope = new Dictionary<int, long>(gEnvelopeWithHashes);
-            var hLocalEnvelope = new Dictionary<int, long>(hEnvelopeWithHashes);
-            var gLocalEdgeConnections = new Dictionary<int, List<int>>(gEdgeConnections);
-            var gLocalSubgraphPrimes = new Dictionary<int, int>(gSubgraphPrimes)
-            {
-                { gMatchingVertex, prime }
-            };
+            gSubgraphPrimes.Add(gMatchingVertex, prime);
             var localEdgeCount = edgeCount;
 
             // by definition add the transition functions (which means adding to the subgraph)
-            ghLocalSubgraphTransitionFunction.Add(gMatchingVertex, hMatchingVertex);
-            hgLocalSubgraphTransitionFunction.Add(hMatchingVertex, gMatchingVertex);
+            ghSubgraphTransitionFunction.Add(gMatchingVertex, hMatchingVertex);
+            hgSubgraphTransitionFunction.Add(hMatchingVertex, gMatchingVertex);
 
             // if the matching vertex was on the envelope then remove it
-            gLocalEnvelope.Remove(gMatchingVertex);
-            hLocalEnvelope.Remove(hMatchingVertex);
+            var gEnvelopeToRestore = gEnvelopeWithHashes[gMatchingVertex];
+            var hEnvelopeToRestore = hEnvelopeWithHashes[hMatchingVertex];
+            gEnvelopeWithHashes.Remove(gMatchingVertex);
+            hEnvelopeWithHashes.Remove(hMatchingVertex);
+
+            var gToDivide = new List<Tuple<int, int>>();
+            var gToRemove = new List<int>();
+            var hToDivide = new List<Tuple<int, int>>();
+            var hToRemove = new List<int>();
 
             // toconsider: pass on a dictionary of edges from subgraph to the envelope for more performance (somewhere else...)!
             // spread the id to all neighbours on the envelope & discover new neighbours
             foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
             {
                 // if the neighbour is in the subgraph
-                if (ghLocalSubgraphTransitionFunction.ContainsKey(gNeighbour))
+                if (ghSubgraphTransitionFunction.ContainsKey(gNeighbour))
                 {
                     localEdgeCount += 1;
                     // increase both 'degrees' of vertices
-                    if (gLocalEdgeConnections.ContainsKey(gMatchingVertex))
+                    if (gEdgeConnections.ContainsKey(gMatchingVertex))
                     {
-                        gLocalEdgeConnections[gMatchingVertex].Add(gNeighbour);
+                        gEdgeConnections[gMatchingVertex].Add(gNeighbour);
                     }
                     else
                     {
-                        gLocalEdgeConnections.Add(gMatchingVertex, new List<int>() { gNeighbour });
+                        gEdgeConnections.Add(gMatchingVertex, new List<int>() { gNeighbour });
                     }
 
-                    gLocalEdgeConnections[gNeighbour].Add(gMatchingVertex);
+                    gEdgeConnections[gNeighbour].Add(gMatchingVertex);
                 }
                 else
                 {
                     // if the neighbour is outside of the subgraph and is not ignored
 
-                    if (gLocalEnvelope.ContainsKey(gNeighbour))
+                    if (gEnvelopeWithHashes.ContainsKey(gNeighbour))
                     {
                         // if it is already on the envelope
-                        gLocalEnvelope[gNeighbour] *= prime;
+                        gEnvelopeWithHashes[gNeighbour] *= prime;
+                        gToDivide.Add(new Tuple<int, int>(gNeighbour, prime));
                     }
                     else
                     {
+                        gToRemove.Add(gNeighbour);
                         // if it is new to the envelope
-                        gLocalEnvelope.Add(gNeighbour, 1L);
+                        gEnvelopeWithHashes.Add(gNeighbour, 1L);
                         // the new neighbour needs to update their hash
-                        foreach (var gVertexInSubgraph in ghLocalSubgraphTransitionFunction.Keys)
+                        foreach (var gVertexInSubgraph in ghSubgraphTransitionFunction.Keys)
                         {
                             if (g.ExistsConnectionBetween(gVertexInSubgraph, gNeighbour))
                             {
                                 // BUG: reassign primes
-                                gLocalEnvelope[gNeighbour] *= gLocalSubgraphPrimes[gVertexInSubgraph];
+                                gEnvelopeWithHashes[gNeighbour] *= gSubgraphPrimes[gVertexInSubgraph];
                             }
                         }
                     }
@@ -193,37 +196,61 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             // verify extremum condition right now!
-            if (!VerifyExtremumCondition(gMatchingVertex, ghLocalSubgraphTransitionFunction, gLocalEdgeConnections))
-                return;
-
-            // spread the id to all neighbours on the envelope & discover new neighbours
-            foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
+            if (VerifyExtremumCondition(gMatchingVertex, ghSubgraphTransitionFunction, gEdgeConnections))
             {
-                // if the neighbour is outside the subgraph
-                if (!hgLocalSubgraphTransitionFunction.ContainsKey(hNeighbour))
+                // spread the id to all neighbours on the envelope & discover new neighbours
+                foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
                 {
-                    if (hLocalEnvelope.ContainsKey(hNeighbour))
+                    // if the neighbour is outside the subgraph
+                    if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour))
                     {
-                        // if it is already on the envelope
-                        hLocalEnvelope[hNeighbour] *= prime;
-                    }
-                    else
-                    {
-                        // if it is new to the envelope
-                        hLocalEnvelope.Add(hNeighbour, 1L);
-                        // the new neighbour needs to update their hash
-                        foreach (var hVertexInSubgraph in hgLocalSubgraphTransitionFunction.Keys)
+                        if (hEnvelopeWithHashes.ContainsKey(hNeighbour))
                         {
-                            if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
+                            // if it is already on the envelope
+                            hEnvelopeWithHashes[hNeighbour] *= prime;
+                            hToDivide.Add(new Tuple<int, int>(hNeighbour, prime));
+                        }
+                        else
+                        {
+                            hToRemove.Add(hNeighbour);
+                            // if it is new to the envelope
+                            hEnvelopeWithHashes.Add(hNeighbour, 1L);
+                            // the new neighbour needs to update their hash
+                            foreach (var hVertexInSubgraph in hgSubgraphTransitionFunction.Keys)
                             {
-                                hLocalEnvelope[hNeighbour] *= gLocalSubgraphPrimes[hgLocalSubgraphTransitionFunction[hVertexInSubgraph]];
+                                if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
+                                {
+                                    hEnvelopeWithHashes[hNeighbour] *= gSubgraphPrimes[hgSubgraphTransitionFunction[hVertexInSubgraph]];
+                                }
                             }
                         }
                     }
                 }
+
+                Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
             }
 
-            Analyze(g, h, ghLocalSubgraphTransitionFunction, hgLocalSubgraphTransitionFunction, gLocalEdgeConnections, gLocalEnvelope, hLocalEnvelope, gLocalSubgraphPrimes, localEdgeCount);
+            // restore
+            ghSubgraphTransitionFunction.Remove(gMatchingVertex);
+            hgSubgraphTransitionFunction.Remove(hMatchingVertex);
+            gSubgraphPrimes.Remove(gMatchingVertex);
+
+            var toCleanse = gEdgeConnections[gMatchingVertex];
+            gEdgeConnections.Remove(gMatchingVertex);
+            foreach (var neighbour in toCleanse)
+                gEdgeConnections[neighbour].Remove(gMatchingVertex);
+
+            foreach (var tuple in gToDivide)
+                gEnvelopeWithHashes[tuple.Item1] /= tuple.Item2;
+            foreach (var gVertex in gToRemove)
+                gEnvelopeWithHashes.Remove(gVertex);
+            gEnvelopeWithHashes.Add(gMatchingVertex, gEnvelopeToRestore);
+
+            foreach (var tuple in hToDivide)
+                hEnvelopeWithHashes[tuple.Item1] /= tuple.Item2;
+            foreach (var hVertex in hToRemove)
+                hEnvelopeWithHashes.Remove(hVertex);
+            hEnvelopeWithHashes.Add(hMatchingVertex, hEnvelopeToRestore);
         }
 
         // makes logical connections
@@ -350,8 +377,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 // todo: remove vertex from graph and then give it back!
                 var restoreOperation = g.RemoveVertex(gBestCandidate);
-                var gLocalEnvelopeWithHashes = new Dictionary<int, long>(gEnvelopeWithHashes);
-                gLocalEnvelopeWithHashes.Remove(gBestCandidate);
+                var gEnvelopeHashestoRestore = gEnvelopeWithHashes[gBestCandidate];
+                gEnvelopeWithHashes.Remove(gBestCandidate);
 
                 Analyze(
                     g,
@@ -359,11 +386,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                     ghSubgraphTransitionFunction,
                     hgSubgraphTransitionFunction,
                     gEdgeConnections,
-                    gLocalEnvelopeWithHashes,
+                    gEnvelopeWithHashes,
                     hEnvelopeWithHashes,
                     gLocalSubgraphPrimes,
                     edgeCountInSubgraph
                     );
+
+                gEnvelopeWithHashes.Add(gBestCandidate, gEnvelopeHashestoRestore);
 
                 g.RestoreVertex(gBestCandidate, restoreOperation);
             }

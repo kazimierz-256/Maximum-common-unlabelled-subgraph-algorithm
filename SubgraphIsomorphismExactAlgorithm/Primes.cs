@@ -10,13 +10,13 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             while (primes.Count <= n)
             {
-                if (!staticGenerator.GetEnumerator().MoveNext()) throw new Exception("Error while generating next prime number");
-                primes.Add(staticGenerator.GetEnumerator().Current);
+                if (!staticEnumerator.MoveNext()) throw new Exception("Error while generating next prime number");
+                primes.Add(staticEnumerator.Current);
             }
 
             return primes[n];
         }
-        private static IEnumerable<int> staticGenerator = Enumerate();
+        private static IEnumerator<int> staticEnumerator = Enumerate().GetEnumerator();
         public static IEnumerable<int> Enumerate()
         {
             var primes = new List<int>();
