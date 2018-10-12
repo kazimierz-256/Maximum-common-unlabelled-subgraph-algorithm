@@ -5,4 +5,9 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Graph\GraphDataStructure.csproj" />
+    <ProjectReference Include="..\SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj" />
+  </ItemGroup>
+
 </Project>
