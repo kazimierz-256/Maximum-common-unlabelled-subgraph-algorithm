@@ -69,7 +69,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     gCopy.RemoveVertex(minVertex);
                 }
-                var gVertex = g.EnumerateConnections().First().Key;
+                var gVertex = gCopy.EnumerateConnections().First().Key;
 
                 for (int hVertex = 0; hVertex < h.VertexCount; hVertex++)
                 {
