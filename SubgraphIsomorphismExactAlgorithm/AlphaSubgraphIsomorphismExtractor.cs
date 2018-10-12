@@ -328,23 +328,19 @@ namespace SubgraphIsomorphismExactAlgorithm
                     if (!disagree)
                     {
                         // connections are isomorphic, go on with the recursion
-                        // checking for extremum condition is done here, since the further in recursion the more information we have at our disposal
-                        if (VerifyExtremumCondition(gBestCandidate, ghSubgraphTransitionFunction, gEdgeConnections))
-                        {
-                            MatchAndExpand(
-                                gBestCandidate,
-                                hCandidate,
-                                g,
-                                h,
-                                ghSubgraphTransitionFunction,
-                                hgSubgraphTransitionFunction,
-                                gEdgeConnections,
-                                gEnvelopeWithHashes,
-                                hEnvelopeWithHashes,
-                                gLocalSubgraphPrimes,
-                                edgeCountInSubgraph
-                                );
-                        }
+                        MatchAndExpand(
+                            gBestCandidate,
+                            hCandidate,
+                            g,
+                            h,
+                            ghSubgraphTransitionFunction,
+                            hgSubgraphTransitionFunction,
+                            gEdgeConnections,
+                            gEnvelopeWithHashes,
+                            hEnvelopeWithHashes,
+                            gLocalSubgraphPrimes,
+                            edgeCountInSubgraph
+                            );
                     }
                 }
 
@@ -375,20 +371,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
         {
-            //// assume gBestCandidate is indeed part of graph
-            //var assumedMinimum = gEdgeConnections[gBestCandidate].Count;
-
-            //// todo: use vertexScore
-            //foreach (var gVertex in gEdgeConnections)
-            //{
-            //    if (gVertex.Key != gBestCandidate && gVertex.Value.Count < assumedMinimum)
-            //    {
-            //        return false;
-            //    }
-            //}
-            // todo: this is a hack, I am looking forward to remove/add vertices instead of maintaining the ignored set
             return true;
-            //return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
+            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
         }
 
         private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
