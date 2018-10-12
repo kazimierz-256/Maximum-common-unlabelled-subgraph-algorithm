@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using GraphDataStructure;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using GraphDataStructure;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
@@ -33,6 +31,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             // todo: make the initial connection
             // remove vertices based on extremum condition itself!
 
+            for (int i = 0; i < argG.; i++)
+            {
+
+            }
+
             // return
             score = bestScore;
             this.graphScore = graphScore;
@@ -42,6 +45,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         // modifies subgraph structure
         // does not modify ignore-data structure
+        // checks by the way the extremum condition
         private void MatchAndExpand(
             int gMatchingVertex,
             int hMatchingVertex,
@@ -112,6 +116,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 }
             }
+
+            // verify extremum condition right now!
+            if (!VerifyExtremumCondition(gMatchingVertex, ghLocalSubgraphTransitionFunction, gLocalEdgeConnections))
+                return;
+
             // spread the id to all neighbours on the envelope & discover new neighbours
             foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
             {
@@ -285,9 +294,45 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
         {
-            // todo: reimplement...
-            // use vertexScore
-            return true;
+            //// assume gBestCandidate is indeed part of graph
+            //var assumedMinimum = gEdgeConnections[gBestCandidate].Count;
+
+            //// todo: use vertexScore
+            //foreach (var gVertex in gEdgeConnections)
+            //{
+            //    if (gVertex.Key != gBestCandidate && gVertex.Value.Count < assumedMinimum)
+            //    {
+            //        return false;
+            //    }
+            //}
+
+            //return true;
+            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
+        }
+
+        private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
+        {
+            // assume gBestCandidate is indeed part of graph
+            var assumedMinimum = int.MaxValue;
+            var minimumSet = new HashSet<int>();
+
+            // todo: use vertexScore
+            foreach (var gVertex in gEdgeConnections)
+            {
+                if (gVertex.Value.Count < assumedMinimum)
+                {
+                    minimumSet = new HashSet<int>()
+                    {
+                        gVertex.Key
+                    };
+                }
+                else if (gVertex.Value.Count == assumedMinimum)
+                {
+                    minimumSet.Add(gVertex.Key);
+                }
+            }
+
+            return minimumSet;
         }
 
         private void LocalMaximumEnding(
