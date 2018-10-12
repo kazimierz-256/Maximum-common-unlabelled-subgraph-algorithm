@@ -7,13 +7,13 @@ namespace GraphDataStructure
 {
     public class GraphFactory
     {
-        public static Graph GenerateRandom(int n, double density, int generatingSeed)
+        public static UndirectedGraph GenerateRandom(int n, double density, int generatingSeed)
         {
             var random = new Random(generatingSeed);
             var neighbours = new Dictionary<int, HashSet<int>>();
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < n - 1; i++)
             {
-                for (int j = 0; j < n; j++)
+                for (int j = i + 1; j < n; j++)
                 {
                     if (random.NextDouble() < density)
                     {
@@ -39,10 +39,10 @@ namespace GraphDataStructure
                 }
             }
 
-            return new Graph(neighbours);
+            return new UndirectedGraph(neighbours);
         }
 
-        public static Graph GeneratePermuted(Graph g, int permutingSeed)
+        public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
         {
             // permute the vertices and make another graph
 
@@ -72,7 +72,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new Graph(neighbours);
+            return new UndirectedGraph(neighbours);
         }
 
         private static void Permute(int seed, ref int[] vertices)

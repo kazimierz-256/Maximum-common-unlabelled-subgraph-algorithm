@@ -8,10 +8,10 @@ namespace SubgraphIsomorphismExactAlgorithm
     public interface ISubgraphIsomorphismExtractor<T> where T : IComparable
     {
         void Extract(
-               Graph argG,
-               Graph argH,
+               UndirectedGraph argG,
+               UndirectedGraph argH,
                Func<int, int, T> graphScore,
-               Func<Graph, int, T> extremumConditionClassifier,
+               Func<UndirectedGraph, int, T> extremumConditionClassifier,
                T initialScore,
                out T score,
                out Dictionary<int, int> gBestSolution,

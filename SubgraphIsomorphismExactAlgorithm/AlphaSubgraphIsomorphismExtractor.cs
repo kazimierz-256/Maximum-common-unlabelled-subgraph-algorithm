@@ -9,69 +9,101 @@ namespace SubgraphIsomorphismExactAlgorithm
         where T : IComparable
     {
         private Func<int, int, T> graphScore = null;
-        private Func<Graph, int, T> vertexScore = null;
+        private Func<UndirectedGraph, int, T> vertexScore = null;
         private T bestScore = default(T);
         private Dictionary<int, int> gToH = null;
         private Dictionary<int, int> hToG = null;
 
         public void Extract(
-            Graph argG,
-            Graph argH,
+            UndirectedGraph argG,
+            UndirectedGraph argH,
             Func<int, int, T> graphScore,
-            Func<Graph, int, T> vertexScore,
+            Func<UndirectedGraph, int, T> vertexScore,
             T initialScore,
             out T score,
             out Dictionary<int, int> gToH,
             out Dictionary<int, int> hToG
             )
         {
+            UndirectedGraph g = null;
+            UndirectedGraph h = null;
+            var swapped = false;
+
+            // todo: verify performance benefit
+            if (argH.VertexCount < argG.VertexCount)
+            {
+                swapped = true;
+                h = argG.DeepClone();
+                g = argH.DeepClone();
+            }
+            else
+            {
+                g = argG.DeepClone();
+                h = argH.DeepClone();
+            }
+
             this.vertexScore = vertexScore;
             this.graphScore = graphScore;
             bestScore = initialScore;
 
-            var ignoredHashSet = new HashSet<int>();
-
-            // todo: generate the proper order (each time smallest-last)
-            var vertices = Enumerable.Range(0, argG.VertexCount).ToArray();
-            // note: the mapping is onto negative degrees
-            var degrees = Enumerable.Range(0, argG.VertexCount).Select(v => -1 * argG.Degree(v)).ToArray();
-            Array.Sort(degrees, vertices);
-
-            foreach (var gVertex in vertices)
+            while (g.VertexCount > 0)
             {
-                for (int j = 0; j < argH.VertexCount; j++)
+                // get largest vertex according to smallest-last order
+                var gCopy = g.DeepClone();
+                while (gCopy.VertexCount > 1)
+                {
+                    // delete smallest vertex
+                    var minDegree = int.MaxValue;
+                    var minVertex = -1;
+
+                    foreach (var connection in gCopy.EnumerateConnections())
+                    {
+                        if (connection.Value.Count < minDegree)
+                        {
+                            minDegree = connection.Value.Count;
+                            minVertex = connection.Key;
+                        }
+                    }
+
+                    gCopy.RemoveVertex(minVertex);
+                }
+                var gVertex = g.EnumerateConnections().First().Key;
+
+                for (int j = 0; j < h.VertexCount; j++)
                 {
                     MatchAndExpand(
                         gVertex,
                         j,
-                        argG,
-                        argH,
-                        new Dictionary<int, int>()
-                        {
-                            { gVertex, j }
-                        },
-                        new Dictionary<int, int>()
-                        {
-                            { j, gVertex }
-                        },
-                        new Dictionary<int, List<int>>(),
+                        g,
+                        h,
+                        new Dictionary<int, int>(),
+                        new Dictionary<int, int>(),
+                        new Dictionary<int, List<int>>() { { gVertex, new List<int>() } },
                         new Dictionary<int, long>(),
                         new Dictionary<int, long>(),
-                        0,
-                        ignoredHashSet
+                        new Dictionary<int, int>(),
+                        0
                         );
                 }
 
                 // ignore previous g-vertices
                 // todo: remove vertices based on extremum condition itself!
-                ignoredHashSet.Add(gVertex);
+                g.RemoveVertex(gVertex);
             }
 
 
             // return the solution
             score = bestScore;
-            gToH = this.gToH;
-            hToG = this.hToG;
+            if (swapped)
+            {
+                gToH = this.hToG;
+                hToG = this.gToH;
+            }
+            else
+            {
+                gToH = this.gToH;
+                hToG = this.hToG;
+            }
         }
 
         // modifies subgraph structure
@@ -80,19 +112,19 @@ namespace SubgraphIsomorphismExactAlgorithm
         private void MatchAndExpand(
             int gMatchingVertex,
             int hMatchingVertex,
-            Graph g,
-            Graph h,
+            UndirectedGraph g,
+            UndirectedGraph h,
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
             Dictionary<int, List<int>> gEdgeConnections,
             Dictionary<int, long> gEnvelopeWithHashes,
             Dictionary<int, long> hEnvelopeWithHashes,
-            int edgeCount,
-            HashSet<int> gIgnoredVertices
+            Dictionary<int, int> gSubgraphPrimes,//TODO: implement primes
+            int edgeCount
             )
         {
             // get a unique id number to send out
-            var prime = Primes.GetNthPrime(ghSubgraphTransitionFunction.Count);
+            var prime = Primes.GetNthPrime(gSubgraphPrimes.Count);
 
             // make a modifiable copy of arguments
             var ghLocalSubgraphTransitionFunction = new Dictionary<int, int>(ghSubgraphTransitionFunction);
@@ -100,6 +132,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             var gLocalEnvelope = new Dictionary<int, long>(gEnvelopeWithHashes);
             var hLocalEnvelope = new Dictionary<int, long>(hEnvelopeWithHashes);
             var gLocalEdgeConnections = new Dictionary<int, List<int>>(gEdgeConnections);
+            var gLocalSubgraphPrimes = new Dictionary<int, int>(gSubgraphPrimes)
+            {
+                { gMatchingVertex, prime }
+            };
             var localEdgeCount = edgeCount;
 
             // by definition add the transition functions (which means adding to the subgraph)
@@ -119,11 +155,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     localEdgeCount += 1;
                     // increase both 'degrees' of vertices
+                    if (gLocalEdgeConnections.ContainsKey(gMatchingVertex))
+                    {
+                        gLocalEdgeConnections[gMatchingVertex].Add(gNeighbour);
+                    }
+                    else
+                    {
+                        gLocalEdgeConnections.Add(gMatchingVertex, new List<int>() { gNeighbour });
+                    }
 
-                    gLocalEdgeConnections[gMatchingVertex].Add(gNeighbour);
                     gLocalEdgeConnections[gNeighbour].Add(gMatchingVertex);
                 }
-                else if (!gIgnoredVertices.Contains(gNeighbour))
+                else
                 {
                     // if the neighbour is outside of the subgraph and is not ignored
 
@@ -141,7 +184,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             if (g.ExistsConnectionBetween(gVertexInSubgraph, gNeighbour))
                             {
-                                gLocalEnvelope[gNeighbour] *= gLocalEnvelope[gVertexInSubgraph];
+                                // BUG: reassign primes
+                                gLocalEnvelope[gNeighbour] *= gLocalSubgraphPrimes[gVertexInSubgraph];
                             }
                         }
                     }
@@ -172,14 +216,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
                             {
-                                hLocalEnvelope[hNeighbour] *= hLocalEnvelope[hVertexInSubgraph];
+                                hLocalEnvelope[hNeighbour] *= gLocalSubgraphPrimes[hgLocalSubgraphTransitionFunction[hVertexInSubgraph]];
                             }
                         }
                     }
                 }
             }
 
-            Analyze(g, h, ghLocalSubgraphTransitionFunction, hgLocalSubgraphTransitionFunction, gLocalEdgeConnections, gLocalEnvelope, hLocalEnvelope, localEdgeCount, gIgnoredVertices);
+            Analyze(g, h, ghLocalSubgraphTransitionFunction, hgLocalSubgraphTransitionFunction, gLocalEdgeConnections, gLocalEnvelope, hLocalEnvelope, gLocalSubgraphPrimes, localEdgeCount);
         }
 
         // makes logical connections
@@ -188,15 +232,15 @@ namespace SubgraphIsomorphismExactAlgorithm
         // ignores vertices
         // does not modify subgraph structure
         private void Analyze(
-            Graph g,
-            Graph h,
+            UndirectedGraph g,
+            UndirectedGraph h,
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
             Dictionary<int, List<int>> gEdgeConnections,
             Dictionary<int, long> gEnvelopeWithHashes,
             Dictionary<int, long> hEnvelopeWithHashes,
-            int edgeCountInSubgraph,
-            HashSet<int> gIgnoredVertices
+            Dictionary<int, int> gLocalSubgraphPrimes,
+            int edgeCountInSubgraph
             )
         {
             // toconsider: the hash analysis is indepentent of the envelope, then the analysis should be made only once
@@ -208,37 +252,40 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 if (gHashRepresentatives.ContainsKey(gHashMapping.Value))
                 {
+                    gHashRepresentatives[gHashMapping.Value].Add(gHashMapping.Key);
+                }
+                else
+                {
                     gHashRepresentatives[gHashMapping.Value] = new List<int>()
                     {
                         gHashMapping.Key
                     };
-                }
-                else
-                {
-                    gHashRepresentatives[gHashMapping.Value].Add(gHashMapping.Key);
                 }
             }
             foreach (var hHashMapping in hEnvelopeWithHashes)
             {
                 if (hHashRepresentatives.ContainsKey(hHashMapping.Value))
                 {
+                    hHashRepresentatives[hHashMapping.Value].Add(hHashMapping.Key);
+                }
+                else
+                {
                     hHashRepresentatives[hHashMapping.Value] = new List<int>()
                     {
                         hHashMapping.Key
                     };
                 }
-                else
-                {
-                    hHashRepresentatives[hHashMapping.Value].Add(hHashMapping.Key);
-                }
             }
+
+            var gBestCandidate = -1;
+
             // prepare to sort h hashes based on collisions
-            var hHashes = new long[0];
+            var hHashes = new long[hHashRepresentatives.Keys.Count];
             hHashRepresentatives.Keys.CopyTo(hHashes, 0);
             var hRepetitions = hHashes.Select(hash => hHashRepresentatives[hash].Count).ToArray();
             // should be in ascending order
             Array.Sort(hRepetitions, hHashes);
-            var gBestCandidate = -1;
+
             foreach (var hHashCondidate in hHashes)
             {
                 // make sure the extremum condition is satisfied
@@ -248,6 +295,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gBestCandidate = gHashRepresentatives[hHashCondidate][0];
                 }
             }
+
             if (gBestCandidate == -1)
             {
                 // no more connections could be found
@@ -293,8 +341,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 gEdgeConnections,
                                 gEnvelopeWithHashes,
                                 hEnvelopeWithHashes,
-                                edgeCountInSubgraph,
-                                gIgnoredVertices
+                                gLocalSubgraphPrimes,
+                                edgeCountInSubgraph
                                 );
                         }
                     }
@@ -303,11 +351,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 // now consider the problem once the best candidate vertex has been removed
                 // toconsider: instead of copying just remove the vertex (make sure to do this on a local copy of graph g)
+
+                // todo: remove vertex from graph and then give it back!
+                var restoreOperation = g.RemoveVertex(gBestCandidate);
                 var gLocalEnvelopeWithHashes = new Dictionary<int, long>(gEnvelopeWithHashes);
                 gLocalEnvelopeWithHashes.Remove(gBestCandidate);
-
-                var gLocallyIgnoredVertices = new HashSet<int>(gIgnoredVertices);
-                gLocallyIgnoredVertices.Add(gBestCandidate);
 
                 Analyze(
                     g,
@@ -317,9 +365,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gEdgeConnections,
                     gLocalEnvelopeWithHashes,
                     hEnvelopeWithHashes,
-                    edgeCountInSubgraph,
-                    gLocallyIgnoredVertices
+                    gLocalSubgraphPrimes,
+                    edgeCountInSubgraph
                     );
+
+                g.RestoreVertex(gBestCandidate, restoreOperation);
             }
         }
 
@@ -336,9 +386,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             //        return false;
             //    }
             //}
-
-            //return true;
-            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
+            // todo: this is a hack, I am looking forward to remove/add vertices instead of maintaining the ignored set
+            return true;
+            //return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
         }
 
         private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)

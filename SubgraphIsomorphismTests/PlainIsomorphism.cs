@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(10, 0.8, 0, 1)]
+        [InlineData(11, 0.8, 0, 1)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
         {
             // randomize a graph of given n and density
@@ -24,7 +24,7 @@ namespace SubgraphIsomorphismTests
             Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
         }
 
-        private bool VerifySubgraphIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
+        private bool VerifySubgraphIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
 
             // all edges in g egsist in h
