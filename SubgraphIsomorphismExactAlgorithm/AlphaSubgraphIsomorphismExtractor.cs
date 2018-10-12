@@ -373,9 +373,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
                 // now consider the problem once the best candidate vertex has been removed
-                // toconsider: instead of copying just remove the vertex (make sure to do this on a local copy of graph g)
 
-                // todo: remove vertex from graph and then give it back!
+                // remove vertex from graph and then restore it
                 var restoreOperation = g.RemoveVertex(gBestCandidate);
                 var gEnvelopeHashestoRestore = gEnvelopeWithHashes[gBestCandidate];
                 gEnvelopeWithHashes.Remove(gBestCandidate);
