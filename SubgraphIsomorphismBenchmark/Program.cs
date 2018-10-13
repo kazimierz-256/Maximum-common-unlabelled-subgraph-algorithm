@@ -13,7 +13,7 @@ namespace SubgraphIsomorphismBenchmark
         private static Func<int, int, double> criterion;
         static void Main(string[] args)
         {
-            Console.WriteLine("Please enter an optimization criterion (please make sure it is increasing in v and e)");
+            Console.WriteLine("Please enter an optimization criterion (please make sure it is increasing in 'vertices' and 'edges')");
             criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
