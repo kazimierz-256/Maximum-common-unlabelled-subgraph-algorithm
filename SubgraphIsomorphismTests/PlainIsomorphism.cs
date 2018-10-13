@@ -49,7 +49,7 @@ namespace SubgraphIsomorphismTests
         {
 
             // all edges in g egsist in h
-            foreach (var connection in g.EnumerateConnections())
+            foreach (var connection in g.Connections)
             {
                 var gFromVertex = connection.Key;
                 foreach (var gToVertex in connection.Value)
@@ -62,7 +62,7 @@ namespace SubgraphIsomorphismTests
             }
 
             // all edges in h egsist in g
-            foreach (var connection in h.EnumerateConnections())
+            foreach (var connection in h.Connections)
             {
                 var hFromVertex = connection.Key;
                 foreach (var hToVertex in connection.Value)

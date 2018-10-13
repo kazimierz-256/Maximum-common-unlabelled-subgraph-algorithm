@@ -51,7 +51,7 @@ namespace GraphDataStructure
             var translation = new Dictionary<int, int>();
 
             var neighbours = new Dictionary<int, HashSet<int>>();
-            foreach (var kvp in g.EnumerateConnections())
+            foreach (var kvp in g.Connections)
             {
                 var fromVertex = kvp.Key;
                 if (!translation.ContainsKey(fromVertex))

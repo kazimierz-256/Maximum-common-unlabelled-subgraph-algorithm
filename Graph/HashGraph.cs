@@ -16,14 +16,16 @@ namespace GraphDataStructure
 
         public int VertexCount => neighbours.Keys.Count;
 
-        public IEnumerable<KeyValuePair<int, HashSet<int>>> EnumerateConnections()
+        public IEnumerable<KeyValuePair<int, HashSet<int>>> Connections
         {
-            foreach (var connection in neighbours)
+            get
             {
-                yield return connection;
+                foreach (var connection in neighbours)
+                {
+                    yield return connection;
+                }
             }
         }
-
         public IEnumerable<int> NeighboursOf(int gMatchingVertex)
         {
             foreach (var neighbour in neighbours[gMatchingVertex])

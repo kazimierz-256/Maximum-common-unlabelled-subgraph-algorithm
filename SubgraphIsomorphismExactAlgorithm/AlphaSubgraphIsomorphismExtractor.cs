@@ -47,9 +47,9 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             while (g.VertexCount > this.hToG.Keys.Count)
             {
-                var gVertex = g.EnumerateConnections().First().Key;
+                var gVertex = g.Connections.First().Key;
 
-                foreach (var hConnection in h.EnumerateConnections())
+                foreach (var hConnection in h.Connections)
                 {
                     MatchAndExpand(
                         gVertex,

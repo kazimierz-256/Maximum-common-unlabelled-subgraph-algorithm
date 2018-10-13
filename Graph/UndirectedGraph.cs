@@ -8,7 +8,7 @@ namespace GraphDataStructure
     {
         int VertexCount { get; }
 
-        IEnumerable<KeyValuePair<int, HashSet<int>>> EnumerateConnections();
+        IEnumerable<KeyValuePair<int, HashSet<int>>> Connections { get; }
 
         IEnumerable<int> NeighboursOf(int gMatchingVertex);
         bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour);
