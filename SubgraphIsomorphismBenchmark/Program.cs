@@ -8,14 +8,13 @@ namespace SubgraphIsomorphismBenchmark
     {
         static void Main(string[] args)
         {
-            printBenchmark(8, 0.9);
-            printBenchmark(9, 0.82);
-            printBenchmark(10, 0.73);
-            printBenchmark(11, 0.6);
-            printBenchmark(12, 0.44);
-            printBenchmark(13, 0.32);
+            printBenchmark(1, 0.9);
+            printBenchmark(16, 0.9);
+            printBenchmark(17, 0.9);
+            printBenchmark(18, 0.9);
+            printBenchmark(19, 0.9);
         }
-        private const int iterations = 10;
+        private const int iterations = 1;
         private static void printBenchmark(int n, double density)
         {
             var time = TimeSpan.Zero;
@@ -24,6 +23,7 @@ namespace SubgraphIsomorphismBenchmark
                 time += BenchmarkIsomorphism(n, density, i);
             }
             Console.WriteLine($"{n}: Elapsed: {time.TotalMilliseconds / iterations}ms");
+            printBenchmark(n+1, density);
         }
 
         private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed)

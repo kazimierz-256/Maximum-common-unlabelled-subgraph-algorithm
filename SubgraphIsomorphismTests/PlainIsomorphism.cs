@@ -9,8 +9,28 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(25, 0.9, 0, 1)]
+        [InlineData(20, 0.9, 0, 1)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                // randomize a graph of given n and density
+                var g = GraphFactory.GenerateRandom(i, density, generatingSeed);
+                var h = GraphFactory.GeneratePermuted(g, permutingSeed);
+
+                // run the algorithm
+                var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
+                solver.Extract(g, h, (vertices, edges) => vertices + edges, 0, out int score, out var gToH, out var hToG);
+
+                // verify the solution
+                Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
+                Assert.Equal(g.VertexCount, gToH.Count);
+            }
+        }
+
+        [Theory]
+        [InlineData(20, 0.9, 0, 1)]
+        public void GraphOfSize(int n, double density, int generatingSeed, int permutingSeed)
         {
             // randomize a graph of given n and density
             var g = GraphFactory.GenerateRandom(n, density, generatingSeed);
