@@ -39,7 +39,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new UndirectedGraph(neighbours);
+            return new HashGraph(neighbours);
         }
 
         public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
@@ -72,7 +72,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new UndirectedGraph(neighbours);
+            return new HashGraph(neighbours);
         }
 
         private static void Permute(int seed, ref int[] vertices)
