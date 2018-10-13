@@ -59,8 +59,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         new Dictionary<int, int>(),
                         new Dictionary<int, int>(),
                         new Dictionary<int, List<int>>() { { gVertex, new List<int>() } },
-                        new Dictionary<int, long>() { { gVertex, 0L } },
-                        new Dictionary<int, long>() { { hConnection.Key, 0L } },
+                        new HashSet<int>() { gVertex },
+                        new HashSet<int>() { hConnection.Key },
                         new Dictionary<int, int>(),
                         0
                         );
@@ -96,8 +96,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
             Dictionary<int, List<int>> gEdgeConnections,
-            Dictionary<int, long> gEnvelopeWithHashes,
-            Dictionary<int, long> hEnvelopeWithHashes,
+            HashSet<int> gEnvelopeWithHashes,
+            HashSet<int> hEnvelopeWithHashes,
             Dictionary<int, int> gSubgraphPrimes,
             int edgeCount
             )
@@ -114,14 +114,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             hgSubgraphTransitionFunction.Add(hMatchingVertex, gMatchingVertex);
 
             // if the matching vertex was on the envelope then remove it
-            var gEnvelopeToRestore = gEnvelopeWithHashes[gMatchingVertex];
-            var hEnvelopeToRestore = hEnvelopeWithHashes[hMatchingVertex];
             gEnvelopeWithHashes.Remove(gMatchingVertex);
             hEnvelopeWithHashes.Remove(hMatchingVertex);
 
-            var gToDivide = new List<Tuple<int, int>>();
             var gToRemove = new List<int>();
-            var hToDivide = new List<Tuple<int, int>>();
             var hToRemove = new List<int>();
 
             // toconsider: pass on a dictionary of edges from subgraph to the envelope for more performance (somewhere else...)!
@@ -144,28 +140,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     gEdgeConnections[gNeighbour].Add(gMatchingVertex);
                 }
-                else
+                else if (!gEnvelopeWithHashes.Contains(gNeighbour))
                 {
-                    // if the neighbour is outside of the subgraph
-
-                    if (gEnvelopeWithHashes.ContainsKey(gNeighbour))
-                    {
-                        // if it is already on the envelope
-                        gEnvelopeWithHashes[gNeighbour] *= prime;
-                        gToDivide.Add(new Tuple<int, int>(gNeighbour, prime));
-                    }
-                    else
-                    {
-                        gToRemove.Add(gNeighbour);
-                        // if it is new to the envelope
-                        gEnvelopeWithHashes.Add(gNeighbour, 1L);
-                        // the new neighbour needs to update their hash
-                        foreach (var gVertexInSubgraph in ghSubgraphTransitionFunction.Keys)
-                        {
-                            if (g.ExistsConnectionBetween(gVertexInSubgraph, gNeighbour))
-                                gEnvelopeWithHashes[gNeighbour] *= gSubgraphPrimes[gVertexInSubgraph];
-                        }
-                    }
+                    // if it is new to the envelope
+                    gEnvelopeWithHashes.Add(gNeighbour);
+                    gToRemove.Add(gNeighbour);
                 }
             }
 
@@ -173,28 +152,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
             {
                 // if the neighbour is outside the subgraph
-                if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour))
+                if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour) && !hEnvelopeWithHashes.Contains(hNeighbour))
                 {
-                    if (hEnvelopeWithHashes.ContainsKey(hNeighbour))
-                    {
-                        // if it is already on the envelope
-                        hEnvelopeWithHashes[hNeighbour] *= prime;
-                        hToDivide.Add(new Tuple<int, int>(hNeighbour, prime));
-                    }
-                    else
-                    {
-                        hToRemove.Add(hNeighbour);
-                        // if it is new to the envelope
-                        hEnvelopeWithHashes.Add(hNeighbour, 1L);
-                        // the new neighbour needs to update their hash
-                        foreach (var hVertexInSubgraph in hgSubgraphTransitionFunction.Keys)
-                        {
-                            if (h.ExistsConnectionBetween(hVertexInSubgraph, hNeighbour))
-                            {
-                                hEnvelopeWithHashes[hNeighbour] *= gSubgraphPrimes[hgSubgraphTransitionFunction[hVertexInSubgraph]];
-                            }
-                        }
-                    }
+                    // if it is new to the envelope
+                    hEnvelopeWithHashes.Add(hNeighbour);
+                    hToRemove.Add(hNeighbour);
                 }
             }
 
@@ -211,17 +173,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             foreach (var neighbour in toCleanse)
                 gEdgeConnections[neighbour].Remove(gMatchingVertex);
 
-            foreach (var tuple in gToDivide)
-                gEnvelopeWithHashes[tuple.Item1] /= tuple.Item2;
-            foreach (var gVertex in gToRemove)
-                gEnvelopeWithHashes.Remove(gVertex);
-            gEnvelopeWithHashes.Add(gMatchingVertex, gEnvelopeToRestore);
+            gEnvelopeWithHashes.Add(gMatchingVertex);
 
-            foreach (var tuple in hToDivide)
-                hEnvelopeWithHashes[tuple.Item1] /= tuple.Item2;
             foreach (var hVertex in hToRemove)
                 hEnvelopeWithHashes.Remove(hVertex);
-            hEnvelopeWithHashes.Add(hMatchingVertex, hEnvelopeToRestore);
+            hEnvelopeWithHashes.Add(hMatchingVertex);
         }
 
         // makes logical connections
@@ -235,8 +191,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
             Dictionary<int, List<int>> gEdgeConnections,
-            Dictionary<int, long> gEnvelopeWithHashes,
-            Dictionary<int, long> hEnvelopeWithHashes,
+            HashSet<int> gEnvelopeWithHashes,
+            HashSet<int> hEnvelopeWithHashes,
             Dictionary<int, int> gLocalSubgraphPrimes,
             int edgeCountInSubgraph
             )
@@ -250,9 +206,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                var gBestCandidate = gEnvelopeWithHashes.First().Key;
+                var gBestCandidate = gEnvelopeWithHashes.First();
 
-                var hCandidates = hEnvelopeWithHashes.Keys.ToArray();
+                var hCandidates = hEnvelopeWithHashes.ToArray();
                 foreach (var hCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
@@ -296,7 +252,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     // remove vertex from graph and then restore it
                     var restoreOperation = g.RemoveVertex(gBestCandidate);
-                    var gEnvelopeHashestoRestore = gEnvelopeWithHashes[gBestCandidate];
                     gEnvelopeWithHashes.Remove(gBestCandidate);
 
                     Analyze(
@@ -311,7 +266,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         edgeCountInSubgraph
                         );
 
-                    gEnvelopeWithHashes.Add(gBestCandidate, gEnvelopeHashestoRestore);
+                    gEnvelopeWithHashes.Add(gBestCandidate);
 
                     g.RestoreVertex(gBestCandidate, restoreOperation);
                 }
