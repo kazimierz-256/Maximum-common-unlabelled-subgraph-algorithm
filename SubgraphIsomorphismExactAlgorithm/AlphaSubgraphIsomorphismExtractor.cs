@@ -231,7 +231,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                Console.WriteLine("Not on extremum");
+                //Console.WriteLine("Not on extremum");
             }
 
             // restore
