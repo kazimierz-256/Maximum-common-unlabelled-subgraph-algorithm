@@ -146,7 +146,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 else
                 {
-                    // if the neighbour is outside of the subgraph and is not ignored
+                    // if the neighbour is outside of the subgraph
 
                     if (gEnvelopeWithHashes.ContainsKey(gNeighbour))
                     {
@@ -163,10 +163,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         foreach (var gVertexInSubgraph in ghSubgraphTransitionFunction.Keys)
                         {
                             if (g.ExistsConnectionBetween(gVertexInSubgraph, gNeighbour))
-                            {
-                                // BUG: reassign primes
                                 gEnvelopeWithHashes[gNeighbour] *= gSubgraphPrimes[gVertexInSubgraph];
-                            }
                         }
                     }
                 }
@@ -201,9 +198,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
+            // RECURSE DOWN
             Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
 
-            // restore
+            // CLEANUP
             ghSubgraphTransitionFunction.Remove(gMatchingVertex);
             hgSubgraphTransitionFunction.Remove(hMatchingVertex);
             gSubgraphPrimes.Remove(gMatchingVertex);

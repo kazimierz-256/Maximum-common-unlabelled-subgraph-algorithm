@@ -12,7 +12,7 @@ namespace SubgraphIsomorphismBenchmark
         static void Main(string[] args)
         {
             File.WriteAllText(path, string.Empty);
-            printBenchmark(15, 0.01m);
+            printBenchmark(1, 0.1m);
         }
         private const int oddIterations = 0;
         private static void printBenchmark(int n, decimal density)
