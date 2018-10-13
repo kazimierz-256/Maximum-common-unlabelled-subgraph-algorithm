@@ -243,15 +243,14 @@ namespace SubgraphIsomorphismExactAlgorithm
             int edgeCountInSubgraph
             )
         {
-            //if (gEnvelopeWithHashes.Count == 0)
-            //{
-            // no more connections could be found
-            // check for optimality
+            if (gEnvelopeWithHashes.Count == 0)
+            {
+                // no more connections could be found
+                // check for optimality
 
-            LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, edgeCountInSubgraph);
-            //}
-            //else
-            if (gEnvelopeWithHashes.Count > 0)
+                LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, edgeCountInSubgraph);
+            }
+            else
             {
                 var gBestCandidate = gEnvelopeWithHashes.First().Key;
 
