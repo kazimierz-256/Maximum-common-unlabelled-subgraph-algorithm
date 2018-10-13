@@ -1,4 +1,5 @@
 ﻿using GraphDataStructure;
+using MathParser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,8 +10,12 @@ namespace SubgraphIsomorphismBenchmark
     class Program
     {
         private const string path = @"benchmark.csv";
+        private static Func<int, int, double> criterion;
         static void Main(string[] args)
         {
+            Console.WriteLine("Please enter an optimization criterion (please make sure it is increasing in v and e)");
+            criterion = Parse.ParseInput(Console.ReadLine());
+
             File.WriteAllText(path, string.Empty);
             printBenchmark(1, 0.5m);
         }
@@ -48,9 +53,9 @@ namespace SubgraphIsomorphismBenchmark
             //var h = GraphFactory.GeneratePermuted(g, 0);
 
             // run the algorithm
-            var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
+            var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<double>();
             sw.Start();
-            solver.Extract(g, h, (vertices, edges) => vertices + edges, 0, out int score, out var gToH, out var hToG);
+            solver.Extract(g, h, criterion, 0, out double score, out var gToH, out var hToG);
             sw.Stop();
             return sw.Elapsed;
         }
