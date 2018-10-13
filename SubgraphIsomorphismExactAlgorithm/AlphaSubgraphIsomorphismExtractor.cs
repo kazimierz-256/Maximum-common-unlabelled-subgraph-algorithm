@@ -11,8 +11,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Func<int, int, T> graphScore = null;
         private Func<UndirectedGraph, int, T> vertexScore = null;
         private T bestScore = default(T);
-        private Dictionary<int, int> gToH = null;
-        private Dictionary<int, int> hToG = null;
+        private Dictionary<int, int> gToH = new Dictionary<int, int>();
+        private Dictionary<int, int> hToG = new Dictionary<int, int>();
 
         public void Extract(
             UndirectedGraph argG,
@@ -48,7 +48,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // note: work even faster without this fancy order...
 
-            while (g.VertexCount > 0)
+            while (g.VertexCount > this.hToG.Keys.Count)
             {
                 // get largest vertex according to smallest-last order
                 var gCopy = g.DeepClone();
@@ -374,33 +374,36 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 // now consider the problem once the best candidate vertex has been removed
 
-                // remove vertex from graph and then restore it
-                var restoreOperation = g.RemoveVertex(gBestCandidate);
-                var gEnvelopeHashestoRestore = gEnvelopeWithHashes[gBestCandidate];
-                gEnvelopeWithHashes.Remove(gBestCandidate);
+                if (g.VertexCount - 1 > hToG.Keys.Count)
+                {
+                    // remove vertex from graph and then restore it
+                    var restoreOperation = g.RemoveVertex(gBestCandidate);
+                    var gEnvelopeHashestoRestore = gEnvelopeWithHashes[gBestCandidate];
+                    gEnvelopeWithHashes.Remove(gBestCandidate);
 
-                Analyze(
-                    g,
-                    h,
-                    ghSubgraphTransitionFunction,
-                    hgSubgraphTransitionFunction,
-                    gEdgeConnections,
-                    gEnvelopeWithHashes,
-                    hEnvelopeWithHashes,
-                    gLocalSubgraphPrimes,
-                    edgeCountInSubgraph
-                    );
+                    Analyze(
+                        g,
+                        h,
+                        ghSubgraphTransitionFunction,
+                        hgSubgraphTransitionFunction,
+                        gEdgeConnections,
+                        gEnvelopeWithHashes,
+                        hEnvelopeWithHashes,
+                        gLocalSubgraphPrimes,
+                        edgeCountInSubgraph
+                        );
 
-                gEnvelopeWithHashes.Add(gBestCandidate, gEnvelopeHashestoRestore);
+                    gEnvelopeWithHashes.Add(gBestCandidate, gEnvelopeHashestoRestore);
 
-                g.RestoreVertex(gBestCandidate, restoreOperation);
+                    g.RestoreVertex(gBestCandidate, restoreOperation);
+                }
             }
         }
 
         private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
         {
-            return true;
-            //return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
+            //return true;
+            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
         }
 
         private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
