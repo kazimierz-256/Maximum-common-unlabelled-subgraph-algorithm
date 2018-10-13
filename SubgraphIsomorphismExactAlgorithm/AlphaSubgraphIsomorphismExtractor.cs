@@ -56,10 +56,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         h,
                         new Dictionary<int, int>(),
                         new Dictionary<int, int>(),
-                        new Dictionary<int, List<int>>() { { gVertex, new List<int>() } },
                         new HashSet<int>() { gVertex },
                         new HashSet<int>() { hConnection.Key },
-                        new Dictionary<int, int>(),
                         0
                         );
                 }
@@ -93,18 +91,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph h,
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
-            Dictionary<int, List<int>> gEdgeConnections,
             HashSet<int> gEnvelopeWithHashes,
             HashSet<int> hEnvelopeWithHashes,
-            Dictionary<int, int> gSubgraphPrimes,
             int edgeCount
             )
         {
-            // get a unique id number to send out
-            var prime = Primes.GetNthPrime(gSubgraphPrimes.Count);
-
-            // make a modifiable copy of arguments
-            gSubgraphPrimes.Add(gMatchingVertex, prime);
             var localEdgeCount = edgeCount;
 
             // by definition add the transition functions (which means adding to the subgraph)
@@ -126,17 +117,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (ghSubgraphTransitionFunction.ContainsKey(gNeighbour))
                 {
                     localEdgeCount += 1;
-                    // increase both 'degrees' of vertices
-                    if (gEdgeConnections.ContainsKey(gMatchingVertex))
-                    {
-                        gEdgeConnections[gMatchingVertex].Add(gNeighbour);
-                    }
-                    else
-                    {
-                        gEdgeConnections.Add(gMatchingVertex, new List<int>() { gNeighbour });
-                    }
-
-                    gEdgeConnections[gNeighbour].Add(gMatchingVertex);
                 }
                 else if (!gEnvelopeWithHashes.Contains(gNeighbour))
                 {
@@ -159,18 +139,14 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             // RECURSE DOWN
-            Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
+            Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEnvelopeWithHashes, hEnvelopeWithHashes, localEdgeCount);
 
             // CLEANUP
             ghSubgraphTransitionFunction.Remove(gMatchingVertex);
             hgSubgraphTransitionFunction.Remove(hMatchingVertex);
-            gSubgraphPrimes.Remove(gMatchingVertex);
 
-            var toCleanse = gEdgeConnections[gMatchingVertex];
-            gEdgeConnections.Remove(gMatchingVertex);
-            foreach (var neighbour in toCleanse)
-                gEdgeConnections[neighbour].Remove(gMatchingVertex);
-
+            foreach (var gVertex in gToRemove)
+                gEnvelopeWithHashes.Remove(gVertex);
             gEnvelopeWithHashes.Add(gMatchingVertex);
 
             foreach (var hVertex in hToRemove)
@@ -188,10 +164,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph h,
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
-            Dictionary<int, List<int>> gEdgeConnections,
             HashSet<int> gEnvelopeWithHashes,
             HashSet<int> hEnvelopeWithHashes,
-            Dictionary<int, int> gLocalSubgraphPrimes,
             int edgeCountInSubgraph
             )
         {
@@ -200,7 +174,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // no more connections could be found
                 // check for optimality
 
-                LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, edgeCountInSubgraph);
+                LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, edgeCountInSubgraph);
             }
             else
             {
@@ -235,10 +209,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             h,
                             ghSubgraphTransitionFunction,
                             hgSubgraphTransitionFunction,
-                            gEdgeConnections,
                             gEnvelopeWithHashes,
                             hEnvelopeWithHashes,
-                            gLocalSubgraphPrimes,
                             edgeCountInSubgraph
                             );
                     }
@@ -255,10 +227,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         h,
                         ghSubgraphTransitionFunction,
                         hgSubgraphTransitionFunction,
-                        gEdgeConnections,
                         gEnvelopeWithHashes,
                         hEnvelopeWithHashes,
-                        gLocalSubgraphPrimes,
                         edgeCountInSubgraph
                         );
                     gEnvelopeWithHashes.Add(gBestCandidate);
@@ -270,11 +240,10 @@ namespace SubgraphIsomorphismExactAlgorithm
         private void LocalMaximumEnding(
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
-            Dictionary<int, List<int>> gEdgeConnections,
             int edgesInSubgraph
             )
         {
-            var vertices = gEdgeConnections.Keys.Count;
+            var vertices = ghSubgraphTransitionFunction.Keys.Count;
             var result = graphScore(vertices, edgesInSubgraph);
             var comparison = result.CompareTo(bestScore);
             if (comparison > 0)
