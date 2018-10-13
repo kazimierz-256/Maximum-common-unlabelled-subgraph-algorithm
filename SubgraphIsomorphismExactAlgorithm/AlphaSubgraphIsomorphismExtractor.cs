@@ -196,7 +196,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             // verify extremum condition right now!
-            if (VerifyExtremumCondition(gMatchingVertex, ghSubgraphTransitionFunction, gEdgeConnections))
+            if (VerifyExtremumCondition(gMatchingVertex, gEdgeConnections))
             {
                 // spread the id to all neighbours on the envelope & discover new neighbours
                 foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
@@ -226,8 +226,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                     }
                 }
-
+                //Console.WriteLine("On extremum");
                 Analyze(g, h, ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, gEdgeConnections, gEnvelopeWithHashes, hEnvelopeWithHashes, gSubgraphPrimes, localEdgeCount);
+            }
+            else
+            {
+                Console.WriteLine("Not on extremum");
             }
 
             // restore
@@ -400,13 +404,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
+        private bool VerifyExtremumCondition(int gBestCandidate, Dictionary<int, List<int>> gEdgeConnections)
         {
             //return true;
-            return ExtractExtremumVertices(ghSubgraphTransitionFunction, gEdgeConnections).Contains(gBestCandidate);
+            return ExtractExtremumVertices(gEdgeConnections).Contains(gBestCandidate);
         }
 
-        private HashSet<int> ExtractExtremumVertices(Dictionary<int, int> ghSubgraphTransitionFunction, Dictionary<int, List<int>> gEdgeConnections)
+        private HashSet<int> ExtractExtremumVertices(Dictionary<int, List<int>> gEdgeConnections)
         {
             // assume gBestCandidate is indeed part of graph
             var assumedMinimum = int.MaxValue;
@@ -417,15 +421,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 if (gVertex.Value.Count < assumedMinimum)
                 {
-                    minimumSet = new HashSet<int>()
-                    {
-                        gVertex.Key
-                    };
+                    minimumSet.Clear();
                 }
-                else if (gVertex.Value.Count == assumedMinimum)
-                {
-                    minimumSet.Add(gVertex.Key);
-                }
+                minimumSet.Add(gVertex.Key);
             }
 
             return minimumSet;
