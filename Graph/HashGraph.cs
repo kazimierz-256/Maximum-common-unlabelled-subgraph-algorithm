@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace GraphDataStructure
 {
-    public class UndirectedGraph
+    public class HashGraph : UndirectedGraph
     {
         // note: this does not copy it reassigns
-        public UndirectedGraph(Dictionary<int, HashSet<int>> neighbours)
+        public HashGraph(Dictionary<int, HashSet<int>> neighbours)
         {
             this.neighbours = neighbours;
         }
@@ -52,7 +52,7 @@ namespace GraphDataStructure
             {
                 neighboursCopy.Add(connection.Key, new HashSet<int>(connection.Value));
             }
-            return new UndirectedGraph(neighboursCopy);
+            return new HashGraph(neighboursCopy);
         }
         // note: this does not copy it reassigns
         public void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours)

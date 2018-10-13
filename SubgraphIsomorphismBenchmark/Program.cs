@@ -12,7 +12,7 @@ namespace SubgraphIsomorphismBenchmark
         static void Main(string[] args)
         {
             File.WriteAllText(path, string.Empty);
-            printBenchmark(15, 0.01m);
+            printBenchmark(15, 0.8m);
         }
         private const int oddIterations = 0;
         private static void printBenchmark(int n, decimal density)
@@ -35,9 +35,9 @@ namespace SubgraphIsomorphismBenchmark
             //}
             //else
             //{
-            //    printBenchmark(n + 1, 0.1m);
+            printBenchmark(n + 1, density);
             //}
-            printBenchmark(n, density + 0.01m);
+            //printBenchmark(n, density + 0.01m);
         }
 
         private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed)
