@@ -6,9 +6,10 @@ namespace GraphDataStructure
     public class HashGraph : UndirectedGraph
     {
         // note: this does not copy it reassigns
-        public HashGraph(Dictionary<int, HashSet<int>> neighbours)
+        public HashGraph(Dictionary<int, HashSet<int>> neighbours, int edges)
         {
             this.neighbours = neighbours;
+            EdgeCount = edges;
         }
 
         // todo: implement two data structures to optimize performance
@@ -26,6 +27,8 @@ namespace GraphDataStructure
                 }
             }
         }
+        public int EdgeCount { get; private set; } = 0;
+
         public IEnumerable<int> NeighboursOf(int gMatchingVertex)
         {
             foreach (var neighbour in neighbours[gMatchingVertex])
@@ -44,7 +47,7 @@ namespace GraphDataStructure
             {
                 neighbours[neighbour].Remove(vertexToRemove);
             }
-
+            EdgeCount -= toReturn.Count;
             return toReturn;
         }
         public UndirectedGraph DeepClone()
@@ -54,7 +57,7 @@ namespace GraphDataStructure
             {
                 neighboursCopy.Add(connection.Key, new HashSet<int>(connection.Value));
             }
-            return new HashGraph(neighboursCopy);
+            return new HashGraph(neighboursCopy, EdgeCount);
         }
         // note: this does not copy it reassigns
         public void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours)
@@ -64,6 +67,7 @@ namespace GraphDataStructure
             {
                 neighbours[neighbour].Add(restoreVertex);
             }
+            EdgeCount += restoreNeighbours.Count;
         }
     }
 }

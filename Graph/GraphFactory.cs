@@ -11,6 +11,7 @@ namespace GraphDataStructure
         {
             var random = new Random(generatingSeed);
             var neighbours = new Dictionary<int, HashSet<int>>();
+            var edges = 0;
             for (int i = 0; i < n - 1; i++)
             {
                 for (int j = i + 1; j < n; j++)
@@ -21,25 +22,29 @@ namespace GraphDataStructure
                         if (neighbours.ContainsKey(i))
                         {
                             neighbours[i].Add(j);
+                            edges += 1;
                         }
                         else
                         {
                             neighbours.Add(i, new HashSet<int> { j });
+                            edges += 1;
                         }
 
                         if (neighbours.ContainsKey(j))
                         {
                             neighbours[j].Add(i);
+                            edges += 1;
                         }
                         else
                         {
                             neighbours.Add(j, new HashSet<int> { i });
+                            edges += 1;
                         }
                     }
                 }
             }
 
-            return new HashGraph(neighbours);
+            return new HashGraph(neighbours, edges);
         }
 
         public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
@@ -72,7 +77,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours);
+            return new HashGraph(neighbours, g.EdgeCount);
         }
 
         private static void Permute(int seed, ref int[] vertices)

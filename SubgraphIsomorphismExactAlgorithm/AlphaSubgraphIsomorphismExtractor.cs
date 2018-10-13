@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         where T : IComparable
     {
         private Func<int, int, T> graphScore = null;
-        private T bestScore = default(T);
+        private T bestScore = default;
         private Dictionary<int, int> gToH = new Dictionary<int, int>();
         private Dictionary<int, int> hToG = new Dictionary<int, int>();
 
@@ -31,21 +31,19 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (argH.VertexCount < argG.VertexCount)
             {
                 swapped = true;
-                h = argG.DeepClone();
+                h = argG;
                 g = argH.DeepClone();
             }
             else
             {
                 g = argG.DeepClone();
-                h = argH.DeepClone();
+                h = argH;
             }
 
             this.graphScore = graphScore;
             bestScore = initialScore;
 
-            // note: work even faster without this fancy order...
-
-            while (g.VertexCount > this.hToG.Keys.Count)
+            while (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
                 var gVertex = g.Connections.First().Key;
 
@@ -212,7 +210,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 foreach (var hCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
-                    var disagree = false;
+                    var agree = true;
 
                     // toconsider: maybe all necessary edges should be precomputed ahead of time, or not?
                     foreach (var ghTransition in ghSubgraphTransitionFunction)
@@ -222,12 +220,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (g.ExistsConnectionBetween(gBestCandidate, gVertexInSubgraph) != h.ExistsConnectionBetween(hCandidate, hVertexInSubgraph))
                         {
                             // connection is wrong! despite same hash
-                            disagree = true;
+                            agree = false;
                             break;
                         }
                     }
 
-                    if (!disagree)
+                    if (agree)
                     {
                         // connections are isomorphic, go on with the recursion
                         MatchAndExpand(
@@ -246,14 +244,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 }
 
-
                 // now consider the problem once the best candidate vertex has been removed
-                if (g.VertexCount - 1 > hToG.Keys.Count)
+                // remove vertex from graph and then restore it
+                var restoreOperation = g.RemoveVertex(gBestCandidate);
+                if (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
                 {
-                    // remove vertex from graph and then restore it
-                    var restoreOperation = g.RemoveVertex(gBestCandidate);
                     gEnvelopeWithHashes.Remove(gBestCandidate);
-
                     Analyze(
                         g,
                         h,
@@ -265,11 +261,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                         gLocalSubgraphPrimes,
                         edgeCountInSubgraph
                         );
-
                     gEnvelopeWithHashes.Add(gBestCandidate);
-
-                    g.RestoreVertex(gBestCandidate, restoreOperation);
                 }
+                g.RestoreVertex(gBestCandidate, restoreOperation);
             }
         }
 

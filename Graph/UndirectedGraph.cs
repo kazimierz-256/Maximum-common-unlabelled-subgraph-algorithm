@@ -7,9 +7,9 @@ namespace GraphDataStructure
     public interface UndirectedGraph
     {
         int VertexCount { get; }
+        int EdgeCount { get; }
 
         IEnumerable<KeyValuePair<int, HashSet<int>>> Connections { get; }
-
         IEnumerable<int> NeighboursOf(int gMatchingVertex);
         bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour);
         int Degree(int v);
