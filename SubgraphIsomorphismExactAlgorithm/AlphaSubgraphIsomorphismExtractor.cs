@@ -206,7 +206,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 }
                 #endregion
-                foreach (var hCandidate in hCandidates)
+                foreach (var hMatchingCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
                     var agree = true;
@@ -216,7 +216,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         var gVertexInSubgraph = ghTransition.Key;
                         var hVertexInSubgraph = ghTransition.Value;
-                        if (g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph) != h.ExistsConnectionBetween(hCandidate, hVertexInSubgraph))
+                        if (g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph) != h.ExistsConnectionBetween(hMatchingCandidate, hVertexInSubgraph))
                         {
                             agree = false;
                             break;
@@ -228,7 +228,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // connections are isomorphic, go on with the recursion
                         HMatchAndExpand(
                             gMatchingVertex,
-                            hCandidate,
+                            hMatchingCandidate,
                             g,
                             h,
                             ghSubgraphTransitionFunction,
