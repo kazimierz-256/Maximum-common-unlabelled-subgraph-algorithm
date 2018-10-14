@@ -17,15 +17,16 @@ namespace GraphDataStructure
         // todo: implement two data structures to optimize performance
         public Dictionary<int, HashSet<int>> Neighbours { get; private set; } = new Dictionary<int, HashSet<int>>();
         public HashSet<int> Vertices { get; private set; } = new HashSet<int>();
-
+        private readonly HashSet<int> emptyHashSet = new HashSet<int>();
         public int VertexCount { get; private set; } = 0;
         public int EdgeCount { get; private set; } = 0;
 
-        public IEnumerable<int> NeighboursOf(int vertex)
+        public HashSet<int> NeighboursOf(int vertex)
         {
             if (Neighbours.ContainsKey(vertex))
-                foreach (var neighbour in Neighbours[vertex])
-                    yield return neighbour;
+                return Neighbours[vertex];
+            else
+                return emptyHashSet;
         }
         public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour) => Neighbours[gVertexInSubgraph].Contains(gNeighbour);
 

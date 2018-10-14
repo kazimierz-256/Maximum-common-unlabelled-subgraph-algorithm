@@ -9,15 +9,15 @@ namespace GraphDataStructure
         int VertexCount { get; }
         int EdgeCount { get; }
 
-        Dictionary<int, HashSet<int>> Neighbours { get; }
+        Dictionary<int, HashSet<int>[]> Neighbours { get; }
         HashSet<int> Vertices { get; }
 
-        IEnumerable<int> NeighboursOf(int vertex, int level);
+        HashSet<int> NeighboursOf(int vertex, int level);
         void ChangeLevel(int vertex, int newLevel);
         bool ExistsConnectionBetween(int vertex1, int vertex2);
         int Degree(int v);
-        HashSet<int> RemoveVertex(int vertex);
+        HashSet<int>[] RemoveVertex(int vertex);
         UndirectedGraph DeepClone();
-        void RestoreVertex(int vertex, HashSet<int> restoreOperation);
+        void RestoreVertex(int vertex, HashSet<int>[] restoreOperation);
     }
 }

@@ -12,7 +12,7 @@ namespace GraphDataStructure
         Dictionary<int, HashSet<int>> Neighbours { get; }
         HashSet<int> Vertices { get; }
 
-        IEnumerable<int> NeighboursOf(int gMatchingVertex);
+        HashSet<int> NeighboursOf(int gMatchingVertex);
         bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour);
         int Degree(int v);
         HashSet<int> RemoveVertex(int vertexToRemove);
