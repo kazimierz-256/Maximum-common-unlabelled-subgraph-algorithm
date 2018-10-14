@@ -69,7 +69,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hVertex in h.Vertices)
                 {
-                    MatchAndExpand(
+                    HMatchAndExpand(
                         gVertex,
                         hVertex,
                         g,
@@ -104,7 +104,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         // modifies subgraph structure
         // does not modify ignore-data structure
         // checks by the way the extremum condition
-        private void MatchAndExpand(
+        private void HMatchAndExpand(
             int gMatchingVertex,
             int hMatchingVertex,
             UndirectedGraph g,
@@ -201,6 +201,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gBestCandidate = gEnvelopeWithHashes.First();
 
                 var hCandidates = hEnvelopeWithHashes.ToArray();
+
+                #region PREPARE
+                #endregion
                 foreach (var hCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
@@ -221,7 +224,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     if (agree)
                     {
                         // connections are isomorphic, go on with the recursion
-                        MatchAndExpand(
+                        HMatchAndExpand(
                             gBestCandidate,
                             hCandidate,
                             g,
@@ -234,7 +237,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             );
                     }
                 }
-
+                #region FINISH
+                #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
                 var restoreOperation = g.RemoveVertex(gBestCandidate);
@@ -252,7 +256,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 g.RestoreVertex(gBestCandidate, restoreOperation);
             }
         }
-
         private void LocalMaximumEnding(
             Dictionary<int, int> ghSubgraphTransitionFunction,
             Dictionary<int, int> hgSubgraphTransitionFunction,
