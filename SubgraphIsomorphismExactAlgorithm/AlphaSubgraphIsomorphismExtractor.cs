@@ -49,7 +49,23 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             while (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
+#if false
+                var maxDegree = int.MinValue;
+                var gVertex = -1;
+                foreach (var vertex in g.Vertices)
+                {
+                    gVertex = vertex;
+                    //break;
+                    if (g.Degree(vertex) > maxDegree)
+                    {
+                        maxDegree = g.Degree(vertex);
+                        gVertex = vertex;
+                    }
+                }
+                //gVertex = g.Vertices.First();
+#else
                 var gVertex = g.Vertices.First();
+#endif
 
                 foreach (var hVertex in h.Vertices)
                 {

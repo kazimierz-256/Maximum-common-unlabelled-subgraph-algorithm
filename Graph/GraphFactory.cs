@@ -33,12 +33,10 @@ namespace GraphDataStructure
                         if (neighbours.ContainsKey(j))
                         {
                             neighbours[j].Add(i);
-                            edges += 1;
                         }
                         else
                         {
                             neighbours.Add(j, new HashSet<int> { i });
-                            edges += 1;
                         }
                     }
                 }
