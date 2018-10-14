@@ -49,8 +49,11 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, seed);
+#if true
             var h = GraphFactory.GenerateRandom(n, density, -seed);
-            //var h = GraphFactory.GeneratePermuted(g, 0);
+#else
+            var h = GraphFactory.GeneratePermuted(g, 0);
+#endif
 
             // run the algorithm
             var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<double>();

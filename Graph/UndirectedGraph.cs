@@ -9,7 +9,9 @@ namespace GraphDataStructure
         int VertexCount { get; }
         int EdgeCount { get; }
 
-        IEnumerable<KeyValuePair<int, HashSet<int>>> Connections { get; }
+        Dictionary<int, HashSet<int>> Neighbours { get; }
+        HashSet<int> Vertices { get; }
+
         IEnumerable<int> NeighboursOf(int gMatchingVertex);
         bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour);
         int Degree(int v);

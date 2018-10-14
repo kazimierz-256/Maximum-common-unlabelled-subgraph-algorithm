@@ -45,19 +45,19 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             while (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
-                var gVertex = g.Connections.First().Key;
+                var gVertex = g.Vertices.First();
 
-                foreach (var hConnection in h.Connections)
+                foreach (var hVertex in h.Vertices)
                 {
                     MatchAndExpand(
                         gVertex,
-                        hConnection.Key,
+                        hVertex,
                         g,
                         h,
                         new Dictionary<int, int>(),
                         new Dictionary<int, int>(),
                         new HashSet<int>() { gVertex },
-                        new HashSet<int>() { hConnection.Key },
+                        new HashSet<int>() { hVertex },
                         0
                         );
                 }
@@ -245,7 +245,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (comparison > 0)
             {
                 bestScore = result;
-
                 gToH = new Dictionary<int, int>(ghSubgraphTransitionFunction);
                 hToG = new Dictionary<int, int>(hgSubgraphTransitionFunction);
             }

@@ -44,7 +44,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, edges);
+            return new HashGraph(neighbours, new HashSet<int>(Enumerable.Range(0, n).ToArray()), edges, n);
         }
 
         public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
@@ -56,16 +56,12 @@ namespace GraphDataStructure
             var translation = new Dictionary<int, int>();
 
             var neighbours = new Dictionary<int, HashSet<int>>();
-            foreach (var kvp in g.Connections)
+            foreach (var kvp in g.Neighbours)
             {
                 var fromVertex = kvp.Key;
                 if (!translation.ContainsKey(fromVertex))
                 {
                     translation.Add(fromVertex, permutedIntegers[translation.Count]);
-                }
-                if (!neighbours.ContainsKey(translation[fromVertex]))
-                {
-                    neighbours.Add(translation[fromVertex], new HashSet<int>());
                 }
                 foreach (var toVertex in kvp.Value)
                 {
@@ -73,11 +69,15 @@ namespace GraphDataStructure
                     {
                         translation.Add(toVertex, permutedIntegers[translation.Count]);
                     }
+                    if (!neighbours.ContainsKey(translation[fromVertex]))
+                    {
+                        neighbours.Add(translation[fromVertex], new HashSet<int>());
+                    }
                     neighbours[translation[fromVertex]].Add(translation[toVertex]);
                 }
             }
 
-            return new HashGraph(neighbours, g.EdgeCount);
+            return new HashGraph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount, g.VertexCount);
         }
 
         private static void Permute(int seed, ref int[] vertices)

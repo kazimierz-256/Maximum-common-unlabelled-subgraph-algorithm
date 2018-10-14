@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(12, 0.9, 0, 1)]
+        [InlineData(100, 0.7, 0, 1)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismTests
 
                 // run the algorithm
                 var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
-                solver.Extract(g, h, (vertices, edges) => vertices + edges, 0, out int score, out var gToH, out var hToG);
+                solver.Extract(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
 
                 // verify the solution
                 Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
@@ -55,7 +55,7 @@ namespace SubgraphIsomorphismTests
         {
 
             // all edges in g egsist in h
-            foreach (var connection in g.Connections)
+            foreach (var connection in g.Neighbours)
             {
                 var gFromVertex = connection.Key;
                 foreach (var gToVertex in connection.Value)
@@ -68,7 +68,7 @@ namespace SubgraphIsomorphismTests
             }
 
             // all edges in h egsist in g
-            foreach (var connection in h.Connections)
+            foreach (var connection in h.Neighbours)
             {
                 var hFromVertex = connection.Key;
                 foreach (var hToVertex in connection.Value)
