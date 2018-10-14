@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(13, 0.7, 24, 41)]
+        [InlineData(18, 0.7, 24, 41)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
