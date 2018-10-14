@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GraphExtensionAlgorithms\GraphExtensionAlgorithms.csproj" />
     <ProjectReference Include="..\Graph\GraphDataStructure.csproj" />
     <ProjectReference Include="..\SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj" />
   </ItemGroup>

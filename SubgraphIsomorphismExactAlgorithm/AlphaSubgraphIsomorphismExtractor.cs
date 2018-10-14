@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-//using GraphExtensionAlgorithms;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
@@ -28,8 +27,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph h = null;
             var swapped = false;
 
-            //var cc = g.ConnectedComponents();
-
             // todo: verify performance benefit
             if (argH.VertexCount < argG.VertexCount)
             {
@@ -42,6 +39,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 g = argG.DeepClone();
                 h = argH;
             }
+
+            //var gCC = g.ConnectedComponents();
+            //var hCC = h.ConnectedComponents();
+            //Console.WriteLine($"G cc: {gCC.Count}, H cc: {hCC.Count}");
 
             this.graphScore = graphScore;
             bestScore = initialScore;

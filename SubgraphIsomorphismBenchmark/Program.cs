@@ -49,7 +49,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, seed);
-#if false
+#if true
             var h = GraphFactory.GenerateRandom(n, density, -seed);
 #else
             var h = GraphFactory.GeneratePermuted(g, 0);
