@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(20, 0.9, 0, 1)]
+        [InlineData(12, 0.9, 0, 1)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -25,11 +25,17 @@ namespace SubgraphIsomorphismTests
                 // verify the solution
                 Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
                 Assert.Equal(g.VertexCount, gToH.Count);
+                Assert.Equal(g.VertexCount, hToG.Count);
+
+                for (int j = 0; j < g.VertexCount; j++)
+                {
+                    Assert.Equal(j, hToG[gToH[j]]);
+                }
             }
         }
 
         [Theory]
-        [InlineData(20, 0.9, 0, 1)]
+        [InlineData(12, 0.9, 0, 1)]
         public void GraphOfSize(int n, double density, int generatingSeed, int permutingSeed)
         {
             // randomize a graph of given n and density

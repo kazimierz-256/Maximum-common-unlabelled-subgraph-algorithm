@@ -147,10 +147,10 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             foreach (var gVertex in gToRemove)
                 gEnvelopeWithHashes.Remove(gVertex);
-            gEnvelopeWithHashes.Add(gMatchingVertex);
-
             foreach (var hVertex in hToRemove)
                 hEnvelopeWithHashes.Remove(hVertex);
+
+            gEnvelopeWithHashes.Add(gMatchingVertex);
             hEnvelopeWithHashes.Add(hMatchingVertex);
         }
 
@@ -169,14 +169,14 @@ namespace SubgraphIsomorphismExactAlgorithm
             int edgeCountInSubgraph
             )
         {
-            if (gEnvelopeWithHashes.Count == 0)
+            if (gEnvelopeWithHashes.Count == 0 || hEnvelopeWithHashes.Count == 0)
             {
                 // no more connections could be found
                 // check for optimality
 
                 LocalMaximumEnding(ghSubgraphTransitionFunction, hgSubgraphTransitionFunction, edgeCountInSubgraph);
             }
-            else
+            else if (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
                 var gBestCandidate = gEnvelopeWithHashes.First();
 
@@ -193,7 +193,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var hVertexInSubgraph = ghTransition.Value;
                         if (g.ExistsConnectionBetween(gBestCandidate, gVertexInSubgraph) != h.ExistsConnectionBetween(hCandidate, hVertexInSubgraph))
                         {
-                            // connection is wrong! despite same hash
                             agree = false;
                             break;
                         }
@@ -219,20 +218,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
                 var restoreOperation = g.RemoveVertex(gBestCandidate);
-                if (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
-                {
-                    gEnvelopeWithHashes.Remove(gBestCandidate);
-                    Analyze(
-                        g,
-                        h,
-                        ghSubgraphTransitionFunction,
-                        hgSubgraphTransitionFunction,
-                        gEnvelopeWithHashes,
-                        hEnvelopeWithHashes,
-                        edgeCountInSubgraph
-                        );
-                    gEnvelopeWithHashes.Add(gBestCandidate);
-                }
+                gEnvelopeWithHashes.Remove(gBestCandidate);
+                Analyze(
+                    g,
+                    h,
+                    ghSubgraphTransitionFunction,
+                    hgSubgraphTransitionFunction,
+                    gEnvelopeWithHashes,
+                    hEnvelopeWithHashes,
+                    edgeCountInSubgraph
+                    );
+                gEnvelopeWithHashes.Add(gBestCandidate);
                 g.RestoreVertex(gBestCandidate, restoreOperation);
             }
         }

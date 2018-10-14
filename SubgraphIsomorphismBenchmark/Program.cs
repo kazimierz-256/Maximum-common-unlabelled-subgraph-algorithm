@@ -17,7 +17,7 @@ namespace SubgraphIsomorphismBenchmark
             criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
-            printBenchmark(1, 0.5m);
+            printBenchmark(2, 0.5m);
         }
         private const int oddIterations = 0;
         private static void printBenchmark(int n, decimal density)
