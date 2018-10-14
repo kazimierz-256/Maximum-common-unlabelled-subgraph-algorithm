@@ -67,11 +67,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gMatchingVertex = g.Vertices.First();
 #endif
 
+                var gEnvelopeWithHashes = new HashSet<int>();
+                foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
+                    gEnvelopeWithHashes.Add(gNeighbour);
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    var gEnvelopeWithHashes = new HashSet<int>();
-                    foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
-                        gEnvelopeWithHashes.Add(gNeighbour);
 
                     HMatchAndExpand(
                         gMatchingVertex,
@@ -135,6 +135,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             // spread the id to all neighbours on the envelope & discover new neighbours
 
             // spread the id to all neighbours on the envelope & discover new neighbours
+            // todo: redesign UndirectedGraph Data Structure to include levels
             foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
             {
                 // if the neighbour is outside the subgraph
@@ -191,6 +192,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 gEnvelopeWithHashes.Remove(gMatchingVertex);
                 var localEdgeCount = edgeCountInSubgraph;
                 var gToRemove = new List<int>();
+                // todo: change iteration to two levelled iterations
                 foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
                 {
                     // if the neighbour is in the subgraph
