@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using GraphExtensionAlgorithms;
 
 namespace SubgraphIsomorphismTests
 {
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(100, 0.7, 0, 1)]
+        [InlineData(13, 0.7, 24, 41)]
         public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -24,31 +25,15 @@ namespace SubgraphIsomorphismTests
 
                 // verify the solution
                 Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
-                Assert.Equal(g.VertexCount, gToH.Count);
-                Assert.Equal(g.VertexCount, hToG.Count);
+                var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
+                Assert.Equal(maximumConnectedComponentSize, gToH.Count);
+                Assert.Equal(maximumConnectedComponentSize, hToG.Count);
 
-                for (int j = 0; j < g.VertexCount; j++)
+                foreach (var transitionFunction in gToH)
                 {
-                    Assert.Equal(j, hToG[gToH[j]]);
+                    Assert.Equal(transitionFunction.Key, hToG[transitionFunction.Value]);
                 }
             }
-        }
-
-        [Theory]
-        [InlineData(12, 0.9, 0, 1)]
-        public void GraphOfSize(int n, double density, int generatingSeed, int permutingSeed)
-        {
-            // randomize a graph of given n and density
-            var g = GraphFactory.GenerateRandom(n, density, generatingSeed);
-            var h = GraphFactory.GeneratePermuted(g, permutingSeed);
-
-            // run the algorithm
-            var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
-            solver.Extract(g, h, (vertices, edges) => vertices + edges, 0, out int score, out var gToH, out var hToG);
-
-            // verify the solution
-            Assert.True(VerifySubgraphIsomorphism(g, h, gToH, hToG));
-            Assert.Equal(g.VertexCount, gToH.Count);
         }
 
         private bool VerifySubgraphIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)

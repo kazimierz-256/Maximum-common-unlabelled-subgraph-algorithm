@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+//using GraphExtensionAlgorithms;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
@@ -26,6 +27,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g = null;
             UndirectedGraph h = null;
             var swapped = false;
+
+            //var cc = g.ConnectedComponents();
 
             // todo: verify performance benefit
             if (argH.VertexCount < argG.VertexCount)

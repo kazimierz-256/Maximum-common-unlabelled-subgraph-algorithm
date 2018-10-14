@@ -17,7 +17,7 @@ namespace SubgraphIsomorphismBenchmark
             criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
-            printBenchmark(2, 0.5m);
+            printBenchmark(2, 0.7m);
         }
         private const int oddIterations = 0;
         private static void printBenchmark(int n, decimal density)
@@ -49,7 +49,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, seed);
-#if true
+#if false
             var h = GraphFactory.GenerateRandom(n, density, -seed);
 #else
             var h = GraphFactory.GeneratePermuted(g, 0);

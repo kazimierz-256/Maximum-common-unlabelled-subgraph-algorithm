@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismExactAlg
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismTests", "SubgraphIsomorphismTests\SubgraphIsomorphismTests.csproj", "{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathParser", "MathParser\MathParser.csproj", "{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathParser", "MathParser\MathParser.csproj", "{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphExtensionAlgorithms", "GraphExtensionAlgorithms\GraphExtensionAlgorithms.csproj", "{6F4F5786-3C06-4E3B-A7EE-267801D58378}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F4F5786-3C06-4E3B-A7EE-267801D58378}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F4F5786-3C06-4E3B-A7EE-267801D58378}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F4F5786-3C06-4E3B-A7EE-267801D58378}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F4F5786-3C06-4E3B-A7EE-267801D58378}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

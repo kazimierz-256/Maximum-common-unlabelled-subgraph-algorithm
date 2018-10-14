@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GraphExtensionAlgorithms\GraphExtensionAlgorithms.csproj" />
     <ProjectReference Include="..\Graph\GraphDataStructure.csproj" />
     <ProjectReference Include="..\SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj" />
   </ItemGroup>
