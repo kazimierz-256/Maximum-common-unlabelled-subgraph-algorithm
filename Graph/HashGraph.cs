@@ -6,19 +6,17 @@ namespace GraphDataStructure
     public class HashGraph : UndirectedGraph
     {
         // note: this does not copy it reassigns
-        public HashGraph(Dictionary<int, HashSet<int>> neighbours, HashSet<int> vertices, int edges, int vertexCount)
+        public HashGraph(Dictionary<int, HashSet<int>> neighbours, HashSet<int> vertices, int edges)
         {
             Neighbours = neighbours;
             Vertices = vertices;
             EdgeCount = edges;
-            VertexCount = vertexCount;
         }
 
         // todo: implement two data structures to optimize performance
         public Dictionary<int, HashSet<int>> Neighbours { get; private set; } = new Dictionary<int, HashSet<int>>();
         public HashSet<int> Vertices { get; private set; } = new HashSet<int>();
         private readonly HashSet<int> emptyHashSet = new HashSet<int>();
-        public int VertexCount { get; private set; } = 0;
         public int EdgeCount { get; private set; } = 0;
 
         public HashSet<int> NeighboursOf(int vertex)
@@ -35,7 +33,6 @@ namespace GraphDataStructure
         public HashSet<int> RemoveVertex(int vertexToRemove)
         {
             Vertices.Remove(vertexToRemove);
-            VertexCount -= 1;
             if (Neighbours.ContainsKey(vertexToRemove))
             {
                 var toReturn = Neighbours[vertexToRemove];
@@ -60,13 +57,12 @@ namespace GraphDataStructure
             {
                 neighboursCopy.Add(connection.Key, new HashSet<int>(connection.Value));
             }
-            return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount, VertexCount);
+            return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
         }
         // note: this does not copy it reassigns
         public void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours)
         {
             Vertices.Add(restoreVertex);
-            VertexCount += 1;
             if (restoreNeighbours != null)
             {
                 Neighbours.Add(restoreVertex, restoreNeighbours);

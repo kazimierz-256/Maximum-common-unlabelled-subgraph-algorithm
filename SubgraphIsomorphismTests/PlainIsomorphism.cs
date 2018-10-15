@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismTests
 
                 // run the algorithm
                 var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
-                solver.Extract(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
+                solver.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
 
                 // verify the solution
                 Assert.True(HasSubgraphCorrectIsomorphism(g, h, gToH, hToG));
@@ -44,7 +44,7 @@ namespace SubgraphIsomorphismTests
 
                 // run the algorithm
                 var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
-                solver.Extract(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
+                solver.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
 
                 Assert.True(AreTransitionsCorrect(gToH, hToG));
                 Assert.True(HasSubgraphCorrectIsomorphism(g, h, gToH, hToG));

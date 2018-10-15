@@ -7,7 +7,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 {
     public interface ISubgraphIsomorphismExtractor<T> where T : IComparable
     {
-        void Extract(
+        void ExtractOptimalSubgraph(
                UndirectedGraph argG,
                UndirectedGraph argH,
                Func<int, int, T> graphScore,

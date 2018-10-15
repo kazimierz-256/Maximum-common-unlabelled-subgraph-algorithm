@@ -42,14 +42,14 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, new HashSet<int>(Enumerable.Range(0, n).ToArray()), edges, n);
+            return new HashGraph(neighbours, new HashSet<int>(Enumerable.Range(0, n).ToArray()), edges);
         }
 
         public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
         {
             // permute the vertices and make another graph
 
-            var permutedIntegers = Enumerable.Range(0, g.VertexCount).ToArray();
+            var permutedIntegers = Enumerable.Range(0, g.Vertices.Count).ToArray();
             Permute(permutingSeed, ref permutedIntegers);
             var translation = new Dictionary<int, int>();
 
@@ -75,7 +75,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount, g.VertexCount);
+            return new HashGraph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
         }
 
         private static void Permute(int seed, ref int[] vertices)

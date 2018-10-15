@@ -8,58 +8,58 @@ namespace SubgraphIsomorphismExactAlgorithm
     public class AlphaSubgraphIsomorphismExtractor<T> : ISubgraphIsomorphismExtractor<T>
         where T : IComparable
     {
-        private Func<int, int, T> graphScore = null;
+        private Func<int, int, T> graphScoringFunction = null;
         private T bestScore = default;
-        private Dictionary<int, int> gToH = new Dictionary<int, int>();
-        private Dictionary<int, int> hToG = new Dictionary<int, int>();
+        private Dictionary<int, int> ghOptimalMapping = new Dictionary<int, int>();
+        private Dictionary<int, int> hgOptimalMapping = new Dictionary<int, int>();
 
         private UndirectedGraph g;
         private UndirectedGraph h;
-        private Dictionary<int, int> ghSubgraphTransitionFunction;
-        private Dictionary<int, int> hgSubgraphTransitionFunction;
-        private HashSet<int> gEnvelopeWithHashes;
-        private HashSet<int> hEnvelopeWithHashes;
-        private int edgeCountInSubgraph;
+        private Dictionary<int, int> ghMapping;
+        private Dictionary<int, int> hgMapping;
+        private HashSet<int> gEnvelope;
+        private HashSet<int> hEnvelope;
+        private int totalNumberOfEdgesInSubgraph;
 
-        public void Extract(
-            UndirectedGraph argG,
-            UndirectedGraph argH,
-            Func<int, int, T> graphScore,
+        public void ExtractOptimalSubgraph(
+            UndirectedGraph gArgument,
+            UndirectedGraph hArgument,
+            Func<int, int, T> graphScoringFunction,
             T initialScore,
-            out T score,
-            out Dictionary<int, int> gToH,
-            out Dictionary<int, int> hToG
+            out T bestScore,
+            out Dictionary<int, int> ghOptimalMapping,
+            out Dictionary<int, int> hgOptimalMapping
             )
         {
-            var swapped = false;
+            var swappedGraphs = false;
 
-            this.graphScore = graphScore;
-            bestScore = initialScore;
-            
-            if (argH.VertexCount < argG.VertexCount)
+            this.graphScoringFunction = graphScoringFunction;
+            this.bestScore = initialScore;
+
+            if (hArgument.Vertices.Count < gArgument.Vertices.Count)
             {
-                swapped = true;
-                h = argG;
-                g = argH.DeepClone();
+                swappedGraphs = true;
+                h = gArgument;
+                g = hArgument.DeepClone();
             }
             else
             {
-                g = argG.DeepClone();
-                h = argH;
+                g = gArgument.DeepClone();
+                h = hArgument;
             }
 
-            while (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
+            while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(this.bestScore) > 0)
             {
                 var gMatchingVertex = g.Vertices.First();
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    ghSubgraphTransitionFunction = new Dictionary<int, int>();
-                    hgSubgraphTransitionFunction = new Dictionary<int, int>();
-                    gEnvelopeWithHashes = new HashSet<int>() { gMatchingVertex };
-                    hEnvelopeWithHashes = new HashSet<int>() { hMatchingVertex };
-                    edgeCountInSubgraph = 0;
-                    Analyze();
+                    ghMapping = new Dictionary<int, int>();
+                    hgMapping = new Dictionary<int, int>();
+                    gEnvelope = new HashSet<int>() { gMatchingVertex };
+                    hEnvelope = new HashSet<int>() { hMatchingVertex };
+                    totalNumberOfEdgesInSubgraph = 0;
+                    Recurse();
                 }
 
                 // ignore previous g-vertices
@@ -68,16 +68,16 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
             // return the solution
-            score = bestScore;
-            if (swapped)
+            bestScore = this.bestScore;
+            if (swappedGraphs)
             {
-                gToH = this.hToG;
-                hToG = this.gToH;
+                ghOptimalMapping = this.hgOptimalMapping;
+                hgOptimalMapping = this.ghOptimalMapping;
             }
             else
             {
-                gToH = this.gToH;
-                hToG = this.hToG;
+                ghOptimalMapping = this.ghOptimalMapping;
+                hgOptimalMapping = this.hgOptimalMapping;
             }
         }
 
@@ -86,120 +86,115 @@ namespace SubgraphIsomorphismExactAlgorithm
         // nevertheless it might be also ok to make choice based on 'most extremum condition' although removing vertices might become a hassle
         // ignores vertices
         // does not modify subgraph structure
-        private void Analyze()
+        private void Recurse()
         {
-            if (gEnvelopeWithHashes.Count == 0 || hEnvelopeWithHashes.Count == 0)
+            if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
                 // no more connections could be found
                 // check for optimality
 
-                var vertices = ghSubgraphTransitionFunction.Keys.Count;
-                var result = graphScore(vertices, edgeCountInSubgraph);
-                if (result.CompareTo(bestScore) > 0)
+                var vertices = ghMapping.Keys.Count;
+                var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
+                if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    bestScore = result;
-                    gToH = new Dictionary<int, int>(ghSubgraphTransitionFunction);
-                    hToG = new Dictionary<int, int>(hgSubgraphTransitionFunction);
+                    bestScore = resultingValuation;
+                    ghOptimalMapping = new Dictionary<int, int>(ghMapping);
+                    hgOptimalMapping = new Dictionary<int, int>(hgMapping);
                 }
             }
-            else if (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
+            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0)
             {
-                var gMatchingVertex = gEnvelopeWithHashes.First();
+                var gMatchingVertex = gEnvelope.First();
 
-                #region PREPARE
-                gEnvelopeWithHashes.Remove(gMatchingVertex);
-                var edgeCountInSubgraphBackup = edgeCountInSubgraph;
-                var gToRemove = new List<int>();
+                #region prepare to recurse
+                gEnvelope.Remove(gMatchingVertex);
+                var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
+                var gVerticesToRemoveFromEnvelope = new List<int>();
                 // todo: change iteration to two levelled iterations
                 foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
                 {
                     // if the neighbour is in the subgraph
-                    if (ghSubgraphTransitionFunction.ContainsKey(gNeighbour))
+                    if (ghMapping.ContainsKey(gNeighbour))
                     {
-                        edgeCountInSubgraph += 1;
+                        totalNumberOfEdgesInSubgraph += 1;
                     }
-                    else if (!gEnvelopeWithHashes.Contains(gNeighbour))
+                    else if (!gEnvelope.Contains(gNeighbour))
                     {
                         // if it is new to the envelope
-                        gEnvelopeWithHashes.Add(gNeighbour);
-                        gToRemove.Add(gNeighbour);
+                        gEnvelope.Add(gNeighbour);
+                        gVerticesToRemoveFromEnvelope.Add(gNeighbour);
                     }
                 }
                 #endregion
 
-                foreach (var hMatchingCandidate in hEnvelopeWithHashes.ToArray())
+                // a workaround since hEnvelope is modified during recursion
+                foreach (var hMatchingCandidate in hEnvelope.ToArray())
                 {
                     // verify mutual agreement connections of neighbours
-                    var agree = true;
+                    var verticesTrulyIsomorphic = true;
 
                     // toconsider: maybe all necessary edges should be precomputed ahead of time, or not?
-                    foreach (var ghTransition in ghSubgraphTransitionFunction)
+                    foreach (var ghSingleMapping in ghMapping)
                     {
-                        var gVertexInSubgraph = ghTransition.Key;
-                        var hVertexInSubgraph = ghTransition.Value;
+                        var gVertexInSubgraph = ghSingleMapping.Key;
+                        var hVertexInSubgraph = ghSingleMapping.Value;
                         if (g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph) != h.ExistsConnectionBetween(hMatchingCandidate, hVertexInSubgraph))
                         {
-                            agree = false;
+                            verticesTrulyIsomorphic = false;
                             break;
                         }
                     }
 
-                    if (agree)
+                    if (verticesTrulyIsomorphic)
                     {
-                        // modifies subgraph structure
-                        // does not modify ignore-data structure
-                        // checks by the way the extremum condition
-
                         // by definition add the transition functions (which means adding to the subgraph)
-                        ghSubgraphTransitionFunction.Add(gMatchingVertex, hMatchingCandidate);
-                        hgSubgraphTransitionFunction.Add(hMatchingCandidate, gMatchingVertex);
+                        ghMapping.Add(gMatchingVertex, hMatchingCandidate);
+                        hgMapping.Add(hMatchingCandidate, gMatchingVertex);
 
                         // if the matching vertex was on the envelope then remove it
-                        hEnvelopeWithHashes.Remove(hMatchingCandidate);
+                        hEnvelope.Remove(hMatchingCandidate);
 
-                        var hToRemove = new List<int>();
+                        var hVerticesToRemoveFromEnvelope = new List<int>();
 
                         // toconsider: pass on a dictionary of edges from subgraph to the envelope for more performance (somewhere else...)!
                         // spread the id to all neighbours on the envelope & discover new neighbours
-
-                        // spread the id to all neighbours on the envelope & discover new neighbours
                         foreach (var hNeighbour in h.NeighboursOf(hMatchingCandidate))
                         {
-                            // if the neighbour is outside the subgraph
-                            if (!hgSubgraphTransitionFunction.ContainsKey(hNeighbour) && !hEnvelopeWithHashes.Contains(hNeighbour))
+                            // if the neighbour is outside of the subgraph
+                            if (!hgMapping.ContainsKey(hNeighbour) && !hEnvelope.Contains(hNeighbour))
                             {
                                 // if it is new to the envelope
-                                hEnvelopeWithHashes.Add(hNeighbour);
-                                hToRemove.Add(hNeighbour);
+                                hEnvelope.Add(hNeighbour);
+                                hVerticesToRemoveFromEnvelope.Add(hNeighbour);
                             }
                         }
 
-                        // RECURSE DOWN
-                        Analyze();
+                        Recurse();
 
-                        // CLEANUP
-                        ghSubgraphTransitionFunction.Remove(gMatchingVertex);
-                        hgSubgraphTransitionFunction.Remove(hMatchingCandidate);
+                        #region cleanup
+                        ghMapping.Remove(gMatchingVertex);
+                        hgMapping.Remove(hMatchingCandidate);
 
-                        foreach (var hVertex in hToRemove)
-                            hEnvelopeWithHashes.Remove(hVertex);
+                        foreach (var hVertex in hVerticesToRemoveFromEnvelope)
+                            hEnvelope.Remove(hVertex);
 
-                        hEnvelopeWithHashes.Add(hMatchingCandidate);
+                        hEnvelope.Add(hMatchingCandidate);
+                        #endregion
                     }
                 }
-                #region FINISH
-                foreach (var gVertex in gToRemove)
-                    gEnvelopeWithHashes.Remove(gVertex);
-                edgeCountInSubgraph = edgeCountInSubgraphBackup;
+                #region finalize recursion
+                foreach (var gVertex in gVerticesToRemoveFromEnvelope)
+                    gEnvelope.Remove(gVertex);
+                totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
                 #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
-                var restoreOperation = g.RemoveVertex(gMatchingVertex);
+                var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
-                Analyze();
+                Recurse();
 
-                gEnvelopeWithHashes.Add(gMatchingVertex);
-                g.RestoreVertex(gMatchingVertex, restoreOperation);
+                g.RestoreVertex(gMatchingVertex, gRestoreOperation);
+                gEnvelope.Add(gMatchingVertex);
             }
         }
     }

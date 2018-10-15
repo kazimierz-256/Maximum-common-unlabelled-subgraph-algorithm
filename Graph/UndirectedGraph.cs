@@ -6,7 +6,6 @@ namespace GraphDataStructure
 {
     public interface UndirectedGraph
     {
-        int VertexCount { get; }
         int EdgeCount { get; }
 
         Dictionary<int, HashSet<int>> Neighbours { get; }
