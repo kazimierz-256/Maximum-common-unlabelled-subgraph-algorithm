@@ -40,10 +40,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = argH;
             }
 
-            //var gCC = g.ConnectedComponents();
-            //var hCC = h.ConnectedComponents();
-            //Console.WriteLine($"G cc: {gCC.Count}, H cc: {hCC.Count}");
-
             this.graphScore = graphScore;
             bestScore = initialScore;
 
@@ -135,7 +131,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             // spread the id to all neighbours on the envelope & discover new neighbours
 
             // spread the id to all neighbours on the envelope & discover new neighbours
-            // todo: redesign UndirectedGraph Data Structure to include levels
             foreach (var hNeighbour in h.NeighboursOf(hMatchingVertex))
             {
                 // if the neighbour is outside the subgraph
