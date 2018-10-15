@@ -13,6 +13,14 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Dictionary<int, int> gToH = new Dictionary<int, int>();
         private Dictionary<int, int> hToG = new Dictionary<int, int>();
 
+        private UndirectedGraph g;
+        private UndirectedGraph h;
+        private Dictionary<int, int> ghSubgraphTransitionFunction;
+        private Dictionary<int, int> hgSubgraphTransitionFunction;
+        private HashSet<int> gEnvelopeWithHashes;
+        private HashSet<int> hEnvelopeWithHashes;
+        private int edgeCountInSubgraph;
+
         public void Extract(
             UndirectedGraph argG,
             UndirectedGraph argH,
@@ -25,7 +33,9 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             var swapped = false;
 
-            // todo: verify performance benefit
+            this.graphScore = graphScore;
+            bestScore = initialScore;
+            
             if (argH.VertexCount < argG.VertexCount)
             {
                 swapped = true;
@@ -38,30 +48,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = argH;
             }
 
-
-
-            this.graphScore = graphScore;
-            bestScore = initialScore;
-
             while (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
-#if false
-                var maxDegree = int.MinValue;
-                var gVertex = -1;
-                foreach (var vertex in g.Vertices)
-                {
-                    gVertex = vertex;
-                    //break;
-                    if (g.Degree(vertex) > maxDegree)
-                    {
-                        maxDegree = g.Degree(vertex);
-                        gVertex = vertex;
-                    }
-                }
-                //gVertex = g.Vertices.First();
-#else
                 var gMatchingVertex = g.Vertices.First();
-#endif
+
                 foreach (var hMatchingVertex in h.Vertices)
                 {
                     ghSubgraphTransitionFunction = new Dictionary<int, int>();
@@ -91,22 +81,12 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        private UndirectedGraph g;
-        private UndirectedGraph h;
-        private Dictionary<int, int> ghSubgraphTransitionFunction;
-        private Dictionary<int, int> hgSubgraphTransitionFunction;
-        private HashSet<int> gEnvelopeWithHashes;
-        private HashSet<int> hEnvelopeWithHashes;
-        private int edgeCountInSubgraph;
-
         // makes logical connections
         // currently it is based on hash collisions
         // nevertheless it might be also ok to make choice based on 'most extremum condition' although removing vertices might become a hassle
         // ignores vertices
         // does not modify subgraph structure
-        private void Analyze(
-
-            )
+        private void Analyze()
         {
             if (gEnvelopeWithHashes.Count == 0 || hEnvelopeWithHashes.Count == 0)
             {
@@ -125,8 +105,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             else if (graphScore(g.VertexCount, g.EdgeCount).CompareTo(bestScore) > 0)
             {
                 var gMatchingVertex = gEnvelopeWithHashes.First();
-
-                var hCandidates = hEnvelopeWithHashes.ToArray();
 
                 #region PREPARE
                 gEnvelopeWithHashes.Remove(gMatchingVertex);
@@ -148,7 +126,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 }
                 #endregion
-                foreach (var hMatchingCandidate in hCandidates)
+
+                foreach (var hMatchingCandidate in hEnvelopeWithHashes.ToArray())
                 {
                     // verify mutual agreement connections of neighbours
                     var agree = true;
