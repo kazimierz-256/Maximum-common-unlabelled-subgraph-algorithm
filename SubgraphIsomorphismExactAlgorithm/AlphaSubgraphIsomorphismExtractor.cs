@@ -179,7 +179,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             {
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope.Add(hNeighbour);
-                            hOutsiders.Remove(hNeighbour);
+                                hOutsiders.Remove(hNeighbour);
                             }
                         }
 
