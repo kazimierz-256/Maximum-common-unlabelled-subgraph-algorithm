@@ -19,6 +19,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Dictionary<int, int> hgMapping;
         private HashSet<int> gEnvelope;
         private HashSet<int> hEnvelope;
+        private HashSet<int> gOutsiders;
+        private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
 
         public void ExtractOptimalSubgraph(
@@ -58,6 +60,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hgMapping = new Dictionary<int, int>();
                     gEnvelope = new HashSet<int>() { gMatchingVertex };
                     hEnvelope = new HashSet<int>() { hMatchingVertex };
+                    gOutsiders = new HashSet<int>(g.Vertices);
+                    hOutsiders = new HashSet<int>(h.Vertices);
+                    gOutsiders.Remove(gMatchingVertex);// warning: gOutsider is not working correctly
+                    hOutsiders.Remove(hMatchingVertex);
                     totalNumberOfEdgesInSubgraph = 0;
                     Recurse();
                 }
@@ -94,6 +100,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // check for optimality
 
                 var vertices = ghMapping.Keys.Count;
+                // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
@@ -111,18 +118,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
                 var gVerticesToRemoveFromEnvelope = new List<int>();
 
-                foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
+                // todo: simplify to ghTransitionFunctions and a NEW set of outsiders
+
+                foreach (var gNeighbour in gOutsiders.ToArray())
                 {
                     // if the neighbour is in the subgraph
-                    if (ghMapping.ContainsKey(gNeighbour))
-                    {
-                        totalNumberOfEdgesInSubgraph += 1;
-                    }
-                    else if (!gEnvelope.Contains(gNeighbour))
+                    if (g.ExistsConnectionBetween(gMatchingVertex, gNeighbour))
                     {
                         // if it is new to the envelope
                         gEnvelope.Add(gNeighbour);
                         gVerticesToRemoveFromEnvelope.Add(gNeighbour);
+                        gOutsiders.Remove(gNeighbour);
                     }
                 }
                 #endregion
@@ -132,21 +138,29 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     // verify mutual agreement connections of neighbours
                     var verticesTrulyIsomorphic = true;
+                    var potentialNumberOfNewEdges = 0;
 
                     // toconsider: maybe all necessary edges should be precomputed ahead of time, or not?
                     foreach (var ghSingleMapping in ghMapping)
                     {
                         var gVertexInSubgraph = ghSingleMapping.Key;
                         var hVertexInSubgraph = ghSingleMapping.Value;
-                        if (g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph) != h.ExistsConnectionBetween(hMatchingCandidate, hVertexInSubgraph))
+                        var gConnection = g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph);
+                        var hConnection = h.ExistsConnectionBetween(hMatchingCandidate, hVertexInSubgraph);
+                        if (gConnection != hConnection)
                         {
                             verticesTrulyIsomorphic = false;
                             break;
+                        }
+                        else if (gConnection)
+                        {
+                            potentialNumberOfNewEdges += 1;
                         }
                     }
 
                     if (verticesTrulyIsomorphic)
                     {
+                        totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
                         // by definition add the transition functions (which means adding to the subgraph)
                         ghMapping.Add(gMatchingVertex, hMatchingCandidate);
                         hgMapping.Add(hMatchingCandidate, gMatchingVertex);
@@ -156,36 +170,44 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         var hVerticesToRemoveFromEnvelope = new List<int>();
 
+                        // todo: consider only the set of outsiders
                         // toconsider: pass on a dictionary of edges from subgraph to the envelope for more performance (somewhere else...)!
                         // spread the id to all neighbours on the envelope & discover new neighbours
-                        foreach (var hNeighbour in h.NeighboursOf(hMatchingCandidate))
+                        foreach (var hNeighbour in hOutsiders.ToArray())
                         {
-                            // if the neighbour is outside of the subgraph
-                            if (!hgMapping.ContainsKey(hNeighbour) && !hEnvelope.Contains(hNeighbour))
+                            if (h.ExistsConnectionBetween(hNeighbour, hMatchingCandidate))
                             {
-                                // if it is new to the envelope
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope.Add(hNeighbour);
+                            hOutsiders.Remove(hNeighbour);
                             }
                         }
 
                         Recurse();
 
                         #region cleanup
+
+                        foreach (var hVertex in hVerticesToRemoveFromEnvelope)
+                        {
+                            hEnvelope.Remove(hVertex);
+                            hOutsiders.Add(hVertex);
+                        }
+
+                        hEnvelope.Add(hMatchingCandidate);
+
                         ghMapping.Remove(gMatchingVertex);
                         hgMapping.Remove(hMatchingCandidate);
 
-                        foreach (var hVertex in hVerticesToRemoveFromEnvelope)
-                            hEnvelope.Remove(hVertex);
-
-                        hEnvelope.Add(hMatchingCandidate);
+                        totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
                         #endregion
                     }
                 }
                 #region finalize recursion
                 foreach (var gVertex in gVerticesToRemoveFromEnvelope)
+                {
                     gEnvelope.Remove(gVertex);
-                totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
+                    gOutsiders.Add(gVertex);
+                }
                 #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it

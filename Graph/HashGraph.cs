@@ -26,7 +26,17 @@ namespace GraphDataStructure
             else
                 return emptyHashSet;
         }
-        public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour) => Neighbours[gVertexInSubgraph].Contains(gNeighbour);
+        public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour)
+        {
+            if (Neighbours.ContainsKey(gVertexInSubgraph))
+            {
+                return Neighbours[gVertexInSubgraph].Contains(gNeighbour);
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         public int Degree(int v) => Neighbours[v].Count;
 
