@@ -38,7 +38,17 @@ namespace GraphDataStructure
             }
         }
 
-        public int Degree(int v) => Neighbours[v].Count;
+        public int Degree(int v)
+        {
+            if (Neighbours.ContainsKey(v))
+            {
+                return Neighbours[v].Count;
+            }
+            else
+            {
+                return 0;
+            }
+        }
 
         public HashSet<int> RemoveVertex(int vertexToRemove)
         {
