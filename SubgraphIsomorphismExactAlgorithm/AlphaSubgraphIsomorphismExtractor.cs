@@ -110,7 +110,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 gEnvelope.Remove(gMatchingVertex);
                 var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
                 var gVerticesToRemoveFromEnvelope = new List<int>();
-                // todo: change iteration to two levelled iterations
+
                 foreach (var gNeighbour in g.NeighboursOf(gMatchingVertex))
                 {
                     // if the neighbour is in the subgraph
