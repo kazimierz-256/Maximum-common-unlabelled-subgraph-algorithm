@@ -94,7 +94,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         // does not modify subgraph structure
         private void Recurse()
         {
-            if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
+            if (gEnvelope.Count == 0)
             {
                 // no more connections could be found
                 // check for optimality
