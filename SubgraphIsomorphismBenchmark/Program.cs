@@ -50,15 +50,14 @@ namespace SubgraphIsomorphismBenchmark
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, seed);
 #if true
-            var h = GraphFactory.GenerateRandom(n, density, -seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, density, 1234567 - seed - seed * seed);
 #else
             var h = GraphFactory.GeneratePermuted(g, 0);
 #endif
 
             // run the algorithm
-            var solver = new SubgraphIsomorphismExactAlgorithm.ParallelLeverager<double>();
             sw.Start();
-            solver.ExtractOptimalSubgraph(g, h, criterion, 0, out double score, out var gToH, out var hToG);
+            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, criterion, 0, out double score, out var gToH, out var hToG);
             sw.Stop();
             return sw.Elapsed;
         }

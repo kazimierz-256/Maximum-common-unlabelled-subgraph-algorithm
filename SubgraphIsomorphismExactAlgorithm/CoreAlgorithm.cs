@@ -6,18 +6,17 @@ using System.Text;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class AlphaHelper<T>
+    public class CoreAlgorithm<T>
         where T : IComparable
     {
         private Func<int, int, T> graphScoringFunction = null;
-        private T bestScore = default;
-        private Dictionary<int, int> ghOptimalMapping = new Dictionary<int, int>();
-        private Dictionary<int, int> hgOptimalMapping = new Dictionary<int, int>();
+        private Dictionary<int, int> ghOptimalMapping;
+        private Dictionary<int, int> hgOptimalMapping;
 
         private UndirectedGraph g;
         private UndirectedGraph h;
-        private Dictionary<int, int> ghMapping = new Dictionary<int, int>();
-        private Dictionary<int, int> hgMapping = new Dictionary<int, int>();
+        private Dictionary<int, int> ghMapping;
+        private Dictionary<int, int> hgMapping;
         private HashSet<int> gEnvelope;
         private HashSet<int> hEnvelope;
         private HashSet<int> gOutsiders;
@@ -44,7 +43,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.getCurrentlyBestScore = getCurrentlyBestScore;
 
             this.graphScoringFunction = graphScoringFunction;
-            this.bestScore = initialScore;
+            ghOptimalMapping = new Dictionary<int, int>();
+            hgOptimalMapping = new Dictionary<int, int>();
+            ghMapping = new Dictionary<int, int>();
+            hgMapping = new Dictionary<int, int>();
             gEnvelope = new HashSet<int>() { gMatchingVertex };
             hEnvelope = new HashSet<int>() { hMatchingVertex };
             gOutsiders = new HashSet<int>(g.Vertices);
@@ -57,7 +59,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             ghOptimalMapping = ghMapping;
             hgOptimalMapping = hgMapping;
-            bestScore = this.bestScore;
         }
 
         private void Recurse()
@@ -72,10 +73,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
                 if (resultingValuation.CompareTo(getCurrentlyBestScore()) > 0)
                 {
-                    bestScore = resultingValuation;
                     ghOptimalMapping = new Dictionary<int, int>(ghMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgMapping);
-                    newSolutionFound(bestScore, ghOptimalMapping, hgOptimalMapping);
+                    newSolutionFound(resultingValuation, ghOptimalMapping, hgOptimalMapping);
                 }
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(getCurrentlyBestScore()) > 0)

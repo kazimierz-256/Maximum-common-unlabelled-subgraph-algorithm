@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class ParallelLeverager<T> where T : IComparable
+    public static class ParallelSubgraphIsomorphismExtractor<T> where T : IComparable
     {
-        public void ExtractOptimalSubgraph(
+        public static void ExtractOptimalSubgraph(
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, T> graphScoringFunction,
@@ -57,7 +57,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // try matching all h's
                 foreach (var hVertex in h.Vertices)
                 {
-                    var subLeverager = new AlphaHelper<T>();
+                    var subLeverager = new CoreAlgorithm<T>();
                     subLeverager.RecurseInitialMatch(gInitialVertices[iter], hVertex, gGraphs[iter], h, graphScoringFunction, initialScore, (newScore, ghMap, hgMap) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
