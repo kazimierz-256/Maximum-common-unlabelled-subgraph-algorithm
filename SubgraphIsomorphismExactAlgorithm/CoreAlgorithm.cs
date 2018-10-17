@@ -15,6 +15,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private UndirectedGraph g;
         private UndirectedGraph h;
+        private bool[,] gConnectionExistance;
+        private bool[,] hConnectionExistance;
         private Dictionary<int, int> ghMapping;
         private Dictionary<int, int> hgMapping;
         private HashSet<int> gEnvelope;
@@ -52,6 +54,24 @@ namespace SubgraphIsomorphismExactAlgorithm
             gOutsiders.Remove(gMatchingVertex);// warning: gOutsider is not working correctly
             hOutsiders.Remove(hMatchingVertex);
             totalNumberOfEdgesInSubgraph = 0;
+            var gMax = g.Vertices.Max();
+            gConnectionExistance = new bool[gMax + 1, gMax + 1];
+            
+            foreach (var kvp in g.Neighbours)
+            {
+                foreach (var vertexTo in kvp.Value)
+                {
+                    gConnectionExistance[kvp.Key, vertexTo] = true;
+                }
+            }
+            hConnectionExistance = new bool[h.Vertices.Count, h.Vertices.Count];
+            foreach (var kvp in h.Neighbours)
+            {
+                foreach (var vertexTo in kvp.Value)
+                {
+                    hConnectionExistance[kvp.Key, vertexTo] = true;
+                }
+            }
 
             Recurse(ref bestScore);
 
@@ -90,7 +110,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 foreach (var gNeighbour in gOutsiders.ToArray())
                 {
                     // if the neighbour is in the subgraph
-                    if (g.ExistsConnectionBetween(gMatchingVertex, gNeighbour))
+                    if (gConnectionExistance[gMatchingVertex, gNeighbour])
                     {
                         // if it is new to the envelope
                         gEnvelope.Add(gNeighbour);
@@ -112,8 +132,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         var gVertexInSubgraph = ghSingleMapping.Key;
                         var hVertexInSubgraph = ghSingleMapping.Value;
-                        var gConnection = g.ExistsConnectionBetween(gMatchingVertex, gVertexInSubgraph);
-                        var hConnection = h.ExistsConnectionBetween(hMatchingCandidate, hVertexInSubgraph);
+                        var gConnection = gConnectionExistance[gMatchingVertex, gVertexInSubgraph];
+                        var hConnection = hConnectionExistance[hMatchingCandidate, hVertexInSubgraph];
                         if (gConnection != hConnection)
                         {
                             verticesTrulyIsomorphic = false;
@@ -140,7 +160,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // spread the id to all neighbours on the envelope & discover new neighbours
                         foreach (var hNeighbour in hOutsiders.ToArray())
                         {
-                            if (h.ExistsConnectionBetween(hNeighbour, hMatchingCandidate))
+                            if (hConnectionExistance[hNeighbour, hMatchingCandidate])
                             {
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope.Add(hNeighbour);
