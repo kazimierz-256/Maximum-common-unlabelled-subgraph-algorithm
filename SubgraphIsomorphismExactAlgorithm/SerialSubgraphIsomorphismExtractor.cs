@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class AlphaSubgraphIsomorphismExtractor<T> where T:IComparable
+    public class SerialSubgraphIsomorphismExtractor<T> where T:IComparable
     {
         public static void ExtractOptimalSubgraph(
             UndirectedGraph gArgument,
@@ -51,7 +51,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             ghLocalOptimalMapping = ghMap;
                             hgLocalOptimalMapping = hgMap;
                         }
-                    }, () => localBestScore);
+                    },
+                    ref localBestScore);
 
                 }
 

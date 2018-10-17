@@ -23,7 +23,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
         private Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound;
-        private Func<T> getCurrentlyBestScore;
 
         public void RecurseInitialMatch(
             int gMatchingVertex,
@@ -33,14 +32,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, T> graphScoringFunction,
             T initialScore,
             Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound,
-            Func<T> getCurrentlyBestScore
+            ref T bestScore
             )
         {
             this.g = g;
             this.h = h;
 
             this.newSolutionFound = newSolutionFound;
-            this.getCurrentlyBestScore = getCurrentlyBestScore;
 
             this.graphScoringFunction = graphScoringFunction;
             ghOptimalMapping = new Dictionary<int, int>();
@@ -55,13 +53,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             hOutsiders.Remove(hMatchingVertex);
             totalNumberOfEdgesInSubgraph = 0;
 
-            Recurse();
+            Recurse(ref bestScore);
 
             ghOptimalMapping = ghMapping;
             hgOptimalMapping = hgMapping;
         }
 
-        private void Recurse()
+        private void Recurse(ref T bestScore)
         {
             if (gEnvelope.Count == 0)
             {
@@ -71,14 +69,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
-                if (resultingValuation.CompareTo(getCurrentlyBestScore()) > 0)
+                if (resultingValuation.CompareTo(bestScore) > 0)
                 {
                     ghOptimalMapping = new Dictionary<int, int>(ghMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgMapping);
                     newSolutionFound(resultingValuation, ghOptimalMapping, hgOptimalMapping);
                 }
             }
-            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(getCurrentlyBestScore()) > 0)
+            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0)
             {
                 var gMatchingVertex = gEnvelope.First();
 
@@ -150,7 +148,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
 
-                        Recurse();
+                        Recurse(ref bestScore);
 
                         #region cleanup
 
@@ -180,7 +178,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove vertex from graph and then restore it
                 var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
-                Recurse();
+                Recurse(ref bestScore);
 
                 g.RestoreVertex(gMatchingVertex, gRestoreOperation);
                 gEnvelope.Add(gMatchingVertex);

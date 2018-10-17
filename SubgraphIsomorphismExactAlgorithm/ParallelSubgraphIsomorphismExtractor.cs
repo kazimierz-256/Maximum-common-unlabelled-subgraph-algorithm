@@ -73,7 +73,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
                     },
-                    () => localBestScore);
+                    ref localBestScore);
                 }
             });
 
