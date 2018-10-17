@@ -53,28 +53,28 @@ namespace SubgraphIsomorphismExactAlgorithm
             var lockingObject = new object();
             var hVertices = h.Vertices.ToArray();
             Parallel.For(0, gGraphs.Length * hVertices.Length, iter =>
-              {
-                  var gIndex = iter % gGraphs.Length;
-                  var hIndex = iter / gGraphs.Length;
-                  // try matching all h's
-                  var subLeverager = new CoreAlgorithm<T>();
-                  subLeverager.RecurseInitialMatch(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, initialScore, (newScore, ghMap, hgMap) =>
-                  {
-                      if (newScore.CompareTo(localBestScore) > 0)
-                      {
-                          lock (lockingObject)
-                          {
-                              if (newScore.CompareTo(localBestScore) > 0)
-                              {
-                                  localBestScore = newScore;
-                                  ghLocalOptimalMapping = ghMap;
-                                  hgLocalOptimalMapping = hgMap;
-                              }
-                          }
-                      }
-                  },
-                  ref localBestScore);
-              });
+            {
+                var gIndex = iter % gGraphs.Length;
+                var hIndex = iter / gGraphs.Length;
+                // try matching all h's
+                var subLeverager = new CoreAlgorithm<T>();
+                subLeverager.RecurseInitialMatch(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, initialScore, (newScore, ghMap, hgMap) =>
+                {
+                    if (newScore.CompareTo(localBestScore) > 0)
+                    {
+                        lock (lockingObject)
+                        {
+                            if (newScore.CompareTo(localBestScore) > 0)
+                            {
+                                localBestScore = newScore;
+                                ghLocalOptimalMapping = ghMap;
+                                hgLocalOptimalMapping = hgMap;
+                            }
+                        }
+                    }
+                },
+                ref localBestScore);
+            });
 
             // return the solution
             bestScore = localBestScore;

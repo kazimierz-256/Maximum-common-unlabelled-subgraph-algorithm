@@ -56,7 +56,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             totalNumberOfEdgesInSubgraph = 0;
             var gMax = g.Vertices.Max();
             gConnectionExistance = new bool[gMax + 1, gMax + 1];
-            
             foreach (var kvp in g.Neighbours)
             {
                 foreach (var vertexTo in kvp.Value)
