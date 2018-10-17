@@ -170,8 +170,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         var hVerticesToRemoveFromEnvelope = new List<int>();
 
-                        // todo: consider only the set of outsiders
-                        // toconsider: pass on a dictionary of edges from subgraph to the envelope for more performance (somewhere else...)!
                         // spread the id to all neighbours on the envelope & discover new neighbours
                         foreach (var hNeighbour in hOutsiders.ToArray())
                         {
