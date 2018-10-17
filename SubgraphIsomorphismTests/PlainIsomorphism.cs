@@ -43,7 +43,7 @@ namespace SubgraphIsomorphismTests
                 var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed);
 
                 // run the algorithm
-                var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<int>();
+                var solver = new SubgraphIsomorphismExactAlgorithm.ParallelLeverager<int>();
                 solver.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
 
                 Assert.True(AreTransitionsCorrect(gToH, hToG));

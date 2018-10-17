@@ -56,7 +56,7 @@ namespace SubgraphIsomorphismBenchmark
 #endif
 
             // run the algorithm
-            var solver = new SubgraphIsomorphismExactAlgorithm.AlphaSubgraphIsomorphismExtractor<double>();
+            var solver = new SubgraphIsomorphismExactAlgorithm.ParallelLeverager<double>();
             sw.Start();
             solver.ExtractOptimalSubgraph(g, h, criterion, 0, out double score, out var gToH, out var hToG);
             sw.Stop();
