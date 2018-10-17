@@ -49,11 +49,8 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, seed);
-#if true
-            var h = GraphFactory.GenerateRandom(n, density, 1234567 - seed - seed * seed);
-#else
+            //var h = GraphFactory.GenerateRandom(n, density, 1234567 - seed - seed * seed);
             var h = GraphFactory.GeneratePermuted(g, 0);
-#endif
 
             // run the algorithm
             sw.Start();
