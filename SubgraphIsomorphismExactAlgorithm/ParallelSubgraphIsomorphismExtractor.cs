@@ -67,8 +67,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             if (newScore.CompareTo(localBestScore) > 0)
                             {
                                 localBestScore = newScore;
-                                ghLocalOptimalMapping = ghMap;
-                                hgLocalOptimalMapping = hgMap;
+                                ghLocalOptimalMapping = new Dictionary<int, int>(ghMap);
+                                hgLocalOptimalMapping = new Dictionary<int, int>(hgMap);
                             }
                         }
                     }

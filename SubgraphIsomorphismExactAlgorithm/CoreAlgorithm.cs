@@ -15,6 +15,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private UndirectedGraph g;
         private UndirectedGraph h;
+        private Action<T, Dictionary<int, int>, Dictionary<int, int>> depthReached;
         private bool[,] gConnectionExistance;
         private bool[,] hConnectionExistance;
         private Dictionary<int, int> ghMapping;
@@ -34,12 +35,15 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, T> graphScoringFunction,
             T initialScore,
             Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound,
-            ref T bestScore
+            ref T bestScore,
+            int recursionDepth = int.MaxValue,
+            Action<T, Dictionary<int, int>, Dictionary<int, int>> depthReached = null
             )
         {
             this.g = g;
             this.h = h;
 
+            this.depthReached = depthReached;
             this.newSolutionFound = newSolutionFound;
 
             this.graphScoringFunction = graphScoringFunction;
@@ -51,7 +55,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             hEnvelope = new HashSet<int>() { hMatchingVertex };
             gOutsiders = new HashSet<int>(g.Vertices);
             hOutsiders = new HashSet<int>(h.Vertices);
-            gOutsiders.Remove(gMatchingVertex);// warning: gOutsider is not working correctly
+            gOutsiders.Remove(gMatchingVertex);
             hOutsiders.Remove(hMatchingVertex);
             totalNumberOfEdgesInSubgraph = 0;
             var gMax = g.Vertices.Max();
@@ -72,15 +76,15 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            Recurse(ref bestScore);
+            Recurse(ref bestScore, recursionDepth);
 
             ghOptimalMapping = ghMapping;
             hgOptimalMapping = hgMapping;
         }
 
-        private void Recurse(ref T bestScore)
+        private void Recurse(ref T bestScore, int recursionDepth)
         {
-            if (gEnvelope.Count == 0)
+            if (gEnvelope.Count == 0 || hEnvelope.Count == 0 || recursionDepth == 0)
             {
                 // no more connections could be found
                 // check for optimality
@@ -88,10 +92,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
+                depthReached?.Invoke(resultingValuation, ghMapping, hgMapping);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    ghOptimalMapping = new Dictionary<int, int>(ghMapping);
-                    hgOptimalMapping = new Dictionary<int, int>(hgMapping);
+                    ghOptimalMapping = ghMapping;
+                    hgOptimalMapping = hgMapping;
                     newSolutionFound(resultingValuation, ghOptimalMapping, hgOptimalMapping);
                 }
             }
@@ -167,7 +172,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
 
-                        Recurse(ref bestScore);
+                        Recurse(ref bestScore, recursionDepth - 1);
 
                         #region cleanup
 
@@ -197,7 +202,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove vertex from graph and then restore it
                 var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
-                Recurse(ref bestScore);
+                Recurse(ref bestScore, recursionDepth - 1);
 
                 g.RestoreVertex(gMatchingVertex, gRestoreOperation);
                 gEnvelope.Add(gMatchingVertex);
