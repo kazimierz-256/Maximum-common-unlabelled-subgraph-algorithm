@@ -10,8 +10,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         where T : IComparable
     {
         private Func<int, int, T> graphScoringFunction = null;
-        private Dictionary<int, int> ghOptimalMapping;
-        private Dictionary<int, int> hgOptimalMapping;
 
         private UndirectedGraph g;
         private UndirectedGraph h;
@@ -47,8 +45,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.newSolutionFound = newSolutionFound;
 
             this.graphScoringFunction = graphScoringFunction;
-            ghOptimalMapping = new Dictionary<int, int>();
-            hgOptimalMapping = new Dictionary<int, int>();
             ghMapping = new Dictionary<int, int>();
             hgMapping = new Dictionary<int, int>();
             gEnvelope = new HashSet<int>() { gMatchingVertex };
@@ -77,14 +73,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             Recurse(ref bestScore, recursionDepth);
-
-            ghOptimalMapping = ghMapping;
-            hgOptimalMapping = hgMapping;
         }
 
         private void Recurse(ref T bestScore, int recursionDepth)
         {
-            if (gEnvelope.Count == 0 || hEnvelope.Count == 0 || recursionDepth == 0)
+            if (recursionDepth == 0)
+                depthReached?.Invoke(graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
+            else if (gEnvelope.Count == 0 || hEnvelope.Count == 0 || recursionDepth == 0)
             {
                 // no more connections could be found
                 // check for optimality
@@ -92,12 +87,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
-                depthReached?.Invoke(resultingValuation, ghMapping, hgMapping);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    ghOptimalMapping = ghMapping;
-                    hgOptimalMapping = hgMapping;
-                    newSolutionFound(resultingValuation, ghOptimalMapping, hgOptimalMapping);
+                    newSolutionFound(resultingValuation, ghMapping, hgMapping);
                 }
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0)
