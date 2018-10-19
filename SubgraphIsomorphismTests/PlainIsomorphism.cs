@@ -61,7 +61,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(10, 50, 0.7, 24)]
+        [InlineData(10, 1000, 0.7, 24)]
         public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
