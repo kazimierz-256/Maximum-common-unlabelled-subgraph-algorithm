@@ -17,5 +17,6 @@ namespace GraphDataStructure
         HashSet<int> RemoveVertex(int vertexToRemove);
         UndirectedGraph DeepClone();
         void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours);
+        UndirectedGraph DeepCloneIntersecting(HashSet<int> gOutsiders);
     }
 }

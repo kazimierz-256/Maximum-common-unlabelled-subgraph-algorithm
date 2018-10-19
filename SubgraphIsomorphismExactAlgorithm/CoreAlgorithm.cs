@@ -24,6 +24,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
         private Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound;
+        private bool analyzeDisconnected;
 
         public void RecurseInitialMatch(
             int gMatchingVertex,
@@ -34,6 +35,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             T initialScore,
             Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound,
             ref T bestScore,
+            bool analyzeDisconnected,
             int recursionDepth = int.MaxValue,
             Action<T, Dictionary<int, int>, Dictionary<int, int>> depthReached = null
             )
@@ -43,6 +45,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             this.depthReached = depthReached;
             this.newSolutionFound = newSolutionFound;
+            this.analyzeDisconnected = analyzeDisconnected;
 
             this.graphScoringFunction = graphScoringFunction;
             ghMapping = new Dictionary<int, int>();
@@ -165,6 +168,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
 
                         Recurse(ref bestScore, recursionDepth - 1);
+                        if (analyzeDisconnected)
+                            DisconnectComponent(ref bestScore, recursionDepth - 1);
 
                         #region cleanup
                         foreach (var hVertex in hVerticesToRemoveFromEnvelope)
@@ -214,6 +219,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     g = gOutSiderGraph,
                     h = hOutSiderGraph,
                     depthReached = depthReached,
+                    // todo: how to value disconnected components?
                     graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
                     newSolutionFound = (newScore, ghMap, hgMap) =>
                     {
@@ -226,7 +232,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hgExtended.Add(myMapping.Key, myMapping.Value);
 
                         newSolutionFound(newScore, ghExtended, hgExtended);
-                        //Console.WriteLine($"A sub solution found, how cute");
+                        Console.WriteLine($"A sub solution found, how cute");
                     },
                     ghMapping = new Dictionary<int, int>(),
                     hgMapping = new Dictionary<int, int>(),
@@ -236,7 +242,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutsiders = new HashSet<int>(hOutsiders.Skip(1)),
                     totalNumberOfEdgesInSubgraph = 0,
                     gConnectionExistance = gConnectionExistance,
-                    hConnectionExistance = hConnectionExistance
+                    hConnectionExistance = hConnectionExistance,
+                    analyzeDisconnected = true
                 };
                 subSolver.Recurse(ref bestScore, recursionDepth);
             }

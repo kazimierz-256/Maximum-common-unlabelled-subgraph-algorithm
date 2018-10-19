@@ -14,21 +14,25 @@ namespace SubgraphIsomorphismTests
         {
             for (int i = 1; i < n; i++)
             {
-                // randomize a graph of given n and density
-                var g = GraphFactory.GenerateRandom(i, density, generatingSeed);
-                var h = GraphFactory.GeneratePermuted(g, permutingSeed);
+                for (int j = 0; j < i * 2; j++)
+                {
 
-                // run the algorithm
-                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
+                    // randomize a graph of given n and density
+                    var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j);
+                    var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
-                // verify the solution
-                HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
-                var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
-                Assert.Equal(maximumConnectedComponentSize, gToH.Count);
-                Assert.Equal(maximumConnectedComponentSize, hToG.Count);
+                    // run the algorithm
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out var score, out var gToH, out var hToG);
 
-                AreTransitionsCorrect(gToH, hToG);
-                HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                    // verify the solution
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                    var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
+                    Assert.Equal(maximumConnectedComponentSize, gToH.Count);
+                    Assert.Equal(maximumConnectedComponentSize, hToG.Count);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
             }
         }
         [Theory]
@@ -42,7 +46,7 @@ namespace SubgraphIsomorphismTests
                 var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed);
 
                 // run the algorithm
-                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
+                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out int score, out var gToH, out var hToG);
 
                 AreTransitionsCorrect(gToH, hToG);
                 HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);

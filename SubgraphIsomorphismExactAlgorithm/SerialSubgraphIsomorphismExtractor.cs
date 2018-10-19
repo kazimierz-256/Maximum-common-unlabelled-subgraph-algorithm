@@ -12,6 +12,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph hArgument,
             Func<int, int, T> graphScoringFunction,
             T initialScore,
+            bool analyzeDisconnected,
             out T bestScore,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping
@@ -52,7 +53,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hgLocalOptimalMapping = new Dictionary<int, int>(hgMap);
                         }
                     },
-                    ref localBestScore);
+                    ref localBestScore, analyzeDisconnected);
 
                 }
 

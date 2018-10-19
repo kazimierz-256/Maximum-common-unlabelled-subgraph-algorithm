@@ -79,6 +79,7 @@ namespace GraphDataStructure
             }
             return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
         }
+
         // note: this does not copy it reassigns
         public void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours)
         {
@@ -92,6 +93,25 @@ namespace GraphDataStructure
                 }
                 EdgeCount += restoreNeighbours.Count;
             }
+        }
+
+        public UndirectedGraph DeepCloneIntersecting(HashSet<int> intersection)
+        {
+            var neighboursCopy = new Dictionary<int, HashSet<int>>();
+            foreach (var connection in Neighbours)
+            {
+                if (intersection.Contains(connection.Key))
+                {
+                    var newHashSet = new HashSet<int>();
+                    foreach (var vertex in connection.Value)
+                    {
+                        if (intersection.Contains(vertex))
+                            newHashSet.Add(vertex);
+                    }
+                    neighboursCopy.Add(connection.Key, newHashSet);
+                }
+            }
+            return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
         }
     }
 }
