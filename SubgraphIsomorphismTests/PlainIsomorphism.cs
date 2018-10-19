@@ -9,23 +9,22 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(18, 0.7, 24, 41)]
-        public void GraphOfSizeAtMost(int n, double density, int generatingSeed, int permutingSeed)
+        [InlineData(10, 10000, 0.7, 24, 41)]
+        public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
             {
-                for (int j = 0; j < i * 2; j++)
+                for (int j = 0; j < repetitions; j++)
                 {
 
                     // randomize a graph of given n and density
-                    var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j);
+                    var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
                     SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out var score, out var gToH, out var hToG);
 
                     // verify the solution
-                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
                     var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
                     Assert.Equal(maximumConnectedComponentSize, gToH.Count);
                     Assert.Equal(maximumConnectedComponentSize, hToG.Count);
@@ -36,20 +35,50 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(15, 0.7, 24)]
-        public void GraphOfSizeAtMostDouble(int n, double density, int generatingSeed)
+        [InlineData(10, 10000, 0.7, 24, 41)]
+        public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
             {
-                // randomize a graph of given n and density
-                var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed);
-                var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed);
+                for (int j = 0; j < repetitions; j++)
+                {
 
-                // run the algorithm
-                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out int score, out var gToH, out var hToG);
+                    // randomize a graph of given n and density
+                    var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
+                    var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
-                AreTransitionsCorrect(gToH, hToG);
-                HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                    // run the algorithm
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, true, out var score, out var gToH, out var hToG);
+
+                    // verify the solution
+                    Assert.Equal(g.Vertices.Count, gToH.Count);
+                    Assert.Equal(g.Vertices.Count, hToG.Count);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(10, 50, 0.7, 24)]
+        public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                for (int j = 0; j < repetitions; j++)
+                {
+
+                    // randomize a graph of given n and density
+                    var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed + j * j);
+                    var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
+
+                    // run the algorithm
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out int score, out var gToH, out var hToG);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
             }
         }
 

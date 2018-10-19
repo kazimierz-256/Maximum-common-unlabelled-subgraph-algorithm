@@ -111,7 +111,7 @@ namespace GraphDataStructure
                     neighboursCopy.Add(connection.Key, newHashSet);
                 }
             }
-            return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
+            return new HashGraph(neighboursCopy, new HashSet<int>(intersection), EdgeCount);
         }
     }
 }

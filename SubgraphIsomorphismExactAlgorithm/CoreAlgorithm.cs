@@ -32,7 +32,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g,
             UndirectedGraph h,
             Func<int, int, T> graphScoringFunction,
-            T initialScore,
             Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound,
             ref T bestScore,
             bool analyzeDisconnected,
@@ -211,41 +210,72 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 var currentVertices = ghMapping.Keys.Count;
                 var currentEdges = totalNumberOfEdgesInSubgraph;
-                var gOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
-                var hOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
-
-                var subSolver = new CoreAlgorithm<T>()
+                UndirectedGraph gOutSiderGraph;
+                UndirectedGraph hOutSiderGraph;
+                var swapped = false;
+                if (hOutsiders.Count < gOutsiders.Count)
                 {
-                    g = gOutSiderGraph,
-                    h = hOutSiderGraph,
-                    depthReached = depthReached,
-                    // todo: how to value disconnected components?
-                    graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
-                    newSolutionFound = (newScore, ghMap, hgMap) =>
+                    swapped = true;
+                    gOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                    hOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
+                }
+                else
+                {
+                    gOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
+                    hOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                }
+
+                while (gOutSiderGraph.Vertices.Count > 0)
+                {
+                    var gMatchingVertex = gOutSiderGraph.Vertices.First();
+                    foreach (var hMatchingCandidate in hOutSiderGraph.Vertices)
                     {
-                        var ghExtended = new Dictionary<int, int>(ghMap);
-                        var hgExtended = new Dictionary<int, int>(hgMap);
 
-                        foreach (var myMapping in ghMapping)
-                            ghExtended.Add(myMapping.Key, myMapping.Value);
-                        foreach (var myMapping in hgMapping)
-                            hgExtended.Add(myMapping.Key, myMapping.Value);
+                        var subSolver = new CoreAlgorithm<T>()
+                        {
+                            g = gOutSiderGraph,
+                            h = hOutSiderGraph,
+                            depthReached = depthReached,
+                            // tocontemplate: how to value disconnected components?
+                            graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
+                            newSolutionFound = (newScore, ghMap, hgMap) =>
+                            {
+                                Dictionary<int, int> ghExtended;
+                                Dictionary<int, int> hgExtended;
+                                if (swapped)
+                                {
+                                    ghExtended = new Dictionary<int, int>(hgMap);
+                                    hgExtended = new Dictionary<int, int>(ghMap);
+                                }
+                                else
+                                {
+                                    ghExtended = new Dictionary<int, int>(ghMap);
+                                    hgExtended = new Dictionary<int, int>(hgMap);
+                                }
 
-                        newSolutionFound(newScore, ghExtended, hgExtended);
-                        Console.WriteLine($"A sub solution found, how cute");
-                    },
-                    ghMapping = new Dictionary<int, int>(),
-                    hgMapping = new Dictionary<int, int>(),
-                    gEnvelope = new HashSet<int>() { gOutsiders.First() },
-                    hEnvelope = new HashSet<int>() { hOutsiders.First() },
-                    gOutsiders = new HashSet<int>(gOutsiders.Skip(1)),
-                    hOutsiders = new HashSet<int>(hOutsiders.Skip(1)),
-                    totalNumberOfEdgesInSubgraph = 0,
-                    gConnectionExistance = gConnectionExistance,
-                    hConnectionExistance = hConnectionExistance,
-                    analyzeDisconnected = true
-                };
-                subSolver.Recurse(ref bestScore, recursionDepth);
+                                foreach (var myMapping in ghMapping)
+                                    ghExtended.Add(myMapping.Key, myMapping.Value);
+                                foreach (var myMapping in hgMapping)
+                                    hgExtended.Add(myMapping.Key, myMapping.Value);
+
+                                newSolutionFound(newScore, ghExtended, hgExtended);
+                            },
+                            ghMapping = new Dictionary<int, int>(),
+                            hgMapping = new Dictionary<int, int>(),
+                            gEnvelope = new HashSet<int>() { gMatchingVertex },
+                            hEnvelope = new HashSet<int>() { hMatchingCandidate },
+                            gOutsiders = new HashSet<int>(gOutSiderGraph.Vertices.Where(vertex => vertex != gMatchingVertex)),
+                            hOutsiders = new HashSet<int>(hOutSiderGraph.Vertices.Where(vertex => vertex != hMatchingCandidate)),
+                            totalNumberOfEdgesInSubgraph = 0,
+                            gConnectionExistance = gConnectionExistance,
+                            hConnectionExistance = hConnectionExistance,
+                            analyzeDisconnected = true
+                        };
+                        subSolver.Recurse(ref bestScore, recursionDepth);
+                    }
+
+                    gOutSiderGraph.RemoveVertex(gMatchingVertex);
+                }
             }
         }
     }

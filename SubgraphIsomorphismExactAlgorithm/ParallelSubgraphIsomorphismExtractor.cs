@@ -59,7 +59,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = iter / gGraphs.Length;
                 // try matching all h's
                 var subLeverager = new CoreAlgorithm<T>();
-                subLeverager.RecurseInitialMatch(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, initialScore, (newScore, ghMap, hgMap) =>
+                subLeverager.RecurseInitialMatch(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {

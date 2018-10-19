@@ -44,7 +44,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.RecurseInitialMatch(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, initialScore, (newScore, ghMap, hgMap) =>
+                    solver.RecurseInitialMatch(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
                         {
