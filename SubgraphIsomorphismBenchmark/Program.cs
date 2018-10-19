@@ -13,8 +13,8 @@ namespace SubgraphIsomorphismBenchmark
         private static Func<int, int, double> criterion;
         static void Main(string[] args)
         {
-            Console.WriteLine("Please enter an optimization criterion (please make sure it is non-decreasing in 'vertices' and 'edges')");
-            criterion = Parse.ParseInput(Console.ReadLine());
+            //Console.WriteLine("Please enter an optimization criterion (please make sure it is non-decreasing in 'vertices' and 'edges')");
+            //criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
             printBenchmark(2, 0.7m);
