@@ -167,7 +167,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         Recurse(ref bestScore, recursionDepth - 1);
 
                         #region cleanup
-
                         foreach (var hVertex in hVerticesToRemoveFromEnvelope)
                         {
                             hEnvelope.Remove(hVertex);
