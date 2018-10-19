@@ -106,8 +106,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
                 var gVerticesToRemoveFromEnvelope = new List<int>();
 
-                // todo: simplify to ghTransitionFunctions and a NEW set of outsiders
-
                 foreach (var gNeighbour in gOutsiders.ToArray())
                 {
                     // if the neighbour is in the subgraph
