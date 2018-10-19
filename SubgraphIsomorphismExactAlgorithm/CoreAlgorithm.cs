@@ -79,7 +79,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             if (recursionDepth == 0)
                 depthReached?.Invoke(graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
-            else if (gEnvelope.Count == 0 || hEnvelope.Count == 0 || recursionDepth == 0)
+            else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
                 // no more connections could be found
                 // check for optimality
