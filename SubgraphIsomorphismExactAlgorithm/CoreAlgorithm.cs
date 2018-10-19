@@ -13,7 +13,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private UndirectedGraph g;
         private UndirectedGraph h;
-        private Action<T, Dictionary<int, int>, Dictionary<int, int>> depthReached;
+        private Action<int, T, Dictionary<int, int>, Dictionary<int, int>> depthReached;
         private bool[,] gConnectionExistance;
         private bool[,] hConnectionExistance;
         private Dictionary<int, int> ghMapping;
@@ -37,7 +37,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             ref T bestScore,
             bool analyzeDisconnected,
             int recursionDepth = int.MaxValue,
-            Action<T, Dictionary<int, int>, Dictionary<int, int>> depthReached = null
+            Action<int, T, Dictionary<int, int>, Dictionary<int, int>> depthReached = null
             )
         {
             this.g = g;
@@ -81,9 +81,11 @@ namespace SubgraphIsomorphismExactAlgorithm
         private void Recurse(ref T bestScore, int recursionDepth)
         {
             if (recursionDepth == 0)
-                depthReached?.Invoke(graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
+                depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
             else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
+                depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
+
                 // no more connections could be found
                 // check for optimality
 
