@@ -106,7 +106,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gMatchingOptimality = int.MaxValue;
                 foreach (var gVertexCondidate in gEnvelope)
                 {
-                    var degree = ghMapping.Keys.Count(gSub => gConnectionExistance[gVertexCondidate, gSub]);
+                    var degree = 0;
+                    foreach (var gSub in ghMapping.Keys)
+                    {
+                        if (gConnectionExistance[gVertexCondidate, gSub])
+                        {
+                            degree += 1;
+                        }
+                    }
                     if (degree < gMatchingOptimality)
                     {
                         gMatchingOptimality = degree;
