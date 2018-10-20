@@ -9,12 +9,17 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(10, 10000, 0.7, 24, 41)]
+        [InlineData(5, 500000, 0.9, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
             {
-                for (int j = 0; j < repetitions; j++)
+                var max = repetitions;
+                if (i == 2)
+                {
+                    max = 1;
+                }
+                for (int j = 0; j < max; j++)
                 {
 
                     // randomize a graph of given n and density
@@ -35,12 +40,17 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(10, 10000, 0.7, 24, 41)]
+        [InlineData(5, 500000, 0.9, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
             {
-                for (int j = 0; j < repetitions; j++)
+                var max = repetitions;
+                if (i == 2)
+                {
+                    max = 1;
+                }
+                for (int j = 0; j < max; j++)
                 {
 
                     // randomize a graph of given n and density
@@ -61,12 +71,17 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(10, 1000, 0.7, 24)]
+        [InlineData(5, 50000, 0.9, 24)]
         public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
             {
-                for (int j = 0; j < repetitions; j++)
+                var max = repetitions;
+                if (i == 2)
+                {
+                    max = 1;
+                }
+                for (int j = 0; j < max; j++)
                 {
 
                     // randomize a graph of given n and density

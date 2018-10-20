@@ -227,6 +227,9 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 while (gOutSiderGraph.Vertices.Count > 0)
                 {
+                    if (graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) <= 0)
+                        break;
+
                     var gMatchingVertex = gOutSiderGraph.Vertices.First();
                     foreach (var hMatchingCandidate in hOutSiderGraph.Vertices)
                     {
