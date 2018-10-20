@@ -104,25 +104,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 var gMatchingVertex = -1;
                 var gMatchingOptimality = int.MaxValue;
-                //foreach (var gVertexCondidate in gEnvelope)
-                //{
-                //    if (g.Degree(gVertexCondidate) > gMatchingOptimality)
-                //    {
-                //        gMatchingOptimality = g.Degree(gVertexCondidate);
-                //        gMatchingVertex = gVertexCondidate;
-                //    }
-                //}
-
                 foreach (var gVertexCondidate in gEnvelope)
                 {
-                    var degree = 0;
-                    foreach (var gSub in ghMapping.Keys)
-                    {
-                        if (gConnectionExistance[gVertexCondidate, gSub])
-                        {
-                            degree += 1;
-                        }
-                    }
+                    var degree = ghMapping.Keys.Count(gSub => gConnectionExistance[gVertexCondidate, gSub]);
                     if (degree < gMatchingOptimality)
                     {
                         gMatchingOptimality = degree;
@@ -149,17 +133,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #endregion
 
                 // a workaround since hEnvelope is modified during recursion
-                var hCandidates = hEnvelope.ToArray();
-                //var hCandidateRating = hCandidates.Select(hCandidate =>
-                //{
-                //    var degree = 0;
-                //    foreach (var hSub in hgMapping.Keys)
-                //        if (hConnectionExistance[hCandidate, hSub])
-                //            degree += 1;
-                //    return degree;
-                //}).ToArray();
-                //Array.Sort(hCandidateRating, hCandidateRating);
-                foreach (var hMatchingCandidate in hCandidates)
+                foreach (var hMatchingCandidate in hEnvelope.ToArray())
                 {
                     // verify mutual agreement connections of neighbours
                     var verticesTrulyIsomorphic = true;
