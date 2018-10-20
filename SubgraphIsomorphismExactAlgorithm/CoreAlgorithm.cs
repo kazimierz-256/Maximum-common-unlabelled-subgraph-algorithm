@@ -23,7 +23,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> gOutsiders;
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
-        private Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound;
+        private Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound;
         private bool analyzeDisconnected;
 
         public void RecurseInitialMatch(
@@ -32,7 +32,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g,
             UndirectedGraph h,
             Func<int, int, T> graphScoringFunction,
-            Action<T, Dictionary<int, int>, Dictionary<int, int>> newSolutionFound,
+            Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound,
             ref T bestScore,
             bool analyzeDisconnected,
             int recursionDepth = int.MaxValue,
@@ -93,12 +93,42 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    newSolutionFound(resultingValuation, ghMapping, hgMapping);
+                    newSolutionFound(
+                        resultingValuation,
+                        () => new Dictionary<int, int>(ghMapping),
+                        () => new Dictionary<int, int>(hgMapping)
+                        );
                 }
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0)
             {
-                var gMatchingVertex = gEnvelope.First();
+                var gMatchingVertex = -1;
+                var gMatchingOptimality = int.MaxValue;
+                //foreach (var gVertexCondidate in gEnvelope)
+                //{
+                //    if (g.Degree(gVertexCondidate) > gMatchingOptimality)
+                //    {
+                //        gMatchingOptimality = g.Degree(gVertexCondidate);
+                //        gMatchingVertex = gVertexCondidate;
+                //    }
+                //}
+
+                foreach (var gVertexCondidate in gEnvelope)
+                {
+                    var degree = 0;
+                    foreach (var gSub in ghMapping.Keys)
+                    {
+                        if (gConnectionExistance[gVertexCondidate, gSub])
+                        {
+                            degree += 1;
+                        }
+                    }
+                    if (degree < gMatchingOptimality)
+                    {
+                        gMatchingOptimality = degree;
+                        gMatchingVertex = gVertexCondidate;
+                    }
+                }
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
@@ -119,7 +149,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #endregion
 
                 // a workaround since hEnvelope is modified during recursion
-                foreach (var hMatchingCandidate in hEnvelope.ToArray())
+                var hCandidates = hEnvelope.ToArray();
+                //var hCandidateRating = hCandidates.Select(hCandidate =>
+                //{
+                //    var degree = 0;
+                //    foreach (var hSub in hgMapping.Keys)
+                //        if (hConnectionExistance[hCandidate, hSub])
+                //            degree += 1;
+                //    return degree;
+                //}).ToArray();
+                //Array.Sort(hCandidateRating, hCandidateRating);
+                foreach (var hMatchingCandidate in hCandidates)
                 {
                     // verify mutual agreement connections of neighbours
                     var verticesTrulyIsomorphic = true;
@@ -212,10 +252,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var currentEdges = totalNumberOfEdgesInSubgraph;
                 UndirectedGraph gOutSiderGraph;
                 UndirectedGraph hOutSiderGraph;
-                var swapped = false;
+                var subgraphsSwapped = false;
                 if (hOutsiders.Count < gOutsiders.Count)
                 {
-                    swapped = true;
+                    subgraphsSwapped = true;
                     gOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
                     hOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
                 }
@@ -243,25 +283,23 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
                             newSolutionFound = (newScore, ghMap, hgMap) =>
                             {
-                                Dictionary<int, int> ghExtended;
-                                Dictionary<int, int> hgExtended;
-                                if (swapped)
-                                {
-                                    ghExtended = new Dictionary<int, int>(hgMap);
-                                    hgExtended = new Dictionary<int, int>(ghMap);
-                                }
-                                else
-                                {
-                                    ghExtended = new Dictionary<int, int>(ghMap);
-                                    hgExtended = new Dictionary<int, int>(hgMap);
-                                }
-
-                                foreach (var myMapping in ghMapping)
-                                    ghExtended.Add(myMapping.Key, myMapping.Value);
-                                foreach (var myMapping in hgMapping)
-                                    hgExtended.Add(myMapping.Key, myMapping.Value);
-
-                                newSolutionFound(newScore, ghExtended, hgExtended);
+                                newSolutionFound(
+                                    newScore,
+                                    () =>
+                                    {
+                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                        foreach (var myMapping in ghMapping)
+                                            ghExtended.Add(myMapping.Key, myMapping.Value);
+                                        return ghExtended;
+                                    },
+                                    () =>
+                                    {
+                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                        foreach (var myMapping in hgMapping)
+                                            hgExtended.Add(myMapping.Key, myMapping.Value);
+                                        return hgExtended;
+                                    }
+                                    );
                             },
                             ghMapping = new Dictionary<int, int>(),
                             hgMapping = new Dictionary<int, int>(),
