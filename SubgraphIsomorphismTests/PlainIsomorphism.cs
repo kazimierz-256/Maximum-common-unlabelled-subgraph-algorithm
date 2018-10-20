@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(5, 500000, 0.9, 24, 41)]
+        [InlineData(5, 500000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -40,7 +40,7 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(5, 500000, 0.9, 24, 41)]
+        [InlineData(5, 500000, 0.5, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -71,7 +71,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 50000, 0.9, 24)]
+        [InlineData(5, 50000, 0.5, 24)]
         public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
