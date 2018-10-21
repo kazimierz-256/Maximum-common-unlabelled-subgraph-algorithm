@@ -14,10 +14,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph hArgument,
             Func<int, int, T> graphScoringFunction,
             T initialScore,
-            bool analyzeDisconnected,
             out T bestScore,
             out Dictionary<int, int> ghOptimalMapping,
-            out Dictionary<int, int> hgOptimalMapping
+            out Dictionary<int, int> hgOptimalMapping,
+            bool analyzeDisconnected = false,
+            bool findExactMatch = false
             )
         {
             var swappedGraphs = false;
@@ -74,7 +75,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                     }
                 },
-                ref localBestScore, analyzeDisconnected);
+                ref localBestScore, analyzeDisconnected, findExactMatch);
             });
 
             // return the solution

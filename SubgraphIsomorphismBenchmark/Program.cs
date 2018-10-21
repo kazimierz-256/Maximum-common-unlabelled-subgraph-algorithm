@@ -54,7 +54,7 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, (v, e) => v + e, 0, false, out double score, out var gToH, out var hToG);
+            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, (v, e) => v, 0, out double score, out var gToH, out var hToG);
             sw.Stop();
             return sw.Elapsed;
         }

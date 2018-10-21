@@ -27,7 +27,9 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out var score, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG);
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
 
                     // verify the solution
                     var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
@@ -58,8 +60,9 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, true, out var score, out var gToH, out var hToG);
-
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, true);
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
                     // verify the solution
                     Assert.Equal(g.Vertices.Count, gToH.Count);
                     Assert.Equal(g.Vertices.Count, hToG.Count);
@@ -89,7 +92,9 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, false, out int score, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var gToH, out var hToG);
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
 
                     AreTransitionsCorrect(gToH, hToG);
                     HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);

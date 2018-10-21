@@ -25,6 +25,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int totalNumberOfEdgesInSubgraph;
         private Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound;
         private bool analyzeDisconnected;
+        private bool findExactMatch;
+        private int recursionDepth;
 
         public void RecurseInitialMatch(
             int gMatchingVertex,
@@ -34,7 +36,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, T> graphScoringFunction,
             Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound,
             ref T bestScore,
-            bool analyzeDisconnected,
+            bool analyzeDisconnected = false,
+            bool findExactMatch = false,
             int recursionDepth = int.MaxValue,
             Action<int, T, Dictionary<int, int>, Dictionary<int, int>> depthReached = null
             )
@@ -42,6 +45,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.g = g;
             this.h = h;
 
+            this.recursionDepth = recursionDepth;
+            this.findExactMatch = findExactMatch;
             this.depthReached = depthReached;
             this.newSolutionFound = newSolutionFound;
             this.analyzeDisconnected = analyzeDisconnected;
@@ -74,10 +79,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            Recurse(ref bestScore, recursionDepth);
+            Recurse(ref bestScore);
         }
 
-        private void Recurse(ref T bestScore, int recursionDepth)
+        private void Recurse(ref T bestScore)
         {
             if (recursionDepth == 0)
                 depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
@@ -186,10 +191,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 hOutsiders.Remove(hNeighbour);
                             }
                         }
-
-                        Recurse(ref bestScore, recursionDepth - 1);
+                        recursionDepth -= 1;
+                        Recurse(ref bestScore);
                         if (analyzeDisconnected)
-                            DisconnectComponent(ref bestScore, recursionDepth - 1);
+                            DisconnectComponent(ref bestScore);
 
                         #region cleanup
                         foreach (var hVertex in hVerticesToRemoveFromEnvelope)
@@ -216,16 +221,20 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
-                var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
+                if (!findExactMatch)
+                {
+                    var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
-                Recurse(ref bestScore, recursionDepth - 1);
+                    Recurse(ref bestScore);
 
-                g.RestoreVertex(gMatchingVertex, gRestoreOperation);
-                gEnvelope.Add(gMatchingVertex);
+                    g.RestoreVertex(gMatchingVertex, gRestoreOperation);
+                    gEnvelope.Add(gMatchingVertex);
+                }
+                recursionDepth += 1;
             }
         }
 
-        private void DisconnectComponent(ref T bestScore, int recursionDepth)
+        private void DisconnectComponent(ref T bestScore)
         {
             if (gOutsiders.Count > 0 && hOutsiders.Count > 0)
             {
@@ -291,9 +300,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                             totalNumberOfEdgesInSubgraph = 0,
                             gConnectionExistance = gConnectionExistance,
                             hConnectionExistance = hConnectionExistance,
-                            analyzeDisconnected = true
+                            analyzeDisconnected = true,
+                            recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
+                            findExactMatch = findExactMatch
                         };
-                        subSolver.Recurse(ref bestScore, recursionDepth);
+                        subSolver.Recurse(ref bestScore);
                     }
 
                     gOutSiderGraph.RemoveVertex(gMatchingVertex);
