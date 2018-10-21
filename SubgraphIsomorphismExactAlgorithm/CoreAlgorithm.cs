@@ -255,15 +255,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 }
 
-                while (gOutSiderGraph.Vertices.Count > 0)
+                while (gOutSiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0)
                 {
-                    if (graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) <= 0)
-                        break;
+                    // ERROR: somthing keeps up infinite computations...
 
+                    // todo: maybe some fancy order?
                     var gMatchingVertex = gOutSiderGraph.Vertices.First();
                     foreach (var hMatchingCandidate in hOutSiderGraph.Vertices)
                     {
-
                         var subSolver = new CoreAlgorithm<T>()
                         {
                             g = gOutSiderGraph,
