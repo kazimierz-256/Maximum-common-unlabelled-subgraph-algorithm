@@ -105,7 +105,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0)
+            else if (graphScoringFunction(g.Vertices.Count, Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
             {
                 var gMatchingVertex = -1;
                 var gMatchingOptimality = int.MaxValue;
@@ -255,8 +255,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 }
 
-                //graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0
-                while (gOutsiderGraph.Vertices.Count > 0)
+
+                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutsiderGraph.Vertices.Count + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0)
                 {
                     // ERROR: somthing keeps up infinite computations...
 

@@ -17,7 +17,7 @@ namespace SubgraphIsomorphismBenchmark
             //criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
-            printBenchmark(2, 0.7m);
+            printBenchmark(2, 0.1m);
         }
         private const int oddIterations = 0;
         private static void printBenchmark(int n, decimal density)
@@ -54,7 +54,7 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, (v, e) => v, 0, out double score, out var gToH, out var hToG, false, false);
+            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, (v, e) => v, 0, out double score, out var gToH, out var hToG, true, false);
             sw.Stop();
             return sw.Elapsed;
         }
