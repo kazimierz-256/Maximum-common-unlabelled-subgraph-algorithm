@@ -254,9 +254,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutsiderGraph.Vertices.Count + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0)
                 {
-                    // ERROR: somthing keeps up infinite computations...
-
-                    // todo: maybe some fancy order?
                     var gMatchingVertex = -1;
                     var gMatchingScore = int.MaxValue;
 
