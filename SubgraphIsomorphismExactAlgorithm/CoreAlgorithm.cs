@@ -28,7 +28,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool findExactMatch;
         private int recursionDepth;
 
-        public void RecurseInitialMatch(
+        public void SetupAndRecurse(
             int gMatchingVertex,
             int hMatchingVertex,
             UndirectedGraph g,
@@ -240,33 +240,45 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 var currentVertices = ghMapping.Keys.Count;
                 var currentEdges = totalNumberOfEdgesInSubgraph;
-                UndirectedGraph gOutSiderGraph;
-                UndirectedGraph hOutSiderGraph;
+                UndirectedGraph gOutsiderGraph;
+                UndirectedGraph hOutsiderGraph;
                 var subgraphsSwapped = false;
                 if (hOutsiders.Count < gOutsiders.Count)
                 {
                     subgraphsSwapped = true;
-                    gOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
-                    hOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
+                    gOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                    hOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
                 }
                 else
                 {
-                    gOutSiderGraph = g.DeepCloneIntersecting(gOutsiders);
-                    hOutSiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                    gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
+                    hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 }
 
-                while (gOutSiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0)
+                //graphScoringFunction(gOutSiderGraph.Vertices.Count + currentVertices, gOutSiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0
+                while (gOutsiderGraph.Vertices.Count > 0)
                 {
                     // ERROR: somthing keeps up infinite computations...
 
                     // todo: maybe some fancy order?
-                    var gMatchingVertex = gOutSiderGraph.Vertices.First();
-                    foreach (var hMatchingCandidate in hOutSiderGraph.Vertices)
+                    var gMatchingVertex = -1;
+                    var gMatchingScore = int.MinValue;
+
+                    foreach (var gCandidate in gOutsiderGraph.Vertices)
+                    {
+                        if (gOutsiderGraph.Degree(gCandidate) > gMatchingScore)
+                        {
+                            gMatchingScore = gOutsiderGraph.Degree(gCandidate);
+                            gMatchingVertex = gCandidate;
+                        }
+                    }
+
+                    foreach (var hMatchingCandidate in hOutsiderGraph.Vertices.ToArray())
                     {
                         var subSolver = new CoreAlgorithm<T>()
                         {
-                            g = gOutSiderGraph,
-                            h = hOutSiderGraph,
+                            g = gOutsiderGraph,
+                            h = hOutsiderGraph,
                             depthReached = depthReached,
                             // tocontemplate: how to value disconnected components?
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
@@ -294,8 +306,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hgMapping = new Dictionary<int, int>(),
                             gEnvelope = new HashSet<int>() { gMatchingVertex },
                             hEnvelope = new HashSet<int>() { hMatchingCandidate },
-                            gOutsiders = new HashSet<int>(gOutSiderGraph.Vertices.Where(vertex => vertex != gMatchingVertex)),
-                            hOutsiders = new HashSet<int>(hOutSiderGraph.Vertices.Where(vertex => vertex != hMatchingCandidate)),
+                            gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices.Where(vertex => vertex != gMatchingVertex)),
+                            hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices.Where(vertex => vertex != hMatchingCandidate)),
                             totalNumberOfEdgesInSubgraph = 0,
                             gConnectionExistance = gConnectionExistance,
                             hConnectionExistance = hConnectionExistance,
@@ -306,7 +318,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         subSolver.Recurse(ref bestScore);
                     }
 
-                    gOutSiderGraph.RemoveVertex(gMatchingVertex);
+                    gOutsiderGraph.RemoveVertex(gMatchingVertex);
                 }
             }
         }

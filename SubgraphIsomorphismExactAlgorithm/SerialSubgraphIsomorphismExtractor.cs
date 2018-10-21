@@ -41,11 +41,21 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0)
             {
-                var gMatchingVertex = g.Vertices.First();
+                var gMatchingVertex = -1;
+                var gMatchingScore = int.MaxValue;
+
+                foreach (var gCandidate in g.Vertices)
+                {
+                    if (g.Degree(gCandidate) < gMatchingScore)
+                    {
+                        gMatchingScore = g.Degree(gCandidate);
+                        gMatchingVertex = gCandidate;
+                    }
+                }
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.RecurseInitialMatch(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap) =>
+                    solver.SetupAndRecurse(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
                         {

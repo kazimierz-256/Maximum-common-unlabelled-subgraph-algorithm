@@ -42,8 +42,20 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             while (g.Vertices.Count > 0)
             {
-                gInitialVertices[g.Vertices.Count - 1] = g.Vertices.First();
+                var gMatchingVertex = -1;
+                var gMatchingScore = int.MaxValue;
+
+                foreach (var gCandidate in g.Vertices)
+                {
+                    if (g.Degree(gCandidate) < gMatchingScore)
+                    {
+                        gMatchingScore = g.Degree(gCandidate);
+                        gMatchingVertex = gCandidate;
+                    }
+                }
+
                 gGraphs[g.Vertices.Count - 1] = g.DeepClone();
+                gInitialVertices[g.Vertices.Count - 1] = gMatchingVertex;
 
                 // ignore previous g-vertices
                 g.RemoveVertex(gInitialVertices[g.Vertices.Count - 1]);
@@ -60,7 +72,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = iter / gGraphs.Length;
                 // try matching all h's
                 var subLeverager = new CoreAlgorithm<T>();
-                subLeverager.RecurseInitialMatch(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap) =>
+                subLeverager.SetupAndRecurse(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {
