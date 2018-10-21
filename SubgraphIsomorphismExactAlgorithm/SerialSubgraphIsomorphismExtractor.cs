@@ -23,7 +23,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var solver = new CoreAlgorithm<T>();
             var swappedGraphs = false;
 
-            if (hArgument.Vertices.Count < gArgument.Vertices.Count)
+            if (hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;

@@ -240,19 +240,15 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 var currentVertices = ghMapping.Keys.Count;
                 var currentEdges = totalNumberOfEdgesInSubgraph;
-                UndirectedGraph gOutsiderGraph;
-                UndirectedGraph hOutsiderGraph;
+                var gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
+                var hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 var subgraphsSwapped = false;
-                if (hOutsiders.Count < gOutsiders.Count)
+                if (hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
                 {
                     subgraphsSwapped = true;
-                    gOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
-                    hOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
-                }
-                else
-                {
-                    gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
-                    hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                    var tmp = gOutsiderGraph;
+                    gOutsiderGraph = hOutsiderGraph;
+                    hOutsiderGraph = tmp;
                 }
 
 
@@ -262,11 +258,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     // todo: maybe some fancy order?
                     var gMatchingVertex = -1;
-                    var gMatchingScore = int.MinValue;
+                    var gMatchingScore = int.MaxValue;
 
                     foreach (var gCandidate in gOutsiderGraph.Vertices)
                     {
-                        if (gOutsiderGraph.Degree(gCandidate) > gMatchingScore)
+                        if (gOutsiderGraph.Degree(gCandidate) < gMatchingScore)
                         {
                             gMatchingScore = gOutsiderGraph.Degree(gCandidate);
                             gMatchingVertex = gCandidate;
@@ -309,8 +305,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices.Where(vertex => vertex != gMatchingVertex)),
                             hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices.Where(vertex => vertex != hMatchingCandidate)),
                             totalNumberOfEdgesInSubgraph = 0,
-                            gConnectionExistance = gConnectionExistance,
-                            hConnectionExistance = hConnectionExistance,
+                            gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
+                            hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
                             analyzeDisconnected = true,
                             recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
                             findExactMatch = findExactMatch

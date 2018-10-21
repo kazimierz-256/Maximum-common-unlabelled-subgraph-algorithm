@@ -25,7 +25,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g;
             UndirectedGraph h;
 
-            if (hArgument.Vertices.Count < gArgument.Vertices.Count)
+            if (hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;

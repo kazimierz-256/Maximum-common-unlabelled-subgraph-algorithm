@@ -97,15 +97,23 @@ namespace GraphDataStructure
 
         public UndirectedGraph DeepCloneIntersecting(HashSet<int> intersection)
         {
-            var clone = DeepClone();
-            foreach (var vertex in Vertices)
+            var neighboursCopy = new Dictionary<int, HashSet<int>>();
+            var directedEdgesInClone = 0;
+            foreach (var connection in Neighbours)
             {
-                if (!intersection.Contains(vertex))
+                if (intersection.Contains(connection.Key))
                 {
-                    clone.RemoveVertex(vertex);
+                    var newHashSet = new HashSet<int>();
+                    foreach (var vertex in connection.Value)
+                    {
+                        if (intersection.Contains(vertex))
+                            newHashSet.Add(vertex);
+                    }
+                    neighboursCopy.Add(connection.Key, newHashSet);
+                    directedEdgesInClone += newHashSet.Count;
                 }
             }
-            return clone;
+            return new HashGraph(neighboursCopy, new HashSet<int>(intersection), directedEdgesInClone / 2);
         }
     }
 }
