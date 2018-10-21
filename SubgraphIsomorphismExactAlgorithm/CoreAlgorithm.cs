@@ -88,7 +88,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
             else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
-                depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
 
                 // no more connections could be found
                 // check for optimality
@@ -96,16 +95,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
+                depthReached?.Invoke(recursionDepth, resultingValuation, ghMapping, hgMapping);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    newSolutionFound(
-                        resultingValuation,
-                        () => new Dictionary<int, int>(ghMapping),
-                        () => new Dictionary<int, int>(hgMapping)
-                        );
+                    newSolutionFound(resultingValuation, () => new Dictionary<int, int>(ghMapping), () => new Dictionary<int, int>(hgMapping));
                 }
             }
-            else if (graphScoringFunction(g.Vertices.Count, Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
+            else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
             {
                 var gMatchingVertex = -1;
                 var gMatchingOptimality = int.MaxValue;
@@ -252,7 +248,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
 
 
-                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutsiderGraph.Vertices.Count + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0)
+                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0)
                 {
                     var gMatchingVertex = -1;
                     var gMatchingScore = int.MaxValue;
