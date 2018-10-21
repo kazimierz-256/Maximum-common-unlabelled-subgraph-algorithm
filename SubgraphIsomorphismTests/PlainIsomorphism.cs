@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(5, 500000, 0.5, 24, 41)]
+        [InlineData(5, 50000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -27,7 +27,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, false, true);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 
@@ -42,7 +42,7 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(5, 500000, 0.5, 24, 41)]
+        [InlineData(5, 50000, 0.5, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -60,7 +60,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, true);
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, true, true);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
                     // verify the solution
@@ -74,7 +74,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 50000, 0.5, 24)]
+        [InlineData(5, 5000, 0.5, 24)]
         public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)

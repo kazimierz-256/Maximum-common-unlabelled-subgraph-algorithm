@@ -228,8 +228,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     Recurse(ref bestScore);
 
                     g.RestoreVertex(gMatchingVertex, gRestoreOperation);
-                    gEnvelope.Add(gMatchingVertex);
                 }
+                gEnvelope.Add(gMatchingVertex);
                 recursionDepth += 1;
             }
         }
