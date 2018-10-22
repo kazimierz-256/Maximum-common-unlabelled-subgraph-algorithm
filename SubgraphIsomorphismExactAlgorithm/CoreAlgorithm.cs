@@ -85,6 +85,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private void Recurse(ref T bestScore)
         {
+            recursionDepth -= 1;
             if (recursionDepth == 0)
                 depthReached?.Invoke(recursionDepth, graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph), ghMapping, hgMapping);
             else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
@@ -188,7 +189,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 hOutsiders.Remove(hNeighbour);
                             }
                         }
-                        recursionDepth -= 1;
                         Recurse(ref bestScore);
                         if (analyzeDisconnected)
                             DisconnectComponent(ref bestScore);
