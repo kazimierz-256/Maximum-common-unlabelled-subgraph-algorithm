@@ -17,30 +17,38 @@ namespace SubgraphIsomorphismBenchmark
             //criterion = Parse.ParseInput(Console.ReadLine());
 
             File.WriteAllText(path, string.Empty);
-            printBenchmark(2, 0.1m);
+            PrintBenchmark(2);
         }
         private const int oddIterations = 0;
-        private static void printBenchmark(int n, decimal density)
+        private static void PrintBenchmark(int n)
         {
-            var results = new List<TimeSpan>();
+            //var results = new List<TimeSpan>();
             for (int i = 1; i <= oddIterations * 2 + 1; i++)
             {
-                results.Add(BenchmarkIsomorphism(n, (double)density, i));
+                for (double density = 0.1d; density < 1d; density += 0.1d)
+                {
+                    //results.Add(
+                    var time = BenchmarkIsomorphism(n, density, i);
+                    //);
+                    Console.Write($"{time.TotalMilliseconds:F2}ms,   ".PadLeft(20));
+                    Console.WriteLine($"vertices: {n}, density: { density}");
+                    using (var sw = File.AppendText(path))
+                    {
+                        sw.WriteLine($"{n},{density},{time.TotalMilliseconds}");
+                    }
+                }
+                Console.WriteLine();
             }
-            results.Sort();
-            var medianTime = results[results.Count / 2];
-            Console.WriteLine($"{n}, {density}: Elapsed: {medianTime.TotalMilliseconds}ms");
-            using (var sw = File.AppendText(path))
-            {
-                sw.WriteLine($"{n},{density},{medianTime.TotalMilliseconds}");
-            }
+            //results.Sort();
+            //var medianTime = results[results.Count / 2];
+            //Console.WriteLine($"{n}, {density}: Elapsed: {medianTime.TotalMilliseconds}ms");
             //if (density < 0.6m)
             //{
             //    printBenchmark(n, density + 0.05m);
             //}
             //else
             //{
-            printBenchmark(n + 1, density);
+            PrintBenchmark(n + 1);
             //}
             //printBenchmark(n, density + 0.01m);
         }
@@ -54,7 +62,17 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(g, h, (v, e) => v, 0, out double score, out var gToH, out var hToG, true, true);
+            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+                g,
+                h,
+                (v, e) => v,
+                0,
+                out double score,
+                out var gToH,
+                out var hToG,
+                false,
+                false
+                );
             sw.Stop();
             return sw.Elapsed;
         }
