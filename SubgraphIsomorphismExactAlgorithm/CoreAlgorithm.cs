@@ -27,6 +27,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool analyzeDisconnected;
         private bool findExactMatch;
         private int recursionDepth;
+        private bool exactMatchInG = true;
 
         public void SetupAndRecurse(
             int gMatchingVertex,
@@ -217,7 +218,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
-                if (!findExactMatch)
+                if (!(findExactMatch && exactMatchInG))
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
@@ -232,7 +233,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private void DisconnectComponent(ref T bestScore)
         {
-            if (gOutsiders.Count > 0 && hOutsiders.Count > 0)
+            // if exact match is required then recurse only when no vertex in g would be omitted
+            if (gOutsiders.Count > 0 && hOutsiders.Count > 0 && (!findExactMatch || (gEnvelope.Count == 0 && exactMatchInG) || (hEnvelope.Count == 0 && !exactMatchInG)))
             {
                 var currentVertices = ghMapping.Keys.Count;
                 var currentEdges = totalNumberOfEdgesInSubgraph;
@@ -302,10 +304,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
                             analyzeDisconnected = true,
                             recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
-                            findExactMatch = findExactMatch
+                            findExactMatch = findExactMatch,
+                            exactMatchInG = !subgraphsSwapped
                         };
                         subSolver.Recurse(ref bestScore);
                     }
+
+                    if (findExactMatch && !subgraphsSwapped)
+                        break;
 
                     gOutsiderGraph.RemoveVertex(gMatchingVertex);
                 }

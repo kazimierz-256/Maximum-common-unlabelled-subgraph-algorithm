@@ -60,7 +60,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, true, true);
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var gToH, out var hToG, true, false);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
                     // verify the solution
