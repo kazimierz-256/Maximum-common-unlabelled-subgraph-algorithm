@@ -15,6 +15,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, T> graphScoringFunction,
             T initialScore,
             out T bestScore,
+            out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
             bool analyzeDisconnected = false,
@@ -64,6 +65,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localBestScore = initialScore;
             var ghLocalOptimalMapping = new Dictionary<int, int>();
             var hgLocalOptimalMapping = new Dictionary<int, int>();
+            var localSubgraphEdges = 0;
             var lockingObject = new object();
             var hVertices = h.Vertices.ToArray();
             Parallel.For(0, gGraphs.Length * hVertices.Length, iter =>
@@ -72,7 +74,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = iter / gGraphs.Length;
                 // try matching all h's
                 var subLeverager = new CoreAlgorithm<T>();
-                subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap) =>
+                subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {
@@ -83,6 +85,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 localBestScore = newScore;
                                 ghLocalOptimalMapping = ghMap();
                                 hgLocalOptimalMapping = hgMap();
+                                localSubgraphEdges = edges;
                             }
                         }
                     }
@@ -93,6 +96,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // return the solution
             bestScore = localBestScore;
+            subgraphEdges = localSubgraphEdges;
             if (swappedGraphs)
             {
                 ghOptimalMapping = hgLocalOptimalMapping;

@@ -28,13 +28,13 @@ namespace SubgraphIsomorphismBenchmark
                 for (double density = 0.1d; density < 1d; density += 0.1d)
                 {
                     //results.Add(
-                    var time = BenchmarkIsomorphism(n, density, i);
+                    var time = BenchmarkIsomorphism(n, density, i, out var subgraphVertices, out var subgraphEdges);
                     //);
                     Console.Write($"{time.TotalMilliseconds:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     using (var sw = File.AppendText(path))
                     {
-                        sw.WriteLine($"{n},{density},{time.TotalMilliseconds}");
+                        sw.WriteLine($"{n},{density},{subgraphVertices},{subgraphEdges},{time.TotalMilliseconds}");
                     }
                 }
                 Console.WriteLine();
@@ -53,7 +53,7 @@ namespace SubgraphIsomorphismBenchmark
             //printBenchmark(n, density + 0.01m);
         }
 
-        private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed)
+        private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed, out int subgraphVertices, out int subgraphEdges)
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 363256 + seed - seed * seed);
@@ -67,13 +67,16 @@ namespace SubgraphIsomorphismBenchmark
                 h,
                 (v, e) => v,
                 0,
-                out double score,
+                out var score,
+                out var edges,
                 out var gToH,
                 out var hToG,
                 false,
                 false
                 );
             sw.Stop();
+            subgraphVertices = gToH.Keys.Count;
+            subgraphEdges = edges;
             return sw.Elapsed;
         }
     }

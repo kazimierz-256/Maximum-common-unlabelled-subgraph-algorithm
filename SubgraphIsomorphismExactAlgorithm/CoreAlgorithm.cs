@@ -23,7 +23,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> gOutsiders;
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
-        private Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound;
+        private Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         private bool analyzeDisconnected;
         private bool findExactMatch;
         private int recursionDepth;
@@ -37,7 +37,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g,
             UndirectedGraph h,
             Func<int, int, T> graphScoringFunction,
-            Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound,
+            Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound,
             bool analyzeDisconnected = false,
             bool findExactMatch = false,
             int recursionDepth = int.MaxValue,
@@ -101,7 +101,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 depthReached?.Invoke(recursionDepth, resultingValuation, ghMapping, hgMapping);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    newSolutionFound(resultingValuation, () => new Dictionary<int, int>(ghMapping), () => new Dictionary<int, int>(hgMapping));
+                    newSolutionFound(resultingValuation, () => new Dictionary<int, int>(ghMapping), () => new Dictionary<int, int>(hgMapping), totalNumberOfEdgesInSubgraph);
                 }
             }
             else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
@@ -274,7 +274,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             depthReached = depthReached,
                             // tocontemplate: how to value disconnected components?
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
-                            newSolutionFound = (newScore, ghMap, hgMap) =>
+                            newSolutionFound = (newScore, ghMap, hgMap, edges) =>
                             {
                                 newSolutionFound(
                                     newScore,
@@ -291,7 +291,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                                         foreach (var myMapping in hgMapping)
                                             hgExtended.Add(myMapping.Key, myMapping.Value);
                                         return hgExtended;
-                                    }
+                                    },
+                                    edges
                                     );
                             },
                             ghMapping = new Dictionary<int, int>(),

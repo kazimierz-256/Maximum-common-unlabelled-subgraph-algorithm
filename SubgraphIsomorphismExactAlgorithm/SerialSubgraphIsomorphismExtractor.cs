@@ -13,6 +13,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, T> graphScoringFunction,
             T initialScore,
             out T bestScore,
+            out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
             bool analyzeDisconnected = false,
@@ -38,6 +39,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localBestScore = initialScore;
             var ghLocalOptimalMapping = new Dictionary<int, int>();
             var hgLocalOptimalMapping = new Dictionary<int, int>();
+            var localSubgraphEdges = 0;
 
             while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0)
             {
@@ -55,13 +57,14 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap) =>
+                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
                         {
                             localBestScore = newScore;
                             ghLocalOptimalMapping = ghMap();
                             hgLocalOptimalMapping = hgMap();
+                            localSubgraphEdges = edges;
                         }
                     },
                     analyzeDisconnected, findExactMatch);
@@ -75,6 +78,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // return the solution
             bestScore = localBestScore;
+            subgraphEdges = localSubgraphEdges;
             if (swappedGraphs)
             {
                 ghOptimalMapping = hgLocalOptimalMapping;
