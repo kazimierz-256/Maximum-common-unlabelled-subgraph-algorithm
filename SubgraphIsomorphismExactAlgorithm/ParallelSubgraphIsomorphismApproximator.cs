@@ -27,6 +27,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         private static void ApproximateForward()
         {
+            // gather information
+
+            // predict best choice
+
+            // make next step
 
         }
     }

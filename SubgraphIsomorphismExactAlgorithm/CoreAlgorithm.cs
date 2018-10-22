@@ -28,15 +28,16 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool findExactMatch;
         private int recursionDepth;
         private bool exactMatchInG = true;
+        private int gInitialChoice;
+        private int hInitialChoice;
 
-        public void SetupAndRecurse(
+        public void HighLevelSetup(
             int gMatchingVertex,
             int hMatchingVertex,
             UndirectedGraph g,
             UndirectedGraph h,
             Func<int, int, T> graphScoringFunction,
             Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>> newSolutionFound,
-            ref T bestScore,
             bool analyzeDisconnected = false,
             bool findExactMatch = false,
             int recursionDepth = int.MaxValue,
@@ -46,6 +47,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.g = g;
             this.h = h;
 
+            this.gInitialChoice = gMatchingVertex;
+            this.hInitialChoice = hMatchingVertex;
             this.recursionDepth = recursionDepth;
             this.findExactMatch = findExactMatch;
             this.depthReached = depthReached;
@@ -79,11 +82,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hConnectionExistance[kvp.Key, vertexTo] = true;
                 }
             }
-
-            Recurse(ref bestScore);
         }
 
-        private void Recurse(ref T bestScore)
+        public void Recurse(ref T bestScore)
         {
             recursionDepth -= 1;
             if (recursionDepth == 0)
@@ -305,7 +306,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                             analyzeDisconnected = true,
                             recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
                             findExactMatch = findExactMatch,
-                            exactMatchInG = !subgraphsSwapped
+                            exactMatchInG = !subgraphsSwapped,
+                            gInitialChoice = gMatchingVertex,
+                            hInitialChoice = hMatchingCandidate
                         };
                         subSolver.Recurse(ref bestScore);
                     }
