@@ -27,7 +27,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool analyzeDisconnected;
         private bool findExactMatch;
         private int recursionDepth;
-        private bool exactMatchInG = true;
         private int gInitialChoice;
         private int hInitialChoice;
 
@@ -219,7 +218,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #endregion
                 // now consider the problem once the best candidate vertex has been removed
                 // remove vertex from graph and then restore it
-                if (!(findExactMatch && exactMatchInG))
+                if (!findExactMatch)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
@@ -235,14 +234,14 @@ namespace SubgraphIsomorphismExactAlgorithm
         private void DisconnectComponent(ref T bestScore)
         {
             // if exact match is required then recurse only when no vertex in g would be omitted
-            if (gOutsiders.Count > 0 && hOutsiders.Count > 0 && (!findExactMatch || (gEnvelope.Count == 0 && exactMatchInG) || (hEnvelope.Count == 0 && !exactMatchInG)))
+            if (gOutsiders.Count > 0 && hOutsiders.Count > 0 && (!findExactMatch || gEnvelope.Count == 0))
             {
                 var currentVertices = ghMapping.Keys.Count;
                 var currentEdges = totalNumberOfEdgesInSubgraph;
                 var gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
                 var hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 var subgraphsSwapped = false;
-                if (hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
+                if (!findExactMatch && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
                 {
                     subgraphsSwapped = true;
                     var tmp = gOutsiderGraph;
@@ -307,14 +306,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                             analyzeDisconnected = true,
                             recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
                             findExactMatch = findExactMatch,
-                            exactMatchInG = !subgraphsSwapped,
                             gInitialChoice = gMatchingVertex,
                             hInitialChoice = hMatchingCandidate
                         };
                         subSolver.Recurse(ref bestScore);
                     }
 
-                    if (findExactMatch && !subgraphsSwapped)
+                    if (findExactMatch)
                         break;
 
                     gOutsiderGraph.RemoveVertex(gMatchingVertex);
