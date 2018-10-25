@@ -31,6 +31,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             // gather statistical data about different choices
             // make the best local choice
             // advance in recursion
+            throw new NotImplementedException();
         }
     }
 }
