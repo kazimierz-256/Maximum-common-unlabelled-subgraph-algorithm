@@ -9,48 +9,49 @@ namespace SubgraphIsomorphismBenchmark
 {
     class Program
     {
-        private const string path = @"benchmark.csv";
+        private const string csvPath = @"benchmark.csv";
+        private const string texPath = @"benchmark.tex";
         private static Func<int, int, double> criterion;
         static void Main(string[] args)
         {
             //Console.WriteLine("Please enter an optimization criterion (please make sure it is non-decreasing in 'vertices' and 'edges')");
             //criterion = Parse.ParseInput(Console.ReadLine());
 
-            File.WriteAllText(path, string.Empty);
+            File.WriteAllText(csvPath, string.Empty);
+            File.WriteAllText(texPath, string.Empty);
             PrintBenchmark(2);
         }
-        private const int oddIterations = 0;
+        private const int iterations = 2;
         private static void PrintBenchmark(int n)
         {
-            //var results = new List<TimeSpan>();
-            for (int i = 1; i <= oddIterations * 2 + 1; i++)
+            using (var texWriter = File.AppendText(texPath))
+                texWriter.Write($"{n}&{n}");
+
+            for (double density = 0.05d; density < 1d; density += 0.05d)
             {
-                for (double density = 0.1d; density < 1d; density += 0.1d)
+                var msTime = 0d;
+                var times = new List<double>();
+                for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
-                    //results.Add(
-                    var time = BenchmarkIsomorphism(n, density, i, out var subgraphVertices, out var subgraphEdges);
-                    //);
-                    Console.Write($"{time.TotalMilliseconds:F2}ms,   ".PadLeft(20));
-                    Console.WriteLine($"vertices: {n}, density: { density}");
-                    using (var sw = File.AppendText(path))
-                    {
-                        sw.WriteLine($"{n},{density},{subgraphVertices},{subgraphEdges},{time.TotalMilliseconds}");
-                    }
+                    times.Add(BenchmarkIsomorphism(n, density, i, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds);
                 }
-                Console.WriteLine();
+
+                times.Sort();
+                msTime = times[times.Count / 2];
+
+                Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
+                Console.WriteLine($"vertices: {n}, density: { density}");
+
+                using (var csvWriter = File.AppendText(csvPath))
+                    csvWriter.WriteLine($"{n},{density},{msTime}");
+
+                using (var texWriter = File.AppendText(texPath))
+                    texWriter.Write($"&{msTime:F1}ms");
             }
-            //results.Sort();
-            //var medianTime = results[results.Count / 2];
-            //Console.WriteLine($"{n}, {density}: Elapsed: {medianTime.TotalMilliseconds}ms");
-            //if (density < 0.6m)
-            //{
-            //    printBenchmark(n, density + 0.05m);
-            //}
-            //else
-            //{
+            Console.WriteLine();
+            using (var texWriter = File.AppendText(texPath))
+                texWriter.WriteLine($"\\\\\\hline");
             PrintBenchmark(n + 1);
-            //}
-            //printBenchmark(n, density + 0.01m);
         }
 
         private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed, out int subgraphVertices, out int subgraphEdges)
