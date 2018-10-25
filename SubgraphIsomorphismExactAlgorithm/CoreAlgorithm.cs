@@ -6,11 +6,32 @@ using System.Text;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
+    public struct CoreInternalState<T>
+    {
+        public Func<int, int, T> graphScoringFunction;
+        public UndirectedGraph g;
+        public UndirectedGraph h;
+        public Action<int, T, Dictionary<int, int>, Dictionary<int, int>> depthReached;
+        public bool[,] gConnectionExistance;
+        public bool[,] hConnectionExistance;
+        public Dictionary<int, int> ghMapping;
+        public Dictionary<int, int> hgMapping;
+        public HashSet<int> gEnvelope;
+        public HashSet<int> hEnvelope;
+        public HashSet<int> gOutsiders;
+        public HashSet<int> hOutsiders;
+        public int totalNumberOfEdgesInSubgraph;
+        public Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
+        public bool analyzeDisconnected;
+        public bool findExactMatch;
+        public int recursionDepth;
+        public int gInitialChoice;
+        public int hInitialChoice;
+    }
     public class CoreAlgorithm<T>
         where T : IComparable
     {
         private Func<int, int, T> graphScoringFunction = null;
-
         private UndirectedGraph g;
         private UndirectedGraph h;
         private Action<int, T, Dictionary<int, int>, Dictionary<int, int>> depthReached;
@@ -29,6 +50,53 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int recursionDepth;
         private int gInitialChoice;
         private int hInitialChoice;
+
+        public CoreInternalState<T> ExportShallowInternalState() => new CoreInternalState<T>()
+        {
+            analyzeDisconnected = analyzeDisconnected,
+            depthReached = depthReached,
+            findExactMatch = findExactMatch,
+            g = g,
+            h = h,
+            gConnectionExistance = gConnectionExistance,
+            hConnectionExistance = hConnectionExistance,
+            gEnvelope = gEnvelope,
+            hEnvelope = hEnvelope,
+            ghMapping = ghMapping,
+            hgMapping = hgMapping,
+            gInitialChoice = gInitialChoice,
+            hInitialChoice = hInitialChoice,
+            gOutsiders = gOutsiders,
+            hOutsiders = hOutsiders,
+            graphScoringFunction = graphScoringFunction,
+            newSolutionFound = newSolutionFound,
+            recursionDepth = recursionDepth,
+            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph
+        };
+
+        public void ImportShallowInternalState(CoreInternalState<T> state)
+        {
+            analyzeDisconnected = state.analyzeDisconnected;
+            depthReached = state.depthReached;
+            findExactMatch = state.findExactMatch;
+            g = state.g;
+            h = state.h;
+            gConnectionExistance = state.gConnectionExistance;
+            hConnectionExistance = state.hConnectionExistance;
+            gEnvelope = state.gEnvelope;
+            hEnvelope = state.hEnvelope;
+            ghMapping = state.ghMapping;
+            hgMapping = state.hgMapping;
+            gInitialChoice = state.gInitialChoice;
+            hInitialChoice = state.hInitialChoice;
+            gOutsiders = state.gOutsiders;
+            hOutsiders = state.hOutsiders;
+            graphScoringFunction = state.graphScoringFunction;
+            newSolutionFound = state.newSolutionFound;
+            recursionDepth = state.recursionDepth;
+            totalNumberOfEdgesInSubgraph = state.totalNumberOfEdgesInSubgraph;
+        }
+
 
         public void HighLevelSetup(
             int gMatchingVertex,
@@ -100,7 +168,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 depthReached?.Invoke(recursionDepth, resultingValuation, ghMapping, hgMapping);
                 if (resultingValuation.CompareTo(bestScore) > 0)
                 {
-                    newSolutionFound(resultingValuation, () => new Dictionary<int, int>(ghMapping), () => new Dictionary<int, int>(hgMapping), totalNumberOfEdgesInSubgraph);
+                    newSolutionFound?.Invoke(resultingValuation, () => new Dictionary<int, int>(ghMapping), () => new Dictionary<int, int>(hgMapping), totalNumberOfEdgesInSubgraph);
                 }
             }
             else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
@@ -275,7 +343,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
                             newSolutionFound = (newScore, ghMap, hgMap, edges) =>
                             {
-                                newSolutionFound(
+                                newSolutionFound?.Invoke(
                                     newScore,
                                     () =>
                                     {
