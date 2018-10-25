@@ -71,6 +71,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     solver.Recurse(ref localBestScore);
                 }
 
+                if (findExactMatch)
+                    break;
                 // ignore previous g-vertices
                 g.RemoveVertex(gMatchingVertex);
             }

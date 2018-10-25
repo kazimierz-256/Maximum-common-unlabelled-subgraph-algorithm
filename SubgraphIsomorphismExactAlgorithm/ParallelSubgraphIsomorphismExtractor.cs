@@ -38,8 +38,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = hArgument;
             }
 
-            var gGraphs = new UndirectedGraph[g.Vertices.Count];
-            var gInitialVertices = new int[g.Vertices.Count];
+            var gGraphs = new List<UndirectedGraph>();
+            var gInitialVertices = new List<int>();
 
             while (g.Vertices.Count > 0)
             {
@@ -55,11 +55,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 }
 
-                gGraphs[g.Vertices.Count - 1] = g.DeepClone();
-                gInitialVertices[g.Vertices.Count - 1] = gMatchingVertex;
+                gGraphs.Add(g.DeepClone());
+                gInitialVertices.Add(gMatchingVertex);
 
+                if (findExactMatch)
+                    break;
                 // ignore previous g-vertices
-                g.RemoveVertex(gInitialVertices[g.Vertices.Count - 1]);
+                g.RemoveVertex(gMatchingVertex);
             }
 
             var localBestScore = initialScore;
@@ -68,10 +70,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localSubgraphEdges = 0;
             var lockingObject = new object();
             var hVertices = h.Vertices.ToArray();
-            Parallel.For(0, gGraphs.Length * hVertices.Length, iter =>
+            Parallel.For(0, gGraphs.Count * hVertices.Length, iter =>
             {
-                var gIndex = iter % gGraphs.Length;
-                var hIndex = iter / gGraphs.Length;
+                var gIndex = iter % gGraphs.Count;
+                var hIndex = iter / gGraphs.Count;
                 // try matching all h's
                 var subLeverager = new CoreAlgorithm<T>();
                 subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
