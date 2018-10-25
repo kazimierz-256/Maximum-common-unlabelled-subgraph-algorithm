@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.5d;
+            var density = 0.7d;
             {
                 var msTime = 0d;
                 var times = new List<double>();
@@ -59,8 +59,8 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed, out int subgraphVertices, out int subgraphEdges)
         {
             var sw = new Stopwatch();
-            var g = GraphFactory.GenerateRandom(8, density, 363256 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, density, 123998567 - seed - seed * seed);
+            var g = GraphFactory.GenerateRandom(n, density, 363256 + seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, 1 - density, 123998567 - seed - seed * seed);
             //var h = GraphFactory.GeneratePermuted(g, 0);
 
             // run the algorithm
@@ -75,7 +75,7 @@ namespace SubgraphIsomorphismBenchmark
                 out var gToH,
                 out var hToG,
                 false,
-                true
+                false
                 );
             sw.Stop();
 

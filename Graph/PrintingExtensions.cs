@@ -50,7 +50,7 @@ namespace GraphDataStructure
                 Console.ResetColor();
                 for (int j = 0; j < connections.GetLength(1); j++)
                 {
-                    if (i >= j)
+                    if (i > j)
                     {
                         Console.Write("   ");
                     }
@@ -76,8 +76,8 @@ namespace GraphDataStructure
                             }
                             Console.Write($" 0 ");
                         }
-                        Console.ResetColor();
                     }
+                    Console.ResetColor();
                 }
                 Console.WriteLine();
             }
