@@ -65,7 +65,7 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-#if true
+#if false
             SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
                 g,
                 h,

@@ -30,6 +30,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             CoreInternalState<double> initialSetup(int gMatchingVertex, int hMatchingVertex)
             {
+                // todo: cache more immutable!
                 var setupCore = new CoreAlgorithm<double>();
                 setupCore.HighLevelSetup(gMatchingVertex, hMatchingVertex, gArgument, hArgument, graphScoringFunction, null, analyzeDisconnected, findExactMatch);
                 return setupCore.ExportShallowInternalState();
@@ -46,12 +47,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                 foreach (var hVertex in hArgument.Vertices.ToArray())
                 {
                     var thisKVP = new KeyValuePair<int, int>(gVertex, hVertex);
-
-                    var ghInitialSetup = initialSetup(gVertex, hVertex);
-                    ghInitialSetup.recursionDepth = orderOfPolynomial;
-                    // todo: verify constant here...
                     var localResults = new List<double>();
-                    ghInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
+
+                    var localInitialSetup = initialSetup(gVertex, hVertex);
+                    localInitialSetup.recursionDepth = orderOfPolynomial;
+                    // todo: verify constant here...
+                    localInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                     {
                         var realScore = Math.Pow(score, 3);
                         //foreach (var coolKVP in ghLocalMap)
@@ -64,7 +65,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     var nullBest = initialScore;
                     var predictor = new CoreAlgorithm<double>();
-                    predictor.ImportShallowInternalState(ghInitialSetup);
+                    predictor.ImportShallowInternalState(localInitialSetup);
                     predictor.Recurse(ref nullBest);
 
                     // different combination of min/max...
@@ -87,13 +88,24 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            if (ghExactMapping.ContainsKey(bestConnection.Key) && ghExactMapping[bestConnection.Key] == bestConnection.Value)
-                Console.Beep();
-
-
-
-
             // make the best local choice
+            var nextResults = new List<double>();
+            var bestInitialSetup = initialSetup(bestConnection.Key, bestConnection.Value);
+            bestInitialSetup.recursionDepth = orderOfPolynomial;
+            bestInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
+            {
+                var realScore = Math.Pow(score, 3);
+                nextResults.Add(realScore);
+            };
+
+            // while there is an increase in result continue to approximate
+            while ()
+            {
+                // detect the most profitable connection
+
+            }
+
+
             // advance in recursion
             // herezje:
             bestScore = initialScore;

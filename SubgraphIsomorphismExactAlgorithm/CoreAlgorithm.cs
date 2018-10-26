@@ -145,17 +145,86 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
+        // returns boolean value based on isomorphicity of candidates
+        public bool TryMatchFromEnvelopeMutateInternalState(int gMatchingVertex, int hMatchingCandidate)
+        {
+            if (gEnvelope.Contains(gMatchingVertex) && hEnvelope.Contains(hMatchingCandidate))
+            {
+                gEnvelope.Remove(gMatchingVertex);
+
+                foreach (var gNeighbour in gOutsiders.ToArray())
+                {
+                    // if the neighbour is in the subgraph
+                    if (gConnectionExistance[gMatchingVertex, gNeighbour])
+                    {
+                        // if it is new to the envelope
+                        gEnvelope.Add(gNeighbour);
+                        gOutsiders.Remove(gNeighbour);
+                    }
+                }
+
+                var verticesTrulyIsomorphic = true;
+                var potentialNumberOfNewEdges = 0;
+
+                foreach (var ghSingleMapping in ghMapping)
+                {
+                    var gVertexInSubgraph = ghSingleMapping.Key;
+                    var hVertexInSubgraph = ghSingleMapping.Value;
+                    var gConnection = gConnectionExistance[gMatchingVertex, gVertexInSubgraph];
+                    var hConnection = hConnectionExistance[hMatchingCandidate, hVertexInSubgraph];
+                    if (gConnection != hConnection)
+                    {
+                        verticesTrulyIsomorphic = false;
+                        break;
+                    }
+                    else if (gConnection)
+                    {
+                        potentialNumberOfNewEdges += 1;
+                    }
+                }
+
+                if (verticesTrulyIsomorphic)
+                {
+                    totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
+                    // by definition add the transition functions (which means adding to the subgraph)
+                    ghMapping.Add(gMatchingVertex, hMatchingCandidate);
+                    hgMapping.Add(hMatchingCandidate, gMatchingVertex);
+
+                    // if the matching vertex was on the envelope then remove it
+                    hEnvelope.Remove(hMatchingCandidate);
+
+                    // spread the id to all neighbours on the envelope & discover new neighbours
+                    foreach (var hNeighbour in hOutsiders.ToArray())
+                    {
+                        if (hConnectionExistance[hNeighbour, hMatchingCandidate])
+                        {
+                            hEnvelope.Add(hNeighbour);
+                            hOutsiders.Remove(hNeighbour);
+                        }
+                    }
+                    recursionDepth -= 1;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return false;
+        }
+
         public void Recurse(ref T bestScore)
         {
-            recursionDepth -= 1;
             if (recursionDepth == 0)
+            {
                 newSolutionFound?.Invoke(
-                    graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph),
-                    () => new Dictionary<int, int>(ghMapping),
-                    () => new Dictionary<int, int>(hgMapping),
-                    totalNumberOfEdgesInSubgraph,
-                    recursionDepth
-                    );
+                   graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph),
+                   () => new Dictionary<int, int>(ghMapping),
+                   () => new Dictionary<int, int>(hgMapping),
+                   totalNumberOfEdgesInSubgraph,
+                   recursionDepth
+                   );
+            }
             else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
 
@@ -262,9 +331,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 hOutsiders.Remove(hNeighbour);
                             }
                         }
+                        recursionDepth -= 1;
                         Recurse(ref bestScore);
                         if (analyzeDisconnected)
                             DisconnectComponent(ref bestScore);
+                        recursionDepth += 1;
 
                         #region cleanup
                         foreach (var hVertex in hVerticesToRemoveFromEnvelope)
@@ -295,12 +366,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
 
+                    recursionDepth -= 1;
                     Recurse(ref bestScore);
+                    recursionDepth += 1;
 
                     g.RestoreVertex(gMatchingVertex, gRestoreOperation);
                 }
                 gEnvelope.Add(gMatchingVertex);
-                recursionDepth += 1;
             }
         }
 
