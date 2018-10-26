@@ -22,7 +22,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(texPath, string.Empty);
             PrintBenchmark(18);
         }
-        private const int iterations = 0;
+        //private const int iterations = 0;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
@@ -32,30 +32,34 @@ namespace SubgraphIsomorphismBenchmark
             var density = 0.6d;
             {
                 var msTime = 0d;
-                var times = new List<double>();
-                for (int i = 1; i <= iterations * 2 + 1; i++)
+                //var times = new List<double>();
+                //for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
                     Console.WriteLine("EXACT");
                     Console.ResetColor();
 
-                    times.Add(BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds);
+                    //msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds;
+                    //Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
+                    //Console.WriteLine($"vertices: {n}, density: { density}");
+
+                    for (int nl = 0; nl < 3; nl++)
+                        Console.WriteLine();
 
                     Console.BackgroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine("APPROXIMATE");
                     Console.ResetColor();
 
-                    BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges);
+                    var aMsTime = BenchmarkIsomorphism(false, n, density, 1, out var approximateSubgraphVertices, out var approximateSubgraphEdges).TotalMilliseconds;
+                    Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
+                    Console.WriteLine($"vertices: {n}, density: { density}");
 
-                    for (int nl = 0; nl < 5; nl++)
+                    for (int nl = 0; nl < 7; nl++)
                         Console.WriteLine();
                 }
 
-                times.Sort();
-                msTime = times[times.Count / 2];
-
-                Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
-                Console.WriteLine($"vertices: {n}, density: { density}");
+                //times.Sort();
+                //msTime = times[times.Count / 2];
 
                 using (var csvWriter = File.AppendText(csvPath))
                     csvWriter.WriteLine($"{n},{density},{msTime}");
@@ -96,14 +100,10 @@ namespace SubgraphIsomorphismBenchmark
 
                 Console.WriteLine("Graph G:");
                 g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
-
                 Console.WriteLine();
+
                 Console.WriteLine("Graph H:");
                 h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
                 Console.WriteLine();
 
                 subgraphVertices = gToH.Keys.Count;
@@ -112,7 +112,7 @@ namespace SubgraphIsomorphismBenchmark
             else
             {
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                    3,
+                    2,
                     g,
                     h,
                     (v, e) => v,
@@ -128,15 +128,13 @@ namespace SubgraphIsomorphismBenchmark
 
                 Console.WriteLine("Graph G:");
                 g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
-
                 Console.WriteLine();
+
                 Console.WriteLine("Graph H:");
                 h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
+                Console.WriteLine();
 
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
+                Console.WriteLine($"score: {score}");
 
                 subgraphVertices = gToH.Keys.Count;
                 subgraphEdges = edges;

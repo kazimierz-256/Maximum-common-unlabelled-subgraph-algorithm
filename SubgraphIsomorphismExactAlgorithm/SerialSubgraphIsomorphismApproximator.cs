@@ -8,8 +8,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 {
     public class SerialSubgraphIsomorphismApproximator
     {
+        // let D be max{|G|,|H|}
+        // upper bound polynomial is on the order of O(D^5+D^{3+order})
+        // it makes sense to make it at least 2
         public static void ApproximateOptimalSubgraph(
-            int orderOfPolynomial,
+            int orderOfPolynomialMinus3,
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
@@ -22,25 +25,67 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool findExactMatch = false
             )
         {
-            if (analyzeDisconnected)
-            {
-                throw new NotImplementedException("Jeszcze nie obsługuję różnych składowych... muszę najpierw sprawdzić sprawność w prostszym przypadku");
-            }
-            SerialSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(gArgument, hArgument, graphScoringFunction, initialScore, out var localBestScore, out var localSubgrahEdges, out var ghExactMapping, out var hgExactMapping, analyzeDisconnected, findExactMatch);
+            if (orderOfPolynomialMinus3 < 2)
+                orderOfPolynomialMinus3 = 2;
 
-            CoreInternalState<double> initialSetup(int gMatchingVertex, int hMatchingVertex)
+            #region Initial setup
+            var gMax = gArgument.Vertices.Max();
+
+            var gConnectionExistance = new bool[gMax + 1, gMax + 1];
+            var hConnectionExistance = new bool[hArgument.Vertices.Count, hArgument.Vertices.Count];
+
+            foreach (var kvp in gArgument.Neighbours)
+                foreach (var vertexTo in kvp.Value)
+                    gConnectionExistance[kvp.Key, vertexTo] = true;
+
+            foreach (var kvp in hArgument.Neighbours)
+                foreach (var vertexTo in kvp.Value)
+                    hConnectionExistance[kvp.Key, vertexTo] = true;
+            #endregion
+
+            CoreInternalState<double> initialSetupAndMatch(int gMatchingVertex, int hMatchingVertex)
             {
                 // todo: cache more immutable!
+                //setupCore.HighLevelSetup(gMatchingVertex, hMatchingVertex, gArgument, hArgument, graphScoringFunction, null, analyzeDisconnected, findExactMatch);
+                var stateToImport = new CoreInternalState<double>()
+                {
+                    g = gArgument,
+                    h = hArgument,
+                    gInitialChoice = gMatchingVertex,
+                    hInitialChoice = hMatchingVertex,
+                    recursionDepth = orderOfPolynomialMinus3,
+                    findExactMatch = findExactMatch,
+                    analyzeDisconnected = analyzeDisconnected,
+                    graphScoringFunction = graphScoringFunction,
+                    ghMapping = new Dictionary<int, int>() { { gMatchingVertex, hMatchingVertex } },
+                    hgMapping = new Dictionary<int, int>() { { hMatchingVertex, gMatchingVertex } },
+                    gEnvelope = new HashSet<int>(gArgument.NeighboursOf(gMatchingVertex)),
+                    hEnvelope = new HashSet<int>(hArgument.NeighboursOf(hMatchingVertex)),
+                    gOutsiders = new HashSet<int>(gArgument.Vertices),
+                    hOutsiders = new HashSet<int>(hArgument.Vertices),
+                    totalNumberOfEdgesInSubgraph = 0,
+
+                    gConnectionExistance = gConnectionExistance,
+                    hConnectionExistance = hConnectionExistance,
+                };
+
+                stateToImport.gOutsiders.Remove(gMatchingVertex);
+                stateToImport.hOutsiders.Remove(hMatchingVertex);
+
+                foreach (var gVertex in gArgument.NeighboursOf(gMatchingVertex))
+                    stateToImport.gOutsiders.Remove(gVertex);
+                foreach (var hVertex in hArgument.NeighboursOf(hMatchingVertex))
+                    stateToImport.hOutsiders.Remove(hVertex);
+
                 var setupCore = new CoreAlgorithm<double>();
-                setupCore.HighLevelSetup(gMatchingVertex, hMatchingVertex, gArgument, hArgument, graphScoringFunction, null, analyzeDisconnected, findExactMatch);
+                setupCore.ImportShallowInternalState(stateToImport);
+
                 return setupCore.ExportShallowInternalState();
             };
 
             // choose best vertex
-            var results = new Dictionary<KeyValuePair<int, int>, double>();
-            foreach (var gVertex in gArgument.Vertices)
-                foreach (var hVertex in hArgument.Vertices)
-                    results.Add(new KeyValuePair<int, int>(gVertex, hVertex), 0d);
+            KeyValuePair<int, int> bestConnection;
+            var bestConnectionValue = double.MinValue;
 
             foreach (var gVertex in gArgument.Vertices.ToArray())
             {
@@ -49,9 +94,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var thisKVP = new KeyValuePair<int, int>(gVertex, hVertex);
                     var localResults = new List<double>();
 
-                    var localInitialSetup = initialSetup(gVertex, hVertex);
-                    localInitialSetup.recursionDepth = orderOfPolynomial;
-                    // todo: verify constant here...
+                    var localInitialSetup = initialSetupAndMatch(gVertex, hVertex);
+
                     localInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                     {
                         var realScore = Math.Pow(score, 3);
@@ -73,41 +117,30 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // max, min/max combination, sum, average
                     // in the future make a large statistical rank of great valuations
                     if (localResults.Count > 0)
-                        results[thisKVP] = localResults.Average();
+                    {
+                        var thisResult = localResults.Max();
+                        if (bestConnectionValue < thisResult)
+                        {
+                            bestConnectionValue = thisResult;
+                            bestConnection = thisKVP;
+                        }
+                    }
                 }
             }
 
-            // gather statistical data about different choices
-            KeyValuePair<int, int> bestConnection;
-            var bestConnectionValue = double.MinValue;
-            foreach (var kvp in results)
-            {
-                if (kvp.Value > bestConnectionValue)
-                {
-                    bestConnectionValue = kvp.Value;
-                    bestConnection = kvp.Key;
-                }
-            }
 
             // make the best local choice
-            var bestLocalSetup = initialSetup(bestConnection.Key, bestConnection.Value);
-            var updater = new CoreAlgorithm<double>();
-            updater.ImportShallowInternalState(bestLocalSetup);
-            updater.TryMatchFromEnvelopeMutateInternalState(bestConnection.Key, bestConnection.Value);
-            bestLocalSetup = updater.ExportShallowInternalState();
+            var bestLocalSetup = initialSetupAndMatch(bestConnection.Key, bestConnection.Value);
+            var bestNextSetup = bestLocalSetup;
             // while there is an increase in result continue to approximate
 
             var anybodyMatched = true;
-            var envelopeResults = new Dictionary<KeyValuePair<int, int>, Tuple<double, double, int>>();
-            var bestConnectionDetails = new Tuple<double, double, int>(0, bestConnectionValue, 0);
+            var localBestConnectionDetails = new Tuple<double, double, int>(double.MinValue, double.MinValue, 0);
+            var archivedBestConnectionDetails = localBestConnectionDetails;
             while (anybodyMatched)
             {
-                envelopeResults.Clear();
-                foreach (var gVertex in bestLocalSetup.gEnvelope)
-                    foreach (var hVertex in bestLocalSetup.hEnvelope)
-                        envelopeResults.Add(new KeyValuePair<int, int>(gVertex, hVertex), new Tuple<double, double, int>(0d, 0d, 0));
-
                 anybodyMatched = false;
+                localBestConnectionDetails = new Tuple<double, double, int>(double.MinValue, double.MinValue, 0);
                 foreach (var gCandidate in bestLocalSetup.gEnvelope)
                 {
                     foreach (var hCandidate in bestLocalSetup.hEnvelope)
@@ -118,51 +151,41 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         var predictor = new CoreAlgorithm<double>();
                         var localSetup = bestLocalSetup.Clone();
-                        localSetup.recursionDepth = orderOfPolynomial;
+                        var potentialImprovedState = new CoreInternalState<double>();
+                        localSetup.recursionDepth = orderOfPolynomialMinus3;
                         localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                         {
                             var realScore = Math.Pow(score, 3);
-                            if (envelopeResults[thisKVP].Item1<realScore)
+                            if (localBestConnectionDetails.Item1 < realScore)
                             {
-                                envelopeResults[thisKVP] = new Tuple<double, double, int>( realScore, score, edges);
+                                bestNextSetup = potentialImprovedState;
+                                bestConnection = thisKVP;
+                                localBestConnectionDetails = new Tuple<double, double, int>(realScore, score, edges);
                             }
                         };
                         predictor.ImportShallowInternalState(localSetup);
 
                         if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
                         {
+                            potentialImprovedState = predictor.ExportShallowInternalState().Clone();
                             anybodyMatched = true;
                             predictor.Recurse(ref nullBest);
                         }
-                        else
-                        {
-                            // vertices not locally isomorphic, sorry
-                        }
-                    }
-                }
-                // detect the most profitable connection
-                bestConnectionValue = double.MinValue;
-                foreach (var kvp in envelopeResults)
-                {
-                    if (kvp.Value.Item1 > bestConnectionValue)
-                    {
-                        bestConnectionValue = kvp.Value.Item1;
-                        bestConnection = kvp.Key;
-                        bestConnectionDetails = kvp.Value;
                     }
                 }
 
-                updater = new CoreAlgorithm<double>();
-                updater.ImportShallowInternalState(bestLocalSetup);
-                updater.TryMatchFromEnvelopeMutateInternalState(bestConnection.Key, bestConnection.Value);
-                bestLocalSetup = updater.ExportShallowInternalState();
+                if (anybodyMatched)
+                {
+                    bestLocalSetup = bestNextSetup;
+                    archivedBestConnectionDetails = localBestConnectionDetails;
+                }
             }
 
 
             // advance in recursion
 
-            bestScore = bestConnectionDetails.Item2;
-            subgraphEdges = bestConnectionDetails.Item3;
+            bestScore = archivedBestConnectionDetails.Item2;
+            subgraphEdges = archivedBestConnectionDetails.Item3;
             ghOptimalMapping = bestLocalSetup.ghMapping;
             hgOptimalMapping = bestLocalSetup.hgMapping;
         }
