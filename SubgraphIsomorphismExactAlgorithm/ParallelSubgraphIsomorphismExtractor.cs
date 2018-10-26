@@ -75,8 +75,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gIndex = iter % gGraphs.Count;
                 var hIndex = iter / gGraphs.Count;
                 // try matching all h's
-                var subLeverager = new CoreAlgorithm<T>();
-                subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
+                var algorithm = new CoreAlgorithm<T>();
+                algorithm.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {
@@ -93,7 +93,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                 },
                 analyzeDisconnected, findExactMatch);
-                subLeverager.Recurse(ref localBestScore);
+                algorithm.Recurse(ref localBestScore);
             });
 
             // return the solution

@@ -27,7 +27,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG, false, true);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG, false, false);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 
@@ -60,7 +60,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG, true, false);
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG, true, true);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
                     // verify the solution
@@ -92,7 +92,36 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out int score, out var subgraphEdges, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<int>.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG);
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(5, 10000, 0.5, 24)]
+        public void ApproximatingGraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                var max = repetitions;
+                if (i == 2)
+                {
+                    max = 1;
+                }
+                for (int j = 0; j < max; j++)
+                {
+
+                    // randomize a graph of given n and density
+                    var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed + j * j);
+                    var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
+
+                    // run the algorithm
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(2, g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 
