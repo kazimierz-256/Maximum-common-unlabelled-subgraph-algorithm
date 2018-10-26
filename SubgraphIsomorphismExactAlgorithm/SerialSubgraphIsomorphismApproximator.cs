@@ -12,7 +12,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         // upper bound polynomial is on the order of O(D^5+D^{3+order})
         // it makes sense to make it at least 2
         public static void ApproximateOptimalSubgraph(
-            int orderOfPolynomialMinus3,
+            int orderOfPolynomial,
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
@@ -29,9 +29,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
             if (findExactMatch)
                 throw new Exception("Feature not yet supported.");
-
-            if (orderOfPolynomialMinus3 < 2)
-                orderOfPolynomialMinus3 = 2;
+            var orderOfPolynomialMinus3 = orderOfPolynomial - 3;
+            if (orderOfPolynomialMinus3 < 1)
+                orderOfPolynomialMinus3 = 1;
 
             #region Initial setup
             var gMax = gArgument.Vertices.Max();
@@ -145,13 +145,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 anybodyMatched = false;
                 localBestConnectionDetails = new Tuple<double, double, int>(double.MinValue, double.MinValue, 0);
+                var localBestScore = initialScore;
+
                 foreach (var gCandidate in bestLocalSetup.gEnvelope)
                 {
                     foreach (var hCandidate in bestLocalSetup.hEnvelope)
                     {
                         var thisKVP = new KeyValuePair<int, int>(gCandidate, hCandidate);
-
-                        var nullBest = initialScore;
 
                         var predictor = new CoreAlgorithm<double>();
                         var localSetup = bestLocalSetup.Clone();
@@ -172,7 +172,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             potentialImprovedState = predictor.ExportShallowInternalState().Clone();
                             anybodyMatched = true;
-                            predictor.Recurse(ref nullBest);
+                            predictor.Recurse(ref localBestScore);
                         }
                     }
                 }
