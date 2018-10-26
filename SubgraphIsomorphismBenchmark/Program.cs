@@ -65,6 +65,20 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
+#if true
+            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+                g,
+                h,
+                (v, e) => v,
+                0,
+                out var score,
+                out var edges,
+                out var gToH,
+                out var hToG,
+                false,
+                false
+                );
+#else
             SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                 5,
                 g,
@@ -78,6 +92,7 @@ namespace SubgraphIsomorphismBenchmark
                 false,
                 false
                 );
+#endif
             sw.Stop();
 
             Console.WriteLine("Graf G:");
