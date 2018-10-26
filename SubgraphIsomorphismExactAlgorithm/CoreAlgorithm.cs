@@ -238,7 +238,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         public void Recurse(ref T bestScore)
         {
-            if (recursionDepth == 0)
+            if (recursionDepth <= 0)
             {
                 newSolutionFound?.Invoke(
                    graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph),
@@ -472,7 +472,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
                             hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
                             analyzeDisconnected = true,
-                            recursionDepth = recursionDepth, // todo: make sure it is recursionDepth not recursionDepth-1
+                            recursionDepth = recursionDepth - 1,
                             findExactMatch = findExactMatch,
                             gInitialChoice = gMatchingVertex,
                             hInitialChoice = hMatchingCandidate

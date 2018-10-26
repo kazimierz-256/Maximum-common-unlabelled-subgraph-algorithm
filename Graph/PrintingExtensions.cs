@@ -6,7 +6,7 @@ namespace GraphDataStructure
 {
     public static class PrintingExtensions
     {
-        public static void PrintSubgraph(this UndirectedGraph g, int[] gSubgraphVertexOrder, Dictionary<int, int> ghMap)
+        public static void PrintSubgraph(this UndirectedGraph g, int[] gSubgraphVertexOrder, Dictionary<int, int> ghMap, ConsoleColor dark = ConsoleColor.DarkGreen, ConsoleColor light = ConsoleColor.Green)
         {
             var ordering = new int[g.Vertices.Count];
             gSubgraphVertexOrder.CopyTo(ordering, 0);
@@ -35,7 +35,7 @@ namespace GraphDataStructure
             for (int i = 0; i < connections.GetLength(0); i++)
             {
                 var indexIsInSubgraph = i < gSubgraphVertexOrder.Length;
-                Console.ForegroundColor = indexIsInSubgraph ? ConsoleColor.Green : ConsoleColor.Gray;
+                Console.ForegroundColor = indexIsInSubgraph ? light : ConsoleColor.Gray;
                 Console.Write($"{ordering[i]} ".PadLeft(3));
                 Console.ResetColor();
             }
@@ -44,7 +44,7 @@ namespace GraphDataStructure
             {
                 var indexIsInSubgraph = i < gSubgraphVertexOrder.Length;
                 if (indexIsInSubgraph)
-                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.ForegroundColor = light;
                 Console.Write($"{ordering[i]}:".PadLeft(4));
                 Console.ResetColor();
                 for (int j = 0; j < g.Vertices.Count; j++)
@@ -57,7 +57,7 @@ namespace GraphDataStructure
                     else if (i == j)
                     {
 
-                        Console.ForegroundColor = isInSubgraph ? ConsoleColor.DarkGreen : ConsoleColor.DarkGray;
+                        Console.ForegroundColor = isInSubgraph ? dark : ConsoleColor.DarkGray;
 
                         Console.Write($"{g.Degree(ordering[i])} ".PadLeft(3));
                     }
@@ -68,7 +68,7 @@ namespace GraphDataStructure
                         {
                             if (isInSubgraph)
                             {
-                                Console.BackgroundColor = ConsoleColor.Green;
+                                Console.BackgroundColor = light;
                                 Console.ForegroundColor = ConsoleColor.Black;
                             }
                             else
@@ -83,13 +83,18 @@ namespace GraphDataStructure
                             if (isInSubgraph)
                             {
                                 Console.BackgroundColor = ConsoleColor.Black;
-                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.ForegroundColor = light;
+                            }
+                            else
+                            {
+
                             }
                             Console.Write(string.Empty.PadLeft(3));
                         }
                     }
                     Console.ResetColor();
                 }
+                Console.Write("  .");
                 Console.WriteLine();
             }
         }

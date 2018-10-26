@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(18);
+            PrintBenchmark(60);
         }
         //private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -29,26 +29,30 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.6d;
+            var density = 0.5d;
             {
                 var msTime = 0d;
                 //var times = new List<double>();
                 //for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
+                    Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
-                    Console.WriteLine("EXACT");
+                    Console.Write("EXACT");
                     Console.ResetColor();
+                    Console.WriteLine(".");
 
-                    msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds;
-                    Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
-                    Console.WriteLine($"vertices: {n}, density: { density}");
+                    //msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds;
+                    //Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
+                    //Console.WriteLine($"vertices: {n}, density: { density}");
 
                     for (int nl = 0; nl < 3; nl++)
                         Console.WriteLine();
 
-                    Console.BackgroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("APPROXIMATE");
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.BackgroundColor = ConsoleColor.DarkCyan;
+                    Console.Write("APPROXIMATE");
                     Console.ResetColor();
+                    Console.WriteLine(".");
 
                     var aMsTime = BenchmarkIsomorphism(false, n, density, 1, out var approximateSubgraphVertices, out var approximateSubgraphEdges).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
@@ -77,7 +81,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 36532556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, 1 - density, 123698567 - seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, density, 123698567 - seed - seed * seed);
             //var h = GraphFactory.GeneratePermuted(g, 0);
 
             // run the algorithm
@@ -87,7 +91,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v,
+                    (v, e) => e,
                     0,
                     out var score,
                     out var edges,
@@ -112,10 +116,10 @@ namespace SubgraphIsomorphismBenchmark
             else
             {
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                    4,
+                    3,
                     g,
                     h,
-                    (v, e) => v,
+                    (v, e) => e,
                     0,
                     out var score,
                     out var edges,
@@ -127,11 +131,11 @@ namespace SubgraphIsomorphismBenchmark
                 sw.Stop();
 
                 Console.WriteLine("Graph G:");
-                g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
+                g.PrintSubgraph(gToH.Keys.ToArray(), gToH, ConsoleColor.DarkCyan, ConsoleColor.Cyan);
                 Console.WriteLine();
 
                 Console.WriteLine("Graph H:");
-                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
+                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG, ConsoleColor.DarkCyan, ConsoleColor.Cyan);
                 Console.WriteLine();
 
                 Console.WriteLine($"score: {score}");

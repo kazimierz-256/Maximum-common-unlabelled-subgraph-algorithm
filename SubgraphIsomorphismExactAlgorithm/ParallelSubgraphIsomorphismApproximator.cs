@@ -3,10 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class SerialSubgraphIsomorphismApproximator
+    public class ParallelSubgraphIsomorphismApproximator
     {
         // let D be max{|G|,|H|}
         // upper bound polynomial is on the order of O(D^5+D^{3+order})
@@ -143,39 +144,49 @@ namespace SubgraphIsomorphismExactAlgorithm
             var archivedBestConnectionDetails = localBestConnectionDetails;
             while (anybodyMatched)
             {
+                var localBestScore = initialScore;
                 anybodyMatched = false;
                 localBestConnectionDetails = new Tuple<double, double, int>(double.MinValue, double.MinValue, 0);
-                foreach (var gCandidate in bestLocalSetup.gEnvelope)
+                var syncObject = new object();
+                var gEnveloperOrdered = bestLocalSetup.gEnvelope.ToArray();
+                var hEnveloperOrdered = bestLocalSetup.hEnvelope.ToArray();
+
+                Parallel.For(0, gEnveloperOrdered.Length * hEnveloperOrdered.Length, i =>
                 {
-                    foreach (var hCandidate in bestLocalSetup.hEnvelope)
+                    var gCandidate = gEnveloperOrdered[i / hEnveloperOrdered.Length];
+                    var hCandidate = hEnveloperOrdered[i % hEnveloperOrdered.Length];
+
+                    var thisKVP = new KeyValuePair<int, int>(gCandidate, hCandidate);
+
+                    var predictor = new CoreAlgorithm<double>();
+                    var localSetup = bestLocalSetup.Clone(true);
+                    var potentialImprovedState = new CoreInternalState<double>();
+                    localSetup.recursionDepth = orderOfPolynomialMinus3;
+                    localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                     {
-                        var thisKVP = new KeyValuePair<int, int>(gCandidate, hCandidate);
-
-                        var nullBest = initialScore;
-
-                        var predictor = new CoreAlgorithm<double>();
-                        var localSetup = bestLocalSetup.Clone();
-                        var potentialImprovedState = new CoreInternalState<double>();
-                        localSetup.recursionDepth = orderOfPolynomialMinus3;
-                        localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
+                        if (localBestConnectionDetails.Item1 < score)
                         {
-                            if (localBestConnectionDetails.Item1 < score)
+                            lock (syncObject)
                             {
-                                bestNextSetup = potentialImprovedState;
-                                bestConnection = thisKVP;
-                                localBestConnectionDetails = new Tuple<double, double, int>(score, score, edges);
+                                if (localBestConnectionDetails.Item1 < score)
+                                {
+                                    localBestScore = score;
+                                    bestNextSetup = potentialImprovedState;
+                                    bestConnection = thisKVP;
+                                    localBestConnectionDetails = new Tuple<double, double, int>(score, score, edges);
+                                }
                             }
-                        };
-                        predictor.ImportShallowInternalState(localSetup);
-
-                        if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
-                        {
-                            potentialImprovedState = predictor.ExportShallowInternalState().Clone();
-                            anybodyMatched = true;
-                            predictor.Recurse(ref nullBest);
                         }
+                    };
+                    predictor.ImportShallowInternalState(localSetup);
+
+                    if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
+                    {
+                        potentialImprovedState = predictor.ExportShallowInternalState().Clone();
+                        anybodyMatched = true;
+                        predictor.Recurse(ref localBestScore);
                     }
-                }
+                });
 
                 if (anybodyMatched)
                 {
