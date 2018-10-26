@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.7d;
+            var density = 0.6d;
             {
                 var msTime = 0d;
                 var times = new List<double>();
@@ -65,7 +65,8 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+            SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
+                3,
                 g,
                 h,
                 (v, e) => v,
