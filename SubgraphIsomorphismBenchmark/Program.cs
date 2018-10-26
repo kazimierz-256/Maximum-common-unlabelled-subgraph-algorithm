@@ -39,9 +39,9 @@ namespace SubgraphIsomorphismBenchmark
                     Console.WriteLine("EXACT");
                     Console.ResetColor();
 
-                    //msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds;
-                    //Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
-                    //Console.WriteLine($"vertices: {n}, density: { density}");
+                    msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds;
+                    Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
+                    Console.WriteLine($"vertices: {n}, density: { density}");
 
                     for (int nl = 0; nl < 3; nl++)
                         Console.WriteLine();
@@ -112,7 +112,7 @@ namespace SubgraphIsomorphismBenchmark
             else
             {
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                    2,
+                    4,
                     g,
                     h,
                     (v, e) => v,
