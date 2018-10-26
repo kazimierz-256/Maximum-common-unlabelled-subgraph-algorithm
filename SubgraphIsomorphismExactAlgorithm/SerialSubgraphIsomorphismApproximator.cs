@@ -25,6 +25,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool findExactMatch = false
             )
         {
+            if (!analyzeDisconnected && findExactMatch)
+                throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
+
             if (orderOfPolynomialMinus3 < 2)
                 orderOfPolynomialMinus3 = 2;
 
@@ -182,12 +185,22 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
 
-            // advance in recursion
-
-            bestScore = archivedBestConnectionDetails.Item2;
-            subgraphEdges = archivedBestConnectionDetails.Item3;
-            ghOptimalMapping = bestLocalSetup.ghMapping;
-            hgOptimalMapping = bestLocalSetup.hgMapping;
+            if (findExactMatch && bestLocalSetup.ghMapping.Count < gArgument.Vertices.Count)
+            {
+                // did not find an exact match
+                bestScore = initialScore;
+                subgraphEdges = 0;
+                ghOptimalMapping = new Dictionary<int, int>();
+                hgOptimalMapping = new Dictionary<int, int>();
+            }
+            else
+            {
+                // advance in recursion
+                bestScore = archivedBestConnectionDetails.Item2;
+                subgraphEdges = archivedBestConnectionDetails.Item3;
+                ghOptimalMapping = bestLocalSetup.ghMapping;
+                hgOptimalMapping = bestLocalSetup.hgMapping;
+            }
         }
     }
 }

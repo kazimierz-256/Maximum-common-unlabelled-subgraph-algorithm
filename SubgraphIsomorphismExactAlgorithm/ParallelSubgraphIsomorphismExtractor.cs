@@ -22,6 +22,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool findExactMatch = false
             )
         {
+            if (!analyzeDisconnected && findExactMatch)
+                throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
+
             var swappedGraphs = false;
             UndirectedGraph g;
             UndirectedGraph h;
@@ -96,18 +99,29 @@ namespace SubgraphIsomorphismExactAlgorithm
                 algorithm.Recurse(ref localBestScore);
             });
 
-            // return the solution
-            bestScore = localBestScore;
-            subgraphEdges = localSubgraphEdges;
-            if (swappedGraphs)
+            if (findExactMatch && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
             {
-                ghOptimalMapping = hgLocalOptimalMapping;
-                hgOptimalMapping = ghLocalOptimalMapping;
+                // did not find an exact match
+                bestScore = initialScore;
+                subgraphEdges = 0;
+                ghOptimalMapping = new Dictionary<int, int>();
+                hgOptimalMapping = new Dictionary<int, int>();
             }
             else
             {
-                ghOptimalMapping = ghLocalOptimalMapping;
-                hgOptimalMapping = hgLocalOptimalMapping;
+                // return the solution
+                bestScore = localBestScore;
+                subgraphEdges = localSubgraphEdges;
+                if (swappedGraphs)
+                {
+                    ghOptimalMapping = hgLocalOptimalMapping;
+                    hgOptimalMapping = ghLocalOptimalMapping;
+                }
+                else
+                {
+                    ghOptimalMapping = ghLocalOptimalMapping;
+                    hgOptimalMapping = hgLocalOptimalMapping;
+                }
             }
         }
     }
