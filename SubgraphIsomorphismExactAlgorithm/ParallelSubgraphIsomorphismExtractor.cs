@@ -26,7 +26,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g;
             UndirectedGraph h;
 
-            if (hArgument.EdgeCount < gArgument.EdgeCount)
+            if (!findExactMatch && hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;
@@ -76,7 +76,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = iter / gGraphs.Count;
                 // try matching all h's
                 var subLeverager = new CoreAlgorithm<T>();
-                subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
+                subLeverager.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {

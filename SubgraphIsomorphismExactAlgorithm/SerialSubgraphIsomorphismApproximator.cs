@@ -51,7 +51,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     ghInitialSetup.recursionDepth = orderOfPolynomial;
                     // todo: verify constant here...
                     var localResults = new List<double>();
-                    ghInitialSetup.depthReached = (int depthAboveRequired, double score, Dictionary<int, int> ghLocalMap, Dictionary<int, int> hgLocalMap, int edges) =>
+                    ghInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                     {
                         var realScore = Math.Pow(score, 3);
                         //foreach (var coolKVP in ghLocalMap)

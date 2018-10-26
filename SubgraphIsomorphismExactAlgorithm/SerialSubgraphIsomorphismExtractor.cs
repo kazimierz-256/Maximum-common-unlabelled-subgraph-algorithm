@@ -24,7 +24,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var solver = new CoreAlgorithm<T>();
             var swappedGraphs = false;
 
-            if (hArgument.EdgeCount < gArgument.EdgeCount)
+            if (!findExactMatch && hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;
@@ -57,7 +57,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
+                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
                         {
