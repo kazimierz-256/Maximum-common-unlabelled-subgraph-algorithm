@@ -26,6 +26,29 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int recursionDepth;
         public int gInitialChoice;
         public int hInitialChoice;
+
+        public CoreInternalState<T> Clone(bool gClone = false, bool hClone = false)
+        => new CoreInternalState<T>()
+        {
+            analyzeDisconnected = analyzeDisconnected,
+            findExactMatch = findExactMatch,
+            g = gClone ? g.DeepClone() : g,
+            h = hClone ? h.DeepClone() : h,
+            gConnectionExistance = gConnectionExistance.Clone() as bool[,],
+            hConnectionExistance = hConnectionExistance.Clone() as bool[,],
+            gEnvelope = new HashSet<int>(gEnvelope),
+            hEnvelope = new HashSet<int>(hEnvelope),
+            ghMapping = new Dictionary<int, int>(ghMapping),
+            hgMapping = new Dictionary<int, int>(hgMapping),
+            gInitialChoice = gInitialChoice,
+            hInitialChoice = hInitialChoice,
+            gOutsiders = new HashSet<int>(gOutsiders),
+            hOutsiders = new HashSet<int>(hOutsiders),
+            graphScoringFunction = graphScoringFunction,
+            newSolutionFound = newSolutionFound,
+            recursionDepth = recursionDepth,
+            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph
+        };
     }
     public class CoreAlgorithm<T>
         where T : IComparable

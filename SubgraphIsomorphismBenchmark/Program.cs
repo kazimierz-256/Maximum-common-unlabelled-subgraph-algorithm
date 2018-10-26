@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(12);
+            PrintBenchmark(18);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -35,7 +35,20 @@ namespace SubgraphIsomorphismBenchmark
                 var times = new List<double>();
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
-                    times.Add(BenchmarkIsomorphism(n, density, i, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds);
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                    Console.WriteLine("EXACT");
+                    Console.ResetColor();
+
+                    times.Add(BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges).TotalMilliseconds);
+
+                    Console.BackgroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine("APPROXIMATE");
+                    Console.ResetColor();
+
+                    BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges);
+
+                    for (int nl = 0; nl < 5; nl++)
+                        Console.WriteLine();
                 }
 
                 times.Sort();
@@ -56,7 +69,7 @@ namespace SubgraphIsomorphismBenchmark
             PrintBenchmark(n + 1);
         }
 
-        private static TimeSpan BenchmarkIsomorphism(int n, double density, int seed, out int subgraphVertices, out int subgraphEdges)
+        private static TimeSpan BenchmarkIsomorphism(bool exact, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges)
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 36532556 + seed - seed * seed);
@@ -65,50 +78,69 @@ namespace SubgraphIsomorphismBenchmark
 
             // run the algorithm
             sw.Start();
-#if false
-            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
-                g,
-                h,
-                (v, e) => v,
-                0,
-                out var score,
-                out var edges,
-                out var gToH,
-                out var hToG,
-                false,
-                false
-                );
-#else
-            SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                5,
-                g,
-                h,
-                (v, e) => v,
-                0,
-                out var score,
-                out var edges,
-                out var gToH,
-                out var hToG,
-                false,
-                false
-                );
-#endif
-            sw.Stop();
+            if (exact)
+            {
+                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+                    g,
+                    h,
+                    (v, e) => v,
+                    0,
+                    out var score,
+                    out var edges,
+                    out var gToH,
+                    out var hToG,
+                    false,
+                    false
+                    );
+                sw.Stop();
 
-            Console.WriteLine("Graf G:");
-            g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
+                Console.WriteLine("Graph G:");
+                g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
 
-            Console.WriteLine();
-            Console.WriteLine("Graf H:");
-            h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
+                Console.WriteLine();
+                Console.WriteLine("Graph H:");
+                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
 
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
 
-            subgraphVertices = gToH.Keys.Count;
-            subgraphEdges = edges;
+                subgraphVertices = gToH.Keys.Count;
+                subgraphEdges = edges;
+            }
+            else
+            {
+                SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
+                    3,
+                    g,
+                    h,
+                    (v, e) => v,
+                    0,
+                    out var score,
+                    out var edges,
+                    out var gToH,
+                    out var hToG,
+                    false,
+                    false
+                    );
+                sw.Stop();
+
+                Console.WriteLine("Graph G:");
+                g.PrintSubgraph(gToH.Keys.ToArray(), gToH);
+
+                Console.WriteLine();
+                Console.WriteLine("Graph H:");
+                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG);
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine();
+
+                subgraphVertices = gToH.Keys.Count;
+                subgraphEdges = edges;
+            }
             return sw.Elapsed;
         }
     }

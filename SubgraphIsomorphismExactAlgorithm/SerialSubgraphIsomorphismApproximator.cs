@@ -72,7 +72,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // maybe try different valuations for the same graphs just to make sure various greedy strategies work:
                     // max, min/max combination, sum, average
                     // in the future make a large statistical rank of great valuations
-                    results[thisKVP] = localResults.Count > 0 ? localResults.Average() : double.NegativeInfinity;
+                    if (localResults.Count > 0)
+                        results[thisKVP] = localResults.Average();
                 }
             }
 
@@ -89,29 +90,81 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             // make the best local choice
-            var nextResults = new List<double>();
-            var bestInitialSetup = initialSetup(bestConnection.Key, bestConnection.Value);
-            bestInitialSetup.recursionDepth = orderOfPolynomial;
-            bestInitialSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
-            {
-                var realScore = Math.Pow(score, 3);
-                nextResults.Add(realScore);
-            };
-
+            var bestLocalSetup = initialSetup(bestConnection.Key, bestConnection.Value);
+            var updater = new CoreAlgorithm<double>();
+            updater.ImportShallowInternalState(bestLocalSetup);
+            updater.TryMatchFromEnvelopeMutateInternalState(bestConnection.Key, bestConnection.Value);
+            bestLocalSetup = updater.ExportShallowInternalState();
             // while there is an increase in result continue to approximate
-            while ()
-            {
-                // detect the most profitable connection
 
+            var anybodyMatched = true;
+            var envelopeResults = new Dictionary<KeyValuePair<int, int>, Tuple<double, double, int>>();
+            var bestConnectionDetails = new Tuple<double, double, int>(0, bestConnectionValue, 0);
+            while (anybodyMatched)
+            {
+                envelopeResults.Clear();
+                foreach (var gVertex in bestLocalSetup.gEnvelope)
+                    foreach (var hVertex in bestLocalSetup.hEnvelope)
+                        envelopeResults.Add(new KeyValuePair<int, int>(gVertex, hVertex), new Tuple<double, double, int>(0d, 0d, 0));
+
+                anybodyMatched = false;
+                foreach (var gCandidate in bestLocalSetup.gEnvelope)
+                {
+                    foreach (var hCandidate in bestLocalSetup.hEnvelope)
+                    {
+                        var thisKVP = new KeyValuePair<int, int>(gCandidate, hCandidate);
+
+                        var nullBest = initialScore;
+
+                        var predictor = new CoreAlgorithm<double>();
+                        var localSetup = bestLocalSetup.Clone();
+                        localSetup.recursionDepth = orderOfPolynomial;
+                        localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
+                        {
+                            var realScore = Math.Pow(score, 3);
+                            if (envelopeResults[thisKVP].Item1<realScore)
+                            {
+                                envelopeResults[thisKVP] = new Tuple<double, double, int>( realScore, score, edges);
+                            }
+                        };
+                        predictor.ImportShallowInternalState(localSetup);
+
+                        if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
+                        {
+                            anybodyMatched = true;
+                            predictor.Recurse(ref nullBest);
+                        }
+                        else
+                        {
+                            // vertices not locally isomorphic, sorry
+                        }
+                    }
+                }
+                // detect the most profitable connection
+                bestConnectionValue = double.MinValue;
+                foreach (var kvp in envelopeResults)
+                {
+                    if (kvp.Value.Item1 > bestConnectionValue)
+                    {
+                        bestConnectionValue = kvp.Value.Item1;
+                        bestConnection = kvp.Key;
+                        bestConnectionDetails = kvp.Value;
+                    }
+                }
+
+                updater = new CoreAlgorithm<double>();
+                updater.ImportShallowInternalState(bestLocalSetup);
+                updater.TryMatchFromEnvelopeMutateInternalState(bestConnection.Key, bestConnection.Value);
+                bestLocalSetup = updater.ExportShallowInternalState();
             }
 
 
             // advance in recursion
-            // herezje:
-            bestScore = initialScore;
-            subgraphEdges = 0;
-            ghOptimalMapping = null;
-            hgOptimalMapping = null;
+
+            bestScore = bestConnectionDetails.Item2;
+            subgraphEdges = bestConnectionDetails.Item3;
+            ghOptimalMapping = bestLocalSetup.ghMapping;
+            hgOptimalMapping = bestLocalSetup.hgMapping;
         }
     }
 }
