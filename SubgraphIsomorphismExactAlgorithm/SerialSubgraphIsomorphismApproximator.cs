@@ -22,6 +22,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool findExactMatch = false
             )
         {
+            if (analyzeDisconnected)
+            {
+                throw new NotImplementedException("Jeszcze nie obsługuję różnych składowych... muszę najpierw sprawdzić sprawność w prostszym przypadku");
+            }
             SerialSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(gArgument, hArgument, graphScoringFunction, initialScore, out var localBestScore, out var localSubgrahEdges, out var ghExactMapping, out var hgExactMapping, analyzeDisconnected, findExactMatch);
 
             CoreInternalState<double> initialSetup(int gMatchingVertex, int hMatchingVertex)
@@ -33,6 +37,10 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // choose best vertex
             var results = new Dictionary<KeyValuePair<int, int>, double>();
+            foreach (var gVertex in gArgument.Vertices)
+                foreach (var hVertex in hArgument.Vertices)
+                    results.Add(new KeyValuePair<int, int>(gVertex, hVertex), 0d);
+
             foreach (var gVertex in gArgument.Vertices.ToArray())
             {
                 foreach (var hVertex in hArgument.Vertices.ToArray())
@@ -40,13 +48,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var thisKVP = new KeyValuePair<int, int>(gVertex, hVertex);
 
                     var ghInitialSetup = initialSetup(gVertex, hVertex);
-                    // todo: verify constant here...
                     ghInitialSetup.recursionDepth = orderOfPolynomial;
+                    // todo: verify constant here...
                     var localResults = new List<double>();
                     ghInitialSetup.depthReached = (int depthAboveRequired, double score, Dictionary<int, int> ghLocalMap, Dictionary<int, int> hgLocalMap, int edges) =>
                     {
-                        var safeDepth = depthAboveRequired + 1;
-                        localResults.Add(Math.Pow(score, 3));
+                        var realScore = Math.Pow(score, 3);
+                        //foreach (var coolKVP in ghLocalMap)
+                        //{
+                        //    results[coolKVP] += realScore;
+                        //}
+                        //var safeDepth = depthAboveRequired + 1;
+                        localResults.Add(realScore);
                     };
 
                     var nullBest = initialScore;
@@ -54,11 +67,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     predictor.ImportShallowInternalState(ghInitialSetup);
                     predictor.Recurse(ref nullBest);
 
-                    if (!results.ContainsKey(thisKVP))
-                    {
-                        results.Add(thisKVP, 0);
-                    }
-                    results[thisKVP] = localResults.Count > 0 ? localResults.Sum() : double.NegativeInfinity;
+                    // different combination of min/max...
+                    // maybe try different valuations for the same graphs just to make sure various greedy strategies work:
+                    // max, min/max combination, sum, average
+                    // in the future make a large statistical rank of great valuations
+                    results[thisKVP] = localResults.Count > 0 ? localResults.Average() : double.NegativeInfinity;
                 }
             }
 
@@ -77,7 +90,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (ghExactMapping.ContainsKey(bestConnection.Key) && ghExactMapping[bestConnection.Key] == bestConnection.Value)
                 Console.Beep();
 
-            
+
 
 
             // make the best local choice
