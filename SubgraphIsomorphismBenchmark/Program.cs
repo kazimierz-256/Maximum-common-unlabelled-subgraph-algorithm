@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(10);
+            PrintBenchmark(16);
         }
         //private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.9d;
+            var density = 0.5d;
             {
                 var msTime = 0d;
                 //var times = new List<double>();

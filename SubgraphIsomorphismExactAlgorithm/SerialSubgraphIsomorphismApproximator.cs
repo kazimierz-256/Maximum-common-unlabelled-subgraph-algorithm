@@ -29,9 +29,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
             if (findExactMatch)
                 throw new Exception("Feature not yet supported.");
+
             var orderOfPolynomialMinus3 = orderOfPolynomial - 3;
-            if (orderOfPolynomialMinus3 < 1)
-                orderOfPolynomialMinus3 = 1;
+            if (orderOfPolynomialMinus3 < 0)
+                orderOfPolynomialMinus3 = 0;
 
             #region Initial setup
             var gMax = gArgument.Vertices.Max();
@@ -97,7 +98,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 anybodyMatched = false;
                 localBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
                 var localBestScore = initialScore;
-                var maxDegree = 0;
+                var maxDegree = int.MinValue;
 
                 #region PREDICTION
                 void makePrediction(int gCandidate, int hCandidate, int additionalOrder = 0)
@@ -122,7 +123,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                         else if (localBestConnectionDetails.Item1 == score)
                         {
-                            var minOfDegrees = Math.Min(gArgument.Degree(gCandidate), hArgument.Degree(hCandidate));
+                            var minOfDegrees = gArgument.Degree(gCandidate) * hArgument.Degree(hCandidate);
                             if (minOfDegrees > maxDegree)
                             {
                                 bestNextSetup = potentialImprovedState;
