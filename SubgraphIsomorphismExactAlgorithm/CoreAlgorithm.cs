@@ -278,7 +278,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
+            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
             {
                 var gMatchingVertex = -1;
                 var gMatchingOptimality = checkStartingFromBest ? int.MinValue : int.MaxValue;

@@ -6,4 +6,10 @@
     <RootNamespace>Application_itself</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Graph\GraphDataStructure.csproj" />
+    <ProjectReference Include="..\MathParser\MathParser.csproj" />
+    <ProjectReference Include="..\SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj" />
+  </ItemGroup>
+
 </Project>
