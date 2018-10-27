@@ -26,6 +26,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int recursionDepth;
         public int gInitialChoice;
         public int hInitialChoice;
+        public bool checkForEquality;
+        public bool checkStartingFromBest;
 
         public CoreInternalState<T> Clone(bool gClone = false, bool hClone = false)
         => new CoreInternalState<T>()
@@ -47,7 +49,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             graphScoringFunction = graphScoringFunction,
             newSolutionFound = newSolutionFound,
             recursionDepth = recursionDepth,
-            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph
+            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
+            checkForEquality = checkForEquality,
+            checkStartingFromBest = checkStartingFromBest
         };
     }
     public class CoreAlgorithm<T>
@@ -71,6 +75,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int recursionDepth;
         private int gInitialChoice;
         private int hInitialChoice;
+        private bool checkForEquality;
+        private bool checkStartingFromBest;
 
         public CoreInternalState<T> ExportShallowInternalState() => new CoreInternalState<T>()
         {
@@ -91,7 +97,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             graphScoringFunction = graphScoringFunction,
             newSolutionFound = newSolutionFound,
             recursionDepth = recursionDepth,
-            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph
+            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
+            checkForEquality = checkForEquality,
+            checkStartingFromBest = checkStartingFromBest
         };
 
         public void ImportShallowInternalState(CoreInternalState<T> state)
@@ -114,6 +122,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             newSolutionFound = state.newSolutionFound;
             recursionDepth = state.recursionDepth;
             totalNumberOfEdgesInSubgraph = state.totalNumberOfEdgesInSubgraph;
+            checkForEquality = state.checkForEquality;
+            checkStartingFromBest = state.checkStartingFromBest;
         }
 
 
@@ -257,7 +267,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
-                if (resultingValuation.CompareTo(bestScore) > 0)
+                if (resultingValuation.CompareTo(bestScore) > (checkForEquality ? -1 : 0))
                 {
                     newSolutionFound?.Invoke(
                         resultingValuation,
@@ -268,24 +278,36 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > 0)
+            else if (graphScoringFunction(Math.Min(g.Vertices.Count, h.Vertices.Count), Math.Min(g.EdgeCount, h.EdgeCount)).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
             {
                 var gMatchingVertex = -1;
-                var gMatchingOptimality = int.MaxValue;
-                foreach (var gVertexCondidate in gEnvelope)
+                var gMatchingOptimality = checkStartingFromBest ? int.MinValue : int.MaxValue;
+                foreach (var gVertexCandidate in gEnvelope)
                 {
                     var degree = 0;
                     foreach (var gSub in ghMapping.Keys)
                     {
-                        if (gConnectionExistance[gVertexCondidate, gSub])
+                        if (gConnectionExistance[gVertexCandidate, gSub])
                         {
                             degree += 1;
                         }
                     }
-                    if (degree < gMatchingOptimality)
+
+                    if (checkStartingFromBest)
                     {
-                        gMatchingOptimality = degree;
-                        gMatchingVertex = gVertexCondidate;
+                        if (degree > gMatchingOptimality)
+                        {
+                            gMatchingOptimality = degree;
+                            gMatchingVertex = gVertexCandidate;
+                        }
+                    }
+                    else
+                    {
+                        if (degree < gMatchingOptimality)
+                        {
+                            gMatchingOptimality = degree;
+                            gMatchingVertex = gVertexCandidate;
+                        }
                     }
                 }
 
@@ -418,7 +440,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
 
 
-                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0)
+                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
                 {
                     var gMatchingVertex = -1;
                     var gMatchingScore = int.MaxValue;
@@ -440,34 +462,32 @@ namespace SubgraphIsomorphismExactAlgorithm
                             h = hOutsiderGraph,
                             // tocontemplate: how to value disconnected components?
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
-                            newSolutionFound = (newScore, ghMap, hgMap, edges, depth) =>
-                            {
-                                newSolutionFound?.Invoke(
-                                    newScore,
-                                    () =>
-                                    {
-                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                        foreach (var myMapping in ghMapping)
-                                            ghExtended.Add(myMapping.Key, myMapping.Value);
-                                        return ghExtended;
-                                    },
-                                    () =>
-                                    {
-                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                        foreach (var myMapping in hgMapping)
-                                            hgExtended.Add(myMapping.Key, myMapping.Value);
-                                        return hgExtended;
-                                    },
-                                    edges,
-                                    depth
-                                    );
-                            },
+                            newSolutionFound = (newScore, ghMap, hgMap, edges, depth) => newSolutionFound?.Invoke(
+                                newScore,
+                                () =>
+                                {
+                                    var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                    foreach (var myMapping in ghMapping)
+                                        ghExtended.Add(myMapping.Key, myMapping.Value);
+                                    return ghExtended;
+                                },
+                                () =>
+                                {
+                                    var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                    foreach (var myMapping in hgMapping)
+                                        hgExtended.Add(myMapping.Key, myMapping.Value);
+                                    return hgExtended;
+                                },
+                                edges,
+                                depth
+                                )
+                            ,
                             ghMapping = new Dictionary<int, int>(),
                             hgMapping = new Dictionary<int, int>(),
                             gEnvelope = new HashSet<int>() { gMatchingVertex },
                             hEnvelope = new HashSet<int>() { hMatchingCandidate },
-                            gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices.Where(vertex => vertex != gMatchingVertex)),
-                            hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices.Where(vertex => vertex != hMatchingCandidate)),
+                            gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
+                            hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
                             totalNumberOfEdgesInSubgraph = 0,
                             gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
                             hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
@@ -475,8 +495,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                             recursionDepth = recursionDepth - 1,
                             findExactMatch = findExactMatch,
                             gInitialChoice = gMatchingVertex,
-                            hInitialChoice = hMatchingCandidate
+                            hInitialChoice = hMatchingCandidate,
+                            checkForEquality = checkForEquality,
+                            checkStartingFromBest = checkStartingFromBest
                         };
+                        subSolver.gOutsiders.Remove(gMatchingVertex);
+                        subSolver.hOutsiders.Remove(hMatchingCandidate);
                         subSolver.Recurse(ref bestScore);
                     }
 
