@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.2d;
+            var density = 0.9d;
             {
                 var msTime = 0d;
                 //var times = new List<double>();
@@ -60,6 +60,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.Write($"Quality of approximation: ");
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"Score: {approximateScore}");
                     Console.Write($"{100d * approximateScore / score:F1}%");
                     Console.ResetColor();
                     Console.WriteLine(".");
