@@ -16,7 +16,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
-            double initialScore,
+            Func<int, int, int> degreeValuation,
             out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
@@ -97,7 +97,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 anybodyMatched = false;
                 localBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
-                var localBestScore = initialScore;
+                var localBestScore = double.MinValue;
                 var maxDegree = int.MinValue;
 
                 #region PREDICTION
@@ -123,12 +123,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                         else if (localBestConnectionDetails.Item1 == score)
                         {
-                            var minOfDegrees = gArgument.Degree(gCandidate) * hArgument.Degree(hCandidate);
-                            if (minOfDegrees > maxDegree)
+                            var localValuation = degreeValuation(gArgument.Degree(gCandidate), hArgument.Degree(hCandidate));
+                            if (localValuation > maxDegree)
                             {
                                 bestNextSetup = potentialImprovedState;
                                 bestConnection = thisKVP;
-                                maxDegree = minOfDegrees;
+                                maxDegree = localValuation;
                                 localBestConnectionDetails = new Tuple<double, int>(score, edges);
                             }
                         }
@@ -174,7 +174,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (findExactMatch && bestLocalSetup.ghMapping.Count < gArgument.Vertices.Count)
             {
                 // did not find an exact match
-                bestScore = initialScore;
+                bestScore = double.MinValue;
                 subgraphEdges = 0;
                 ghOptimalMapping = new Dictionary<int, int>();
                 hgOptimalMapping = new Dictionary<int, int>();

@@ -20,9 +20,9 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(16);
+            PrintBenchmark(19);
         }
-        //private const int iterations = 0;
+        private const int iterations = 1000;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
@@ -33,7 +33,7 @@ namespace SubgraphIsomorphismBenchmark
             {
                 var msTime = 0d;
                 //var times = new List<double>();
-                //for (int i = 1; i <= iterations * 2 + 1; i++)
+                for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
@@ -41,7 +41,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    msTime = BenchmarkIsomorphism(true, n, density, 1, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
+                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
                     Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
                     //Console.WriteLine($"vertices: {n}, density: { density}");
 
@@ -54,7 +54,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    var aMsTime = BenchmarkIsomorphism(false, n, density, 1, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore).TotalMilliseconds;
+                    var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.Write($"Quality of approximation: ");
@@ -87,8 +87,8 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(bool exact, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false)
         {
             var sw = new Stopwatch();
-            var g = GraphFactory.GenerateRandom(n, density, 36532556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, density, 123698567 - seed - seed * seed);
+            var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
             //var h = GraphFactory.GeneratePermuted(g, 0);
@@ -115,12 +115,11 @@ namespace SubgraphIsomorphismBenchmark
             }
             else
             {
-                SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
+                SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     5,
                     g,
                     h,
                     (v, e) => v,
-                    0,
                     out score,
                     out subgraphEdges,
                     out gToH,
