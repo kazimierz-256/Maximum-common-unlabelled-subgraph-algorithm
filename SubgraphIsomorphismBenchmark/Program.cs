@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.4d;
+            var density = 0.5d;
             {
                 var msTime = 0d;
                 //var times = new List<double>();

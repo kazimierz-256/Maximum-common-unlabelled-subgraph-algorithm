@@ -43,8 +43,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         bool findExactMatch = false
         )
         {
-            const int randomTrials = 200;
-
             bestScore = double.MinValue;
             subgraphEdges = 0;
             ghOptimalMapping = new Dictionary<int, int>();
@@ -56,9 +54,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> ghLocalMapping;
             Dictionary<int, int> hgLocalMapping;
 
-            var bestValuations = new HashSet<int>();
             var random = new Random(0);
-            for (int valuationIndex = 0; valuationIndex < randomTrials; valuationIndex++)
+            int plateau = 64;
+            for (int valuationIndex = 0; valuationIndex < int.MaxValue; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
@@ -76,36 +74,15 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 if (localScore > maxScore)
                 {
-                    bestValuations.Clear();
-                    bestValuations.Add(valuationIndex);
-                }
-                else if (localScore == maxScore)
-                {
-                    bestValuations.Add(valuationIndex);
-                }
-                if (localScore > maxScore)
-                {
                     bestScore = maxScore = localScore;
                     subgraphEdges = localEdges;
                     ghOptimalMapping = new Dictionary<int, int>(ghLocalMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgLocalMapping);
+                    plateau = plateau + plateau;
                 }
+                else if (valuationIndex > plateau)
+                    break;
             }
-
-            //Console.WriteLine();
-            //for (int valuationIndex = 0; valuationIndex < possibleCompinations.Count; valuationIndex++)
-            //{
-            //    if (bestValuations.Contains(valuationIndex))
-            //        Console.ForegroundColor = ConsoleColor.DarkCyan;
-            //    else
-            //        Console.ForegroundColor = ConsoleColor.DarkGray;
-
-            //    Console.WriteLine(valuationIndex.ToString().PadLeft(10));
-
-            //    Console.ResetColor();
-            //}
-            //Console.WriteLine($"score: {bestScore}");
-            //Console.WriteLine();
         }
     }
 }
