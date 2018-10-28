@@ -55,8 +55,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> hgLocalMapping;
 
             var random = new Random(0);
-            int plateau = 64;
-            for (int valuationIndex = 0; valuationIndex < int.MaxValue; valuationIndex += 1)
+            int plateau = 200;
+            for (int valuationIndex = 0; valuationIndex < plateau; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
@@ -78,10 +78,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     subgraphEdges = localEdges;
                     ghOptimalMapping = new Dictionary<int, int>(ghLocalMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgLocalMapping);
-                    plateau = plateau + plateau;
                 }
-                else if (valuationIndex > plateau)
-                    break;
             }
         }
     }
