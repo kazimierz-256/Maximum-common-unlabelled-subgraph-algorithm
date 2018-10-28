@@ -59,7 +59,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             for (int valuationIndex = 0; valuationIndex < plateau; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                    orderOfPolynomial,
                     gArgument,
                     hArgument,
                     graphScoringFunction,

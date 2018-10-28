@@ -9,10 +9,8 @@ namespace SubgraphIsomorphismExactAlgorithm
     public class SerialSubgraphIsomorphismApproximator
     {
         // let D be max{|G|,|H|}
-        // upper bound polynomial is on the order of O(D^5+D^{3+order})
-        // it makes sense to make it at least 2
+        // upper bound polynomial is on the order of O(D^4)
         public static void ApproximateOptimalSubgraph(
-            int orderOfPolynomial,
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
@@ -29,10 +27,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
             if (findExactMatch)
                 throw new Exception("Feature not yet supported.");
-
-            var orderOfPolynomialMinus3 = orderOfPolynomial - 3;
-            if (orderOfPolynomialMinus3 < 0)
-                orderOfPolynomialMinus3 = 0;
 
             #region Initial setup
             var gMax = gArgument.Vertices.Max();
@@ -59,7 +53,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                     h = hArgument,
                     gInitialChoice = gMatchingVertex,
                     hInitialChoice = hMatchingVertex,
-                    recursionDepth = orderOfPolynomialMinus3 + additionalOrder,
                     findExactMatch = findExactMatch,
                     analyzeDisconnected = analyzeDisconnected,
                     graphScoringFunction = graphScoringFunction,
@@ -87,52 +80,35 @@ namespace SubgraphIsomorphismExactAlgorithm
             var archivedBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
             // while there is an increase in result continue to approximate
 
-            var anybodyMatched = true;
             var step = 0;
-            while (anybodyMatched)
+            while (true)
             {
-                anybodyMatched = false;
-
                 var listOfLocalBestNextSetup = new List<CoreInternalState>();
                 var listOfLocalBestConnectionDetails = new List<Tuple<double, int>>();
-                var localBestScore = double.MinValue;
                 var latestScore = double.MinValue;
 
                 #region PREDICTION
                 void makePrediction(int gCandidate, int hCandidate, int additionalOrder = 0)
                 {
-                    var thisKVP = new KeyValuePair<int, int>(gCandidate, hCandidate);
-
-                    // todo: check also equal
-                    // todo: traverse in order: best to worst
-                    var predictor = new CoreAlgorithm();
                     var localSetup = bestLocalSetup.Clone();
-                    var potentialImprovedState = new CoreInternalState();
-                    localSetup.recursionDepth = orderOfPolynomialMinus3 + additionalOrder;
-                    localSetup.checkForEquality = true;
-                    localSetup.checkStartingFromBest = true;
-                    localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
-                    {
-                        if (latestScore <= score)
-                        {
-                            if (latestScore < score)
-                            {
-                                listOfLocalBestNextSetup.Clear();
-                                listOfLocalBestConnectionDetails.Clear();
-                                latestScore = score;
-                            }
-
-                            listOfLocalBestNextSetup.Add(potentialImprovedState);
-                            listOfLocalBestConnectionDetails.Add(new Tuple<double, int>(score, edges));
-                        }
-                    };
+                    var predictor = new CoreAlgorithm();
                     predictor.ImportShallowInternalState(localSetup);
 
                     if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
                     {
-                        potentialImprovedState = predictor.ExportShallowInternalState().Clone();
-                        anybodyMatched = true;
-                        predictor.Recurse(ref localBestScore);
+                        var score = graphScoringFunction(localSetup.ghMapping.Keys.Count, localSetup.totalNumberOfEdgesInSubgraph);
+                        if (latestScore <= score)
+                        {
+                            if (latestScore < score)
+                            {
+                                latestScore = score;
+                                listOfLocalBestNextSetup.Clear();
+                                listOfLocalBestConnectionDetails.Clear();
+                            }
+
+                            listOfLocalBestNextSetup.Add(predictor.ExportShallowInternalState().Clone());
+                            listOfLocalBestConnectionDetails.Add(new Tuple<double, int>(score, localSetup.totalNumberOfEdgesInSubgraph));
+                        }
                     }
                 }
                 #endregion
@@ -143,7 +119,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         foreach (var hCandidate in hArgument.Vertices.ToArray())
                         {
                             bestLocalSetup = initialSetupPreMatch(gCandidate, hCandidate);
-
                             makePrediction(gCandidate, hCandidate);
                         }
                 }
@@ -153,9 +128,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         foreach (var hCandidate in bestLocalSetup.hEnvelope)
                             makePrediction(gCandidate, hCandidate);
                 }
-
-                // todo: randomize!
-                if (listOfLocalBestConnectionDetails.Count > 0)
+                
+                if (listOfLocalBestConnectionDetails.Count == 0)
+                {
+                    break;
+                }
+                else
                 {
                     var randomIndex = random.Next() % listOfLocalBestConnectionDetails.Count;
                     bestLocalSetup = listOfLocalBestNextSetup[randomIndex];

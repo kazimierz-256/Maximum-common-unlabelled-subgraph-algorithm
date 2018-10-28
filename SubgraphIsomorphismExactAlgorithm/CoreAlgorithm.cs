@@ -182,18 +182,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             if (gEnvelope.Contains(gMatchingVertex) && hEnvelope.Contains(hMatchingCandidate))
             {
-                gEnvelope.Remove(gMatchingVertex);
-
-                foreach (var gNeighbour in gOutsiders.ToArray())
-                {
-                    // if the neighbour is in the subgraph
-                    if (gConnectionExistance[gMatchingVertex, gNeighbour])
-                    {
-                        // if it is new to the envelope
-                        gEnvelope.Add(gNeighbour);
-                        gOutsiders.Remove(gNeighbour);
-                    }
-                }
 
                 var verticesTrulyIsomorphic = true;
                 var potentialNumberOfNewEdges = 0;
@@ -217,6 +205,18 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 if (verticesTrulyIsomorphic)
                 {
+                    gEnvelope.Remove(gMatchingVertex);
+
+                    foreach (var gNeighbour in gOutsiders.ToArray())
+                    {
+                        // if the neighbour is in the subgraph
+                        if (gConnectionExistance[gMatchingVertex, gNeighbour])
+                        {
+                            // if it is new to the envelope
+                            gEnvelope.Add(gNeighbour);
+                            gOutsiders.Remove(gNeighbour);
+                        }
+                    }
                     totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
                     // by definition add the transition functions (which means adding to the subgraph)
                     ghMapping.Add(gMatchingVertex, hMatchingCandidate);
