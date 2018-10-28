@@ -18,5 +18,6 @@ namespace GraphDataStructure
         UndirectedGraph DeepClone();
         void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours);
         UndirectedGraph DeepCloneIntersecting(HashSet<int> gOutsiders);
+        // todo: when designing tests it would be a useful functionality to add/remove edges
     }
 }
