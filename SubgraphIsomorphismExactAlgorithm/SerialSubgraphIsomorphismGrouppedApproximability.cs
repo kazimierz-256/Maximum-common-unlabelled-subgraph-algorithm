@@ -146,10 +146,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                     Console.ForegroundColor = ConsoleColor.DarkCyan;
                 else
                     Console.ForegroundColor = ConsoleColor.DarkGray;
+
                 Console.WriteLine(valuationDescriptions[valuationIndex]);
 
                 Console.ResetColor();
             }
+            Console.WriteLine();
         }
     }
 }

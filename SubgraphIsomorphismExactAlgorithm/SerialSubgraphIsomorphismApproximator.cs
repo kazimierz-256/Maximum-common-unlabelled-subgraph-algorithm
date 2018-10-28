@@ -123,6 +123,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                         else if (localBestConnectionDetails.Item1 == score)
                         {
+                            // TODO: gather equal ones into a list and then pass on to the parent chooser so that I can compare to the real solution: why do they work?
                             var localValuation = degreeValuation(
                                 gArgument.Degree(gCandidate),
                                 hArgument.Degree(hCandidate),
