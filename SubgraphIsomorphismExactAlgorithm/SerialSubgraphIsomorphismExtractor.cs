@@ -5,14 +5,14 @@ using System.Linq;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class SerialSubgraphIsomorphismExtractor<T> where T : IComparable
+    public class SerialSubgraphIsomorphismExtractor
     {
         public static void ExtractOptimalSubgraph(
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
-            Func<int, int, T> graphScoringFunction,
-            T initialScore,
-            out T bestScore,
+            Func<int, int, double> graphScoringFunction,
+            double initialScore,
+            out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
@@ -24,7 +24,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
 
             UndirectedGraph g, h;
-            var solver = new CoreAlgorithm<T>();
+            var solver = new CoreAlgorithm();
             var swappedGraphs = false;
 
             if (!findExactMatch && hArgument.EdgeCount < gArgument.EdgeCount)

@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public static class ParallelSubgraphIsomorphismExtractor<T> where T : IComparable
+    public static class ParallelSubgraphIsomorphismExtractor
     {
         public static void ExtractOptimalSubgraph(
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
-            Func<int, int, T> graphScoringFunction,
-            T initialScore,
-            out T bestScore,
+            Func<int, int, double> graphScoringFunction,
+            double initialScore,
+            out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
@@ -78,7 +78,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gIndex = iter % gGraphs.Count;
                 var hIndex = iter / gGraphs.Count;
                 // try matching all h's
-                var algorithm = new CoreAlgorithm<T>();
+                var algorithm = new CoreAlgorithm();
                 algorithm.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)

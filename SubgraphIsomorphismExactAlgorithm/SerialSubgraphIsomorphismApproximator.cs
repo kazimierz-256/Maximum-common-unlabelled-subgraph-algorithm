@@ -49,11 +49,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hConnectionExistance[kvp.Key, vertexTo] = true;
             #endregion
 
-            CoreInternalState<double> initialSetupPreMatch(int gMatchingVertex, int hMatchingVertex, int additionalOrder = 0)
+            CoreInternalState initialSetupPreMatch(int gMatchingVertex, int hMatchingVertex, int additionalOrder = 0)
             {
                 // todo: cache more immutable!
                 //setupCore.HighLevelSetup(gMatchingVertex, hMatchingVertex, gArgument, hArgument, graphScoringFunction, null, analyzeDisconnected, findExactMatch);
-                var stateToImport = new CoreInternalState<double>()
+                var stateToImport = new CoreInternalState()
                 {
                     g = gArgument,
                     h = hArgument,
@@ -85,8 +85,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             KeyValuePair<int, int> bestConnection;
 
             // make the best local choice
-            var bestLocalSetup = new CoreInternalState<double>();
-            var bestNextSetup = new CoreInternalState<double>();
+            var bestLocalSetup = new CoreInternalState();
+            var bestNextSetup = new CoreInternalState();
             // while there is an increase in result continue to approximate
 
             var anybodyMatched = true;
@@ -107,9 +107,9 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     // todo: check also equal
                     // todo: traverse in order: best to worst
-                    var predictor = new CoreAlgorithm<double>();
+                    var predictor = new CoreAlgorithm();
                     var localSetup = bestLocalSetup.Clone();
-                    var potentialImprovedState = new CoreInternalState<double>();
+                    var potentialImprovedState = new CoreInternalState();
                     localSetup.recursionDepth = orderOfPolynomialMinus3 + additionalOrder;
                     localSetup.checkForEquality = true;
                     localSetup.checkStartingFromBest = true;

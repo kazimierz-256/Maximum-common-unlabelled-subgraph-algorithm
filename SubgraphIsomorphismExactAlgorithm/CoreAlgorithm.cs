@@ -6,9 +6,9 @@ using System.Text;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public struct CoreInternalState<T>
+    public struct CoreInternalState
     {
-        public Func<int, int, T> graphScoringFunction;
+        public Func<int, int, double> graphScoringFunction;
         public UndirectedGraph g;
         public UndirectedGraph h;
         public bool[,] gConnectionExistance;
@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public HashSet<int> gOutsiders;
         public HashSet<int> hOutsiders;
         public int totalNumberOfEdgesInSubgraph;
-        public Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
+        public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
         public bool analyzeDisconnected;
         public bool findExactMatch;
         public int recursionDepth;
@@ -29,8 +29,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         public bool checkForEquality;
         public bool checkStartingFromBest;
 
-        public CoreInternalState<T> Clone(bool gClone = false, bool hClone = false)
-        => new CoreInternalState<T>()
+        public CoreInternalState Clone(bool gClone = false, bool hClone = false)
+        => new CoreInternalState()
         {
             analyzeDisconnected = analyzeDisconnected,
             findExactMatch = findExactMatch,
@@ -54,10 +54,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             checkStartingFromBest = checkStartingFromBest
         };
     }
-    public class CoreAlgorithm<T>
-        where T : IComparable
+    public class CoreAlgorithm
     {
-        private Func<int, int, T> graphScoringFunction = null;
+        private Func<int, int, double> graphScoringFunction = null;
         private UndirectedGraph g;
         private UndirectedGraph h;
         private bool[,] gConnectionExistance;
@@ -69,7 +68,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> gOutsiders;
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
-        private Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
+        private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
         private bool analyzeDisconnected;
         private bool findExactMatch;
         private int recursionDepth;
@@ -78,7 +77,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool checkForEquality;
         private bool checkStartingFromBest;
 
-        public CoreInternalState<T> ExportShallowInternalState() => new CoreInternalState<T>()
+        public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
             analyzeDisconnected = analyzeDisconnected,
             findExactMatch = findExactMatch,
@@ -102,7 +101,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             checkStartingFromBest = checkStartingFromBest
         };
 
-        public void ImportShallowInternalState(CoreInternalState<T> state)
+        public void ImportShallowInternalState(CoreInternalState state)
         {
             analyzeDisconnected = state.analyzeDisconnected;
             findExactMatch = state.findExactMatch;
@@ -132,8 +131,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             int hMatchingVertex,
             UndirectedGraph g,
             UndirectedGraph h,
-            Func<int, int, T> graphScoringFunction,
-            Action<T, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound,
+            Func<int, int, double> graphScoringFunction,
+            Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound,
             bool analyzeDisconnected = false,
             bool findExactMatch = false,
             int recursionDepth = int.MaxValue
@@ -246,7 +245,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             return false;
         }
 
-        public void Recurse(ref T bestScore)
+        public void Recurse(ref double bestScore)
         {
             if (recursionDepth <= 0)
             {
@@ -421,7 +420,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        private void DisconnectComponent(ref T bestScore)
+        private void DisconnectComponent(ref double bestScore)
         {
             // if exact match is required then recurse only when no vertex in g would be omitted
             if (gOutsiders.Count > 0 && hOutsiders.Count > 0 && (!findExactMatch || gEnvelope.Count == 0))
@@ -456,7 +455,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     foreach (var hMatchingCandidate in hOutsiderGraph.Vertices.ToArray())
                     {
-                        var subSolver = new CoreAlgorithm<T>()
+                        var subSolver = new CoreAlgorithm()
                         {
                             g = gOutsiderGraph,
                             h = hOutsiderGraph,
