@@ -13,7 +13,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
-            double initialScore,
             out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
@@ -25,6 +24,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (!analyzeDisconnected && findExactMatch)
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
 
+            var initialScore = double.MinValue;
             var swappedGraphs = false;
             UndirectedGraph g;
             UndirectedGraph h;

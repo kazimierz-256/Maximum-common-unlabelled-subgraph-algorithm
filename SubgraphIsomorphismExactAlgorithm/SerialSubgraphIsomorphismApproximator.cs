@@ -16,7 +16,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
-            Func<int, int, int> degreeValuation,
+            Func<int, int, int, int, int> degreeValuation,
             out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
@@ -123,7 +123,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                         else if (localBestConnectionDetails.Item1 == score)
                         {
-                            var localValuation = degreeValuation(gArgument.Degree(gCandidate), hArgument.Degree(hCandidate));
+                            var localValuation = degreeValuation(
+                                gArgument.Degree(gCandidate),
+                                hArgument.Degree(hCandidate),
+                                ghLocalMap().Keys.Count(gInside => !gArgument.ExistsConnectionBetween(gInside, gCandidate)),
+                                hgLocalMap().Keys.Count(hInside => !hArgument.ExistsConnectionBetween(hInside, hCandidate))
+                                );
                             if (localValuation > maxDegree)
                             {
                                 bestNextSetup = potentialImprovedState;
@@ -158,7 +163,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     foreach (var gCandidate in bestLocalSetup.gEnvelope)
                         foreach (var hCandidate in bestLocalSetup.hEnvelope)
-                            makePrediction(gCandidate, hCandidate, step <= 1 ? 1 : 0);
+                            makePrediction(gCandidate, hCandidate, step <= 2 ? 1 : 0);
                 }
 
                 if (anybodyMatched)
