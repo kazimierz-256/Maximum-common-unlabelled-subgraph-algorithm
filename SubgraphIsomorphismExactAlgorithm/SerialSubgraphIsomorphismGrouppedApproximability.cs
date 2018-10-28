@@ -48,41 +48,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             ghOptimalMapping = new Dictionary<int, int>();
             hgOptimalMapping = new Dictionary<int, int>();
 
-            var composers = new Func<int, int, int, int, int>[]
-            {
-                (int d1, int d2, int s1, int s2) => d1,
-                (int d1, int d2, int s1, int s2) => d2,
-                (int d1, int d2, int s1, int s2) => d1 + d2,
-                (int d1, int d2, int s1, int s2) => d1 * d2,
-                (int d1, int d2, int s1, int s2) => (int)Math.Pow(d1, d2),
-                (int d1, int d2, int s1, int s2) => (int)Math.Pow(d2, d1),
-                (int d1, int d2, int s1, int s2) => Math.Min(d1, d2),
-                (int d1, int d2, int s1, int s2) => Math.Max(d2, d2),
-                //(a, b, f1, f2) => f1(a, b),
-                //(a, b, f1, f2) => f2(a, b),
-                //(a, b, f1, f2) => f1(a, b) + f2(a, b),
-                //(a, b, f1, f2) => f1(a, b) * f2(a, b),
-                //(a, b, f1, f2) => Math.Min(f1(a, b), f2(a, b)),
-                //(a, b, f1, f2) => Math.Max(f1(a, b), f2(a, b)),
-                //(a, b, f1, f2) => (int)Math.Pow(f1(a, b), f2(a, b)),
-                //(a, b, f1, f2) => (int)Math.Pow(f2(a, b), f1(a, b)),
-            };
-            
-            var possibleCompinations = new List<Func<int, int, int, int, int>>();
-            {
-                var cloned = new Func<int, int, int, int, int>[possibleCompinations.Count];
-                possibleCompinations.CopyTo(cloned);
-                possibleCompinations.Clear();
-
-                foreach (var composer1 in composers)
-                    foreach (var composer2 in composers)
-                    {
-                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(d1, d2, 0, 0), composer2(d1, d2, 0, 0), 0, 0));
-                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(s1, s2, 0, 0), composer2(s1, s2, 0, 0), 0, 0));
-                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(d1, s1, 0, 0), composer2(d2, s2, 0, 0), 0, 0));
-                    }
-            }
-
             var maxScore = double.NegativeInfinity;
             double localScore;
             int localEdges;
@@ -90,15 +55,16 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> hgLocalMapping;
 
             var bestValuations = new HashSet<int>();
-
-            for (int valuationIndex = 0; valuationIndex < possibleCompinations.Count; valuationIndex++)
+            const int randomTrials = 20;
+            var random = new Random(0);
+            for (int valuationIndex = 0; valuationIndex < randomTrials; valuationIndex++)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
                     gArgument,
                     hArgument,
                     graphScoringFunction,
-                    possibleCompinations[valuationIndex],
+                    random.Next(),
                     out localScore,
                     out localEdges,
                     out ghLocalMapping,

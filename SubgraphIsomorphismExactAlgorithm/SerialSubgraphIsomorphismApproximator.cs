@@ -16,7 +16,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
-            Func<int, int, int, int, int> degreeValuation,
+            int seed,
             out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
@@ -81,24 +81,22 @@ namespace SubgraphIsomorphismExactAlgorithm
                 return stateToImport;
             };
 
-            // choose best vertex
-            KeyValuePair<int, int> bestConnection;
-
             // make the best local choice
             var bestLocalSetup = new CoreInternalState();
-            var bestNextSetup = new CoreInternalState();
+            var random = new Random(seed);
+            var archivedBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
             // while there is an increase in result continue to approximate
 
             var anybodyMatched = true;
-            var localBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
-            var archivedBestConnectionDetails = localBestConnectionDetails;
             var step = 0;
             while (anybodyMatched)
             {
                 anybodyMatched = false;
-                localBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
+
+                var listOfLocalBestNextSetup = new List<CoreInternalState>();
+                var listOfLocalBestConnectionDetails = new List<Tuple<double, int>>();
                 var localBestScore = double.MinValue;
-                var maxDegree = int.MinValue;
+                var latestScore = double.MinValue;
 
                 #region PREDICTION
                 void makePrediction(int gCandidate, int hCandidate, int additionalOrder = 0)
@@ -115,28 +113,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                     localSetup.checkStartingFromBest = true;
                     localSetup.newSolutionFound = (double score, Func<Dictionary<int, int>> ghLocalMap, Func<Dictionary<int, int>> hgLocalMap, int edges, int depth) =>
                     {
-                        if (localBestConnectionDetails.Item1 < score)
+                        if (latestScore <= score)
                         {
-                            bestNextSetup = potentialImprovedState;
-                            bestConnection = thisKVP;
-                            localBestConnectionDetails = new Tuple<double, int>(score, edges);
-                        }
-                        else if (localBestConnectionDetails.Item1 == score)
-                        {
-                            // TODO: gather equal ones into a list and then pass on to the parent chooser so that I can compare to the real solution: why do they work?
-                            var localValuation = degreeValuation(
-                                gArgument.Degree(gCandidate),
-                                hArgument.Degree(hCandidate),
-                                ghLocalMap().Keys.Count(gInside => gArgument.ExistsConnectionBetween(gInside, gCandidate)),
-                                hgLocalMap().Keys.Count(hInside => hArgument.ExistsConnectionBetween(hInside, hCandidate))
-                                );
-                            if (localValuation > maxDegree)
+                            if (latestScore < score)
                             {
-                                bestNextSetup = potentialImprovedState;
-                                bestConnection = thisKVP;
-                                maxDegree = localValuation;
-                                localBestConnectionDetails = new Tuple<double, int>(score, edges);
+                                listOfLocalBestNextSetup.Clear();
+                                listOfLocalBestConnectionDetails.Clear();
+                                latestScore = score;
                             }
+
+                            listOfLocalBestNextSetup.Add(potentialImprovedState);
+                            listOfLocalBestConnectionDetails.Add(new Tuple<double, int>(score, edges));
                         }
                     };
                     predictor.ImportShallowInternalState(localSetup);
@@ -167,10 +154,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                             makePrediction(gCandidate, hCandidate);
                 }
 
-                if (anybodyMatched)
+                // todo: randomize!
+                if (listOfLocalBestConnectionDetails.Count > 0)
                 {
-                    bestLocalSetup = bestNextSetup;
-                    archivedBestConnectionDetails = localBestConnectionDetails;
+                    var randomIndex = random.Next() % listOfLocalBestConnectionDetails.Count;
+                    bestLocalSetup = listOfLocalBestNextSetup[randomIndex];
+                    archivedBestConnectionDetails = listOfLocalBestConnectionDetails[randomIndex];
                 }
 
                 step += 1;
@@ -187,7 +176,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                // advance in recursion
                 bestScore = archivedBestConnectionDetails.Item1;
                 subgraphEdges = archivedBestConnectionDetails.Item2;
                 ghOptimalMapping = bestLocalSetup.ghMapping;
