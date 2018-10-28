@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
                 texWriter.Write($"{n}&{n}");
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.5d;
+            var density = 0.4d;
             {
                 var msTime = 0d;
                 //var times = new List<double>();
@@ -87,7 +87,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, 1-density, 129369567 - seed - seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
             //var h = GraphFactory.GeneratePermuted(g, 0);
