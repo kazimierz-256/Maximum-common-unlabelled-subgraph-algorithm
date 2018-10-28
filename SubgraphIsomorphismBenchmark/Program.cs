@@ -87,8 +87,8 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(bool exact, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false)
         {
             var sw = new Stopwatch();
-            var g = GraphFactory.GenerateRandom(n, density, 36532556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, density, 123698567 - seed - seed * seed);
+            var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
             //var h = GraphFactory.GeneratePermuted(g, 0);
