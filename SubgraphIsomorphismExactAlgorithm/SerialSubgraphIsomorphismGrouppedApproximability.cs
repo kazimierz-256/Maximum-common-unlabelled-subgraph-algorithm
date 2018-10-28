@@ -48,54 +48,40 @@ namespace SubgraphIsomorphismExactAlgorithm
             ghOptimalMapping = new Dictionary<int, int>();
             hgOptimalMapping = new Dictionary<int, int>();
 
-            Func<int, int, int> min = (int a, int b) => Math.Max(a, b);
-            Func<int, int, int> max = (int a, int b) => Math.Min(a, b);
-            Func<int, int, int> power = (int a, int b) => (int)Math.Pow(a, b);
+            var composers = new Func<int, int, int, int, int>[]
+            {
+                (int d1, int d2, int s1, int s2) => d1,
+                (int d1, int d2, int s1, int s2) => d2,
+                (int d1, int d2, int s1, int s2) => d1 + d2,
+                (int d1, int d2, int s1, int s2) => d1 * d2,
+                (int d1, int d2, int s1, int s2) => (int)Math.Pow(d1, d2),
+                (int d1, int d2, int s1, int s2) => (int)Math.Pow(d2, d1),
+                (int d1, int d2, int s1, int s2) => Math.Min(d1, d2),
+                (int d1, int d2, int s1, int s2) => Math.Max(d2, d2),
+                //(a, b, f1, f2) => f1(a, b),
+                //(a, b, f1, f2) => f2(a, b),
+                //(a, b, f1, f2) => f1(a, b) + f2(a, b),
+                //(a, b, f1, f2) => f1(a, b) * f2(a, b),
+                //(a, b, f1, f2) => Math.Min(f1(a, b), f2(a, b)),
+                //(a, b, f1, f2) => Math.Max(f1(a, b), f2(a, b)),
+                //(a, b, f1, f2) => (int)Math.Pow(f1(a, b), f2(a, b)),
+                //(a, b, f1, f2) => (int)Math.Pow(f2(a, b), f1(a, b)),
+            };
+            
+            var possibleCompinations = new List<Func<int, int, int, int, int>>();
+            {
+                var cloned = new Func<int, int, int, int, int>[possibleCompinations.Count];
+                possibleCompinations.CopyTo(cloned);
+                possibleCompinations.Clear();
 
-            var valuations = new Func<int, int, int, int, int>[]
-            {
-                (d1, d2, s1, s2) => d1 * d2,
-                (d1, d2, s1, s2) => d1 + d2,
-                (d1, d2, s1, s2) => min(d1, d2),
-                (d1, d2, s1, s2) => max(d1, d2),
-                (d1, d2, s1, s2) => power(d1,d2) + power(d2,d1),
-                (d1, d2, s1, s2) => power(d1,d2) * power(d2,d1),
-                (d1, d2, s1, s2) => min(power(d1,d2), power(d2,d1)),
-                (d1, d2, s1, s2) => max(power(d1,d2), power(d2,d1)),
-                (d1, d2, s1, s2) => (d1+s1) * (d2+s2),
-                (d1, d2, s1, s2) => (d1+s1) + (d2+s2),
-                (d1, d2, s1, s2) => (d1*s1) + (d2*s2),
-                (d1, d2, s1, s2) => power(d1,d2) + power(d2,d1),
-                (d1, d2, s1, s2) => power(d1,d2) * power(d2,d1),
-                (d1, d2, s1, s2) => min(d1+s1, d2+s2),
-                (d1, d2, s1, s2) => max(d1+s1, d2+s2),
-                (d1, d2, s1, s2) => power(d1+s1, d2+s2)+power(d2+s2, d1+s1),
-                (d1, d2, s1, s2) => power(d1 + s1, d2 + s2) * power(d2 + s2, d1 + s1),
-                (d1, d2, s1, s2) => min(power(d1 + s1, d2 + s2), power(d2 + s2, d1 + s1)),
-                (d1, d2, s1, s2) => max(power(d1 + s1, d2 + s2), power(d2 + s2, d1 + s1)),
-            };
-            var valuationDescriptions = new string[]
-            {
-                "product of degrees",
-                "sum of degrees",
-                "min of degrees",
-                "max of degrees",
-                "sum of powers of degrees",
-                "product of powers of degrees",
-                "min of powers of degrees",
-                "max of powers of degrees",
-                "product of subgraph connections and degrees",
-                "sum of subgraph connections and degrees",
-                "sum of product of subgraph connections and degrees",
-                "strange sum of powers of subgraph connections and degrees",
-                "strange product of powers of subgraph connections and degrees",
-                "min of subgraph connections and degrees",
-                "max of subgraph connections and degrees",
-                "sum of powers of subgraph connections and degrees",
-                "product of powers of subgraph connections and degrees",
-                "min of powers of subgraph connections and degrees",
-                "max of powers of subgraph connections and degrees",
-            };
+                foreach (var composer1 in composers)
+                    foreach (var composer2 in composers)
+                    {
+                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(d1, d2, 0, 0), composer2(d1, d2, 0, 0), 0, 0));
+                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(s1, s2, 0, 0), composer2(s1, s2, 0, 0), 0, 0));
+                        possibleCompinations.Add((d1, d2, s1, s2) => composer1(composer2(d1, s1, 0, 0), composer2(d2, s2, 0, 0), 0, 0));
+                    }
+            }
 
             var maxScore = double.NegativeInfinity;
             double localScore;
@@ -105,14 +91,14 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var bestValuations = new HashSet<int>();
 
-            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
+            for (int valuationIndex = 0; valuationIndex < possibleCompinations.Count; valuationIndex++)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
                     gArgument,
                     hArgument,
                     graphScoringFunction,
-                    valuations[valuationIndex],
+                    possibleCompinations[valuationIndex],
                     out localScore,
                     out localEdges,
                     out ghLocalMapping,
@@ -139,19 +125,20 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            Console.WriteLine();
-            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
-            {
-                if (bestValuations.Contains(valuationIndex))
-                    Console.ForegroundColor = ConsoleColor.DarkCyan;
-                else
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
+            //Console.WriteLine();
+            //for (int valuationIndex = 0; valuationIndex < possibleCompinations.Count; valuationIndex++)
+            //{
+            //    if (bestValuations.Contains(valuationIndex))
+            //        Console.ForegroundColor = ConsoleColor.DarkCyan;
+            //    else
+            //        Console.ForegroundColor = ConsoleColor.DarkGray;
 
-                Console.WriteLine(valuationDescriptions[valuationIndex]);
+            //    Console.WriteLine(valuationIndex.ToString().PadLeft(10));
 
-                Console.ResetColor();
-            }
-            Console.WriteLine();
+            //    Console.ResetColor();
+            //}
+            //Console.WriteLine($"score: {bestScore}");
+            //Console.WriteLine();
         }
     }
 }

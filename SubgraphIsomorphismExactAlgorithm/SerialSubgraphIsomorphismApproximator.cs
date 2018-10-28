@@ -127,8 +127,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             var localValuation = degreeValuation(
                                 gArgument.Degree(gCandidate),
                                 hArgument.Degree(hCandidate),
-                                ghLocalMap().Keys.Count(gInside => !gArgument.ExistsConnectionBetween(gInside, gCandidate)),
-                                hgLocalMap().Keys.Count(hInside => !hArgument.ExistsConnectionBetween(hInside, hCandidate))
+                                ghLocalMap().Keys.Count(gInside => gArgument.ExistsConnectionBetween(gInside, gCandidate)),
+                                hgLocalMap().Keys.Count(hInside => hArgument.ExistsConnectionBetween(hInside, hCandidate))
                                 );
                             if (localValuation > maxDegree)
                             {
@@ -157,14 +157,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             bestLocalSetup = initialSetupPreMatch(gCandidate, hCandidate);
 
-                            makePrediction(gCandidate, hCandidate, 1);
+                            makePrediction(gCandidate, hCandidate);
                         }
                 }
                 else
                 {
                     foreach (var gCandidate in bestLocalSetup.gEnvelope)
                         foreach (var hCandidate in bestLocalSetup.hEnvelope)
-                            makePrediction(gCandidate, hCandidate, step <= 2 ? 1 : 0);
+                            makePrediction(gCandidate, hCandidate);
                 }
 
                 if (anybodyMatched)

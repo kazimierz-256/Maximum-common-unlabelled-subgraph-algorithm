@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(18);
+            PrintBenchmark(20);
         }
         private const int iterations = 100;
         private static void PrintBenchmark(int n)
@@ -35,18 +35,6 @@ namespace SubgraphIsomorphismBenchmark
                 //var times = new List<double>();
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
-                    Console.ForegroundColor = ConsoleColor.Black;
-                    Console.BackgroundColor = ConsoleColor.DarkGreen;
-                    Console.Write("EXACT");
-                    Console.ResetColor();
-                    Console.WriteLine(".");
-
-                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
-                    Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
-                    //Console.WriteLine($"vertices: {n}, density: { density}");
-
-                    //for (int nl = 0; nl < 1; nl++)
-                    Console.WriteLine();
 
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkCyan;
@@ -57,14 +45,25 @@ namespace SubgraphIsomorphismBenchmark
                     var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
-                    Console.Write($"Quality of approximation: ");
 
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"Score: {approximateScore}");
-                    Console.Write($"{100d * approximateScore / score:F1}%");
+                    //for (int nl = 0; nl < 1; nl++)
+                    Console.WriteLine();
+
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    Console.BackgroundColor = ConsoleColor.DarkGreen;
+                    Console.Write("EXACT");
                     Console.ResetColor();
                     Console.WriteLine(".");
 
+                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
+                    Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
+                    //Console.WriteLine($"vertices: {n}, density: { density}");
+
+                    Console.Write($"Quality of approximation: ");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{100d * approximateScore / score:F1}%");
+                    Console.ResetColor();
+                    Console.WriteLine($", approximate {approximateScore}, exact {score}");
                     //for (int nl = 0; nl < 2; nl++)
                     Console.WriteLine();
                 }
