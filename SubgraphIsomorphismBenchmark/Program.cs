@@ -20,9 +20,9 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(19);
+            PrintBenchmark(30);
         }
-        private const int iterations = 1000;
+        private const int iterations = 0;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
@@ -41,8 +41,8 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
-                    Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
+                    //msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
+                    //Console.Write($"{msTime:F2}ms,   ".PadLeft(20));
                     //Console.WriteLine($"vertices: {n}, density: { density}");
 
                     //for (int nl = 0; nl < 1; nl++)
@@ -61,7 +61,7 @@ namespace SubgraphIsomorphismBenchmark
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine($"Score: {approximateScore}");
-                    Console.Write($"{100d * approximateScore / score:F1}%");
+                    //Console.Write($"{100d * approximateScore / score:F1}%");
                     Console.ResetColor();
                     Console.WriteLine(".");
 
@@ -115,7 +115,7 @@ namespace SubgraphIsomorphismBenchmark
             else
             {
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
-                    5,
+                    3,
                     g,
                     h,
                     (v, e) => v,
