@@ -43,6 +43,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         bool findExactMatch = false
         )
         {
+            const int randomTrials = 200;
+
             bestScore = double.MinValue;
             subgraphEdges = 0;
             ghOptimalMapping = new Dictionary<int, int>();
@@ -55,7 +57,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> hgLocalMapping;
 
             var bestValuations = new HashSet<int>();
-            const int randomTrials = 20;
             var random = new Random(0);
             for (int valuationIndex = 0; valuationIndex < randomTrials; valuationIndex++)
             {
