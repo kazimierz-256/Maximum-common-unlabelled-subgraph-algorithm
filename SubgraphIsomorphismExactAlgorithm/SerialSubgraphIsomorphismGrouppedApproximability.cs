@@ -25,7 +25,24 @@ namespace SubgraphIsomorphismExactAlgorithm
             ghOptimalMapping = new Dictionary<int, int>();
             hgOptimalMapping = new Dictionary<int, int>();
 
-            var valuations = new Func<int, int, int>[] { (d1, d2) => d1 * d2 };
+            var valuations = new Func<int, int, int>[]
+            {
+                (d1, d2) => d1 * d2,
+                (d1, d2) => Math.Min(d1, d2),
+                (d1, d2) => Math.Max(d1, d2),
+                (d1, d2) => (int)Math.Pow(d1, d2)+(int)Math.Pow(d1, d2),
+                (d1, d2) => (int)Math.Pow(d1, d2)*(int)Math.Pow(d1, d2),
+                (d1, d2) => d1 + d2,
+            };
+            var valuationDescriptions = new string[]
+            {
+                "product",
+                "min",
+                "max",
+                "sum of powers",
+                "product of powers",
+                "sum",
+            };
 
             var maxScore = double.NegativeInfinity;
             double localScore;
@@ -33,14 +50,16 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> ghLocalMapping;
             Dictionary<int, int> hgLocalMapping;
 
-            foreach (var evaluator in valuations)
+            var bestValuations = new HashSet<int>();
+
+            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
                     gArgument,
                     hArgument,
                     graphScoringFunction,
-                    evaluator,
+                    valuations[valuationIndex],
                     out localScore,
                     out localEdges,
                     out ghLocalMapping,
@@ -51,11 +70,31 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 if (localScore > maxScore)
                 {
+                    bestValuations.Clear();
+                    bestValuations.Add(valuationIndex);
+                }
+                else if (localScore == maxScore)
+                {
+                    bestValuations.Add(valuationIndex);
+                }
+                if (localScore > maxScore)
+                {
                     bestScore = maxScore = localScore;
                     subgraphEdges = localEdges;
                     ghOptimalMapping = new Dictionary<int, int>(ghLocalMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgLocalMapping);
                 }
+            }
+
+            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
+            {
+                if (bestValuations.Contains(valuationIndex))
+                    Console.ForegroundColor = ConsoleColor.Green;
+                else
+                    Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(valuationDescriptions[valuationIndex]);
+
+                Console.ResetColor();
             }
         }
     }
