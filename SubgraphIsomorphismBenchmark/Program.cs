@@ -115,7 +115,6 @@ namespace SubgraphIsomorphismBenchmark
             else
             {
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
-                    3,
                     g,
                     h,
                     (v, e) => v,

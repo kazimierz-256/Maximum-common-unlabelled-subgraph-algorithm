@@ -8,7 +8,6 @@ namespace SubgraphIsomorphismExactAlgorithm
     public static class SerialSubgraphIsomorphismGrouppedApproximability
     {
         public static void ApproximateOptimalSubgraph(
-            int orderOfPolynomial,
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
@@ -18,7 +17,31 @@ namespace SubgraphIsomorphismExactAlgorithm
             out Dictionary<int, int> hgOptimalMapping,
             bool analyzeDisconnected = false,
             bool findExactMatch = false
-            )
+            ) => ApproximateOptimalSubgraph(
+                            3,
+                            gArgument,
+                            hArgument,
+                            graphScoringFunction,
+                            out bestScore,
+                            out subgraphEdges,
+                            out ghOptimalMapping,
+                            out hgOptimalMapping,
+                            analyzeDisconnected,
+                            findExactMatch
+                            );
+
+        public static void ApproximateOptimalSubgraph(
+        int orderOfPolynomial,
+        UndirectedGraph gArgument,
+        UndirectedGraph hArgument,
+        Func<int, int, double> graphScoringFunction,
+        out double bestScore,
+        out int subgraphEdges,
+        out Dictionary<int, int> ghOptimalMapping,
+        out Dictionary<int, int> hgOptimalMapping,
+        bool analyzeDisconnected = false,
+        bool findExactMatch = false
+        )
         {
             bestScore = double.MinValue;
             subgraphEdges = 0;
@@ -51,8 +74,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 (d1, d2, s1, s2) => min(power(d1 + s1, d2 + s2), power(d2 + s2, d1 + s1)),
                 (d1, d2, s1, s2) => max(power(d1 + s1, d2 + s2), power(d2 + s2, d1 + s1)),
             };
-        var valuationDescriptions = new string[]
-        {
+            var valuationDescriptions = new string[]
+            {
                 "product of degrees",
                 "sum of degrees",
                 "min of degrees",
@@ -72,17 +95,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                 "product of powers of subgraph connections and degrees",
                 "min of powers of subgraph connections and degrees",
                 "max of powers of subgraph connections and degrees",
-        };
+            };
 
-        var maxScore = double.NegativeInfinity;
-        double localScore;
-        int localEdges;
-        Dictionary<int, int> ghLocalMapping;
-        Dictionary<int, int> hgLocalMapping;
+            var maxScore = double.NegativeInfinity;
+            double localScore;
+            int localEdges;
+            Dictionary<int, int> ghLocalMapping;
+            Dictionary<int, int> hgLocalMapping;
 
-        var bestValuations = new HashSet<int>();
+            var bestValuations = new HashSet<int>();
 
-            for (int valuationIndex = 0; valuationIndex<valuations.Length; valuationIndex++)
+            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
                     orderOfPolynomial,
@@ -117,7 +140,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
             Console.WriteLine();
-            for (int valuationIndex = 0; valuationIndex<valuations.Length; valuationIndex++)
+            for (int valuationIndex = 0; valuationIndex < valuations.Length; valuationIndex++)
             {
                 if (bestValuations.Contains(valuationIndex))
                     Console.ForegroundColor = ConsoleColor.DarkCyan;
