@@ -121,7 +121,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(g, h, (vertices, edges) => vertices, 0, out var score, out var subgraphEdges, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(g, h, (vertices, edges) => vertices, out var score, out var subgraphEdges, out var gToH, out var hToG);
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 

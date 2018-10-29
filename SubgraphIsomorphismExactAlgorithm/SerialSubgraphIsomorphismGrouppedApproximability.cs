@@ -57,7 +57,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gConnectionExistance,
                     hConnectionExistance,
                     graphScoringFunction,
-                    random.Next(),
+                    random,
                     out localScore,
                     out localEdges,
                     out ghLocalMapping,

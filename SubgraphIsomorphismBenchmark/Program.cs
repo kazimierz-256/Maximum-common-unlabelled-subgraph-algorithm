@@ -99,7 +99,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v,
+                    (v, e) => e + v,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -116,7 +116,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v,
+                    (v, e) => e + v,
                     out score,
                     out subgraphEdges,
                     out gToH,

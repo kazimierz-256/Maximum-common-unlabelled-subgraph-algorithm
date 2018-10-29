@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public class SerialSubgraphIsomorphismApproximator
+    class SerialSubgraphIsomorphismApproximator
     {
         // let D be max{|G|,|H|}
         // upper bound polynomial is on the order of O(D^4)
@@ -16,7 +16,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool[,] gConnectionExistance,
             bool[,] hConnectionExistance,
             Func<int, int, double> graphScoringFunction,
-            int seed,
+            Random random,
             out double bestScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
@@ -63,8 +63,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // make the best local choice
             var bestLocalSetup = new CoreInternalState();
-            var random = new Random(seed);
-            var archivedBestConnectionDetails = new Tuple<double, int>(double.MinValue, 0);
+            var archivedScore = double.MinValue;
+            var archivedEdges = 0;
             // while there is an increase in result continue to approximate
 
             var step = 0;
@@ -82,7 +82,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var score = graphScoringFunction(localSetup.ghMapping.Keys.Count, localSetup.totalNumberOfEdgesInSubgraph);
 
                         bestLocalSetup = predictor.ExportShallowInternalState().Clone();
-                        archivedBestConnectionDetails = new Tuple<double, int>(score, localSetup.totalNumberOfEdgesInSubgraph);
+                        archivedScore = score;
+                        archivedEdges = localSetup.totalNumberOfEdgesInSubgraph;
 
                         return true;
                     }
@@ -142,8 +143,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                bestScore = archivedBestConnectionDetails.Item1;
-                subgraphEdges = archivedBestConnectionDetails.Item2;
+                bestScore = archivedScore;
+                subgraphEdges = archivedEdges;
                 ghOptimalMapping = bestLocalSetup.ghMapping;
                 hgOptimalMapping = bestLocalSetup.hgMapping;
             }

@@ -136,11 +136,10 @@ namespace Application_itself
                     }
                     else
                     {
-                        SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
+                        SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                             g,
                             h,
                             valuation,
-                            0,
                             out bestScore,
                             out subgraphEdges,
                             out ghOptimalMapping,
