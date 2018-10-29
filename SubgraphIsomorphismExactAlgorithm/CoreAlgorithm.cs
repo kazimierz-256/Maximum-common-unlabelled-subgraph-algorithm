@@ -76,7 +76,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int hInitialChoice;
         private bool checkForEquality;
         private bool checkStartingFromBest;
-        private Random randomGenerator = new Random(0);
 
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
@@ -280,8 +279,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
             {
-                var numberOfVerticesToSkip = randomGenerator.Next() % gEnvelope.Count;
-                var gMatchingVertex = gEnvelope.Skip(numberOfVerticesToSkip).First();
+                var gMatchingVertex = gEnvelope.First();
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
