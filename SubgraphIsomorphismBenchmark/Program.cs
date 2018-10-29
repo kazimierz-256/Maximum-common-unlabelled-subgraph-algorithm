@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(21);
+            PrintBenchmark(17);
         }
         private const int iterations = 1;
         private static void PrintBenchmark(int n)
@@ -42,7 +42,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore).TotalMilliseconds;
+                    var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore, false).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
 
@@ -55,7 +55,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score).TotalMilliseconds;
+                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, false).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
                     //Console.WriteLine($"vertices: {n}, density: { density}");
 
@@ -87,7 +87,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, 1-density, 129369567 - seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, 1 - density, 129369567 - seed - seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
             //var h = GraphFactory.GeneratePermuted(g, 0);
@@ -131,12 +131,15 @@ namespace SubgraphIsomorphismBenchmark
 
             if (printGraphs)
             {
+                var light = exact ? ConsoleColor.Green : ConsoleColor.Cyan;
+                var dark = exact ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
+
                 Console.WriteLine("Graph G:");
-                g.PrintSubgraph(gToH.Keys.ToArray(), gToH, ConsoleColor.DarkCyan, ConsoleColor.Cyan);
+                g.PrintSubgraph(gToH.Keys.ToArray(), gToH, dark, light);
                 Console.WriteLine();
 
                 Console.WriteLine("Graph H:");
-                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG, ConsoleColor.DarkCyan, ConsoleColor.Cyan);
+                h.PrintSubgraph(gToH.Keys.Select(key => gToH[key]).ToArray(), hToG, dark, light);
                 Console.WriteLine();
             }
             return sw.Elapsed;

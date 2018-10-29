@@ -30,6 +30,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findExactMatch
                             );
 
+        // complexity upper bound order of this algorithm is O(D^5) where D is the maximum of the sizes of two input graphs
         public static void ApproximateOptimalSubgraph(
         int orderOfPolynomial,
         UndirectedGraph gArgument,
@@ -55,7 +56,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> hgLocalMapping;
 
             var random = new Random(0);
-            int plateau = 200;
+            int plateau = 10 * Math.Max(gArgument.Vertices.Count, hArgument.Vertices.Count);
             for (int valuationIndex = 0; valuationIndex < plateau; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
