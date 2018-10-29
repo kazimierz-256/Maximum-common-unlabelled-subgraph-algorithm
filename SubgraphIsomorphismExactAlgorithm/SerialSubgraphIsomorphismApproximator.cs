@@ -13,6 +13,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         public static void ApproximateOptimalSubgraph(
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
+            bool[,] gConnectionExistance,
+            bool[,] hConnectionExistance,
             Func<int, int, double> graphScoringFunction,
             int seed,
             out double bestScore,
@@ -27,22 +29,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
             if (findExactMatch)
                 throw new Exception("Feature not yet supported.");
-
-            #region Initial setup
-            var gMax = gArgument.Vertices.Max();
-
-            var gConnectionExistance = new bool[gMax + 1, gMax + 1];
-            var hConnectionExistance = new bool[hArgument.Vertices.Count, hArgument.Vertices.Count];
-
-            foreach (var kvp in gArgument.Neighbours)
-                foreach (var vertexTo in kvp.Value)
-                    gConnectionExistance[kvp.Key, vertexTo] = true;
-
-            foreach (var kvp in hArgument.Neighbours)
-                foreach (var vertexTo in kvp.Value)
-                    hConnectionExistance[kvp.Key, vertexTo] = true;
-            #endregion
-
+            
             CoreInternalState initialSetupPreMatch(int gMatchingVertex, int hMatchingVertex, int additionalOrder = 0)
             {
                 // todo: cache more immutable!
