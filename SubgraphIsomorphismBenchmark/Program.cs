@@ -20,9 +20,9 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(20);
+            PrintBenchmark(19);
         }
-        private const int iterations = 100;
+        private const int iterations = 1;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
