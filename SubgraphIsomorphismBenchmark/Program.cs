@@ -20,9 +20,9 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(21);
+            PrintBenchmark(10);
         }
-        private const int iterations = 1;
+        private const int iterations = 2;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
@@ -57,13 +57,14 @@ namespace SubgraphIsomorphismBenchmark
 
                     msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, false).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
-                    //Console.WriteLine($"vertices: {n}, density: { density}");
+                    Console.WriteLine($"vertices: {n}, density: { density}");
 
                     Console.Write($"Quality of approximation: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write($"{100d * approximateScore / score:F1}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximateScore}, exact {score}");
+
                     //for (int nl = 0; nl < 2; nl++)
                     Console.WriteLine();
                 }
@@ -99,7 +100,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e + v,
+                    (v, e) => e,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -116,7 +117,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e + v,
+                    (v, e) => e,
                     out score,
                     out subgraphEdges,
                     out gToH,

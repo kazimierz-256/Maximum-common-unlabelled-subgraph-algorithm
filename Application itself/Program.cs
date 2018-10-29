@@ -71,7 +71,6 @@ namespace Application_itself
                     GraphFileIO.Read(input[1], out var h);
                     var outputAddress = input[2];
                     var valuation = stringToValuation(input[3]);
-                    var initialValue = double.NegativeInfinity;
                     var computeExactly = stringToBool(input[4]);
 
                     bool analyzeDisconnected = false;
@@ -83,7 +82,6 @@ namespace Application_itself
                         analyzeDisconnected = stringToBool(input[6]);
 
                     bool launchInParallel = true;
-                    int orderOfPolynomial = 5;
 
                     if (input.Length > 7)
                     {

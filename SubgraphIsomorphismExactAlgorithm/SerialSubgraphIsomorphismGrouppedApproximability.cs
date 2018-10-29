@@ -47,8 +47,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hConnectionExistance[kvp.Key, vertexTo] = true;
 
             var random = new Random(0);
-            int plateau = Math.Max(gArgument.Vertices.Count, hArgument.Vertices.Count);
-            var max = 20 + plateau;
+            int plateau = 10 * Math.Max(gArgument.Vertices.Count, hArgument.Vertices.Count);
+            var max = 200 + plateau;
             for (int valuationIndex = 0; valuationIndex < max; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
