@@ -83,12 +83,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             var step = 0;
             while (true)
             {
-                var listOfLocalBestNextSetup = new List<CoreInternalState>();
-                var listOfLocalBestConnectionDetails = new List<Tuple<double, int>>();
-                var latestScore = double.MinValue;
-
                 #region PREDICTION
-                void makePrediction(int gCandidate, int hCandidate, int additionalOrder = 0)
+                bool makePrediction(int gCandidate, int hCandidate, int additionalOrder = 0)
                 {
                     var localSetup = bestLocalSetup.Clone();
                     var predictor = new CoreAlgorithm();
@@ -97,47 +93,52 @@ namespace SubgraphIsomorphismExactAlgorithm
                     if (predictor.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
                     {
                         var score = graphScoringFunction(localSetup.ghMapping.Keys.Count, localSetup.totalNumberOfEdgesInSubgraph);
-                        if (latestScore <= score)
-                        {
-                            if (latestScore < score)
-                            {
-                                latestScore = score;
-                                listOfLocalBestNextSetup.Clear();
-                                listOfLocalBestConnectionDetails.Clear();
-                            }
 
-                            listOfLocalBestNextSetup.Add(predictor.ExportShallowInternalState().Clone());
-                            listOfLocalBestConnectionDetails.Add(new Tuple<double, int>(score, localSetup.totalNumberOfEdgesInSubgraph));
-                        }
+                        bestLocalSetup = predictor.ExportShallowInternalState().Clone();
+                        archivedBestConnectionDetails = new Tuple<double, int>(score, localSetup.totalNumberOfEdgesInSubgraph);
+
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
                 #endregion
 
                 if (step == 0)
                 {
-                    foreach (var gCandidate in gArgument.Vertices.ToArray())
-                        foreach (var hCandidate in hArgument.Vertices.ToArray())
-                        {
-                            bestLocalSetup = initialSetupPreMatch(gCandidate, hCandidate);
-                            makePrediction(gCandidate, hCandidate);
-                        }
+                    var gSkip = random.Next() % gArgument.Vertices.Count;
+                    var hSkip = random.Next() % hArgument.Vertices.Count;
+                    var gCandidate = gArgument.Vertices.Skip(gSkip).First();
+                    var hCandidate = hArgument.Vertices.Skip(hSkip).First();
+                    bestLocalSetup = initialSetupPreMatch(gCandidate, hCandidate);
+                    makePrediction(gCandidate, hCandidate);
                 }
                 else
                 {
-                    foreach (var gCandidate in bestLocalSetup.gEnvelope)
-                        foreach (var hCandidate in bestLocalSetup.hEnvelope)
-                            makePrediction(gCandidate, hCandidate);
-                }
-                
-                if (listOfLocalBestConnectionDetails.Count == 0)
-                {
-                    break;
-                }
-                else
-                {
-                    var randomIndex = random.Next() % listOfLocalBestConnectionDetails.Count;
-                    bestLocalSetup = listOfLocalBestNextSetup[randomIndex];
-                    archivedBestConnectionDetails = listOfLocalBestConnectionDetails[randomIndex];
+                    var gRandomizedOrder = bestLocalSetup.gEnvelope.ToArray();
+                    var hRandomizedOrder = bestLocalSetup.hEnvelope.ToArray();
+                    var randomizingArray = Enumerable.Range(0, gRandomizedOrder.Length).Select(i => random.Next()).ToArray();
+
+                    Array.Sort(randomizingArray, gRandomizedOrder);
+                    randomizingArray = Enumerable.Range(0, hRandomizedOrder.Length).Select(i => random.Next()).ToArray();
+                    Array.Sort(randomizingArray, hRandomizedOrder);
+
+                    var stopIteration = false;
+                    foreach (var gCandidate in gRandomizedOrder)
+                    {
+                        foreach (var hCandidate in hRandomizedOrder)
+                            if (makePrediction(gCandidate, hCandidate))
+                            {
+                                stopIteration = true;
+                                break;
+                            }
+                        if (stopIteration)
+                            break;
+                    }
+                    if (!stopIteration)
+                        break;
                 }
 
                 step += 1;

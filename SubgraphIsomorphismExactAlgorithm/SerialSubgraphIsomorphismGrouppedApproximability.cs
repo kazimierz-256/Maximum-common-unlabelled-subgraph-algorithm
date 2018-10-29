@@ -7,32 +7,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 {
     public static class SerialSubgraphIsomorphismGrouppedApproximability
     {
-        public static void ApproximateOptimalSubgraph(
-            UndirectedGraph gArgument,
-            UndirectedGraph hArgument,
-            Func<int, int, double> graphScoringFunction,
-            out double bestScore,
-            out int subgraphEdges,
-            out Dictionary<int, int> ghOptimalMapping,
-            out Dictionary<int, int> hgOptimalMapping,
-            bool analyzeDisconnected = false,
-            bool findExactMatch = false
-            ) => ApproximateOptimalSubgraph(
-                            3,
-                            gArgument,
-                            hArgument,
-                            graphScoringFunction,
-                            out bestScore,
-                            out subgraphEdges,
-                            out ghOptimalMapping,
-                            out hgOptimalMapping,
-                            analyzeDisconnected,
-                            findExactMatch
-                            );
-
         // complexity upper bound order of this algorithm is O(D^5) where D is the maximum of the sizes of two input graphs
         public static void ApproximateOptimalSubgraph(
-        int orderOfPolynomial,
         UndirectedGraph gArgument,
         UndirectedGraph hArgument,
         Func<int, int, double> graphScoringFunction,
