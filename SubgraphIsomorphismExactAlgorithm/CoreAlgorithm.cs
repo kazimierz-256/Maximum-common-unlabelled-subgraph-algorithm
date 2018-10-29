@@ -76,6 +76,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int hInitialChoice;
         private bool checkForEquality;
         private bool checkStartingFromBest;
+        private Random randomGenerator = new Random(0);
 
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
@@ -279,36 +280,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
             {
-                var gMatchingVertex = -1;
-                var gMatchingOptimality = checkStartingFromBest ? int.MinValue : int.MaxValue;
-                foreach (var gVertexCandidate in gEnvelope)
-                {
-                    var degree = 0;
-                    foreach (var gSub in ghMapping.Keys)
-                    {
-                        if (gConnectionExistance[gVertexCandidate, gSub])
-                        {
-                            degree += 1;
-                        }
-                    }
-
-                    if (checkStartingFromBest)
-                    {
-                        if (degree > gMatchingOptimality)
-                        {
-                            gMatchingOptimality = degree;
-                            gMatchingVertex = gVertexCandidate;
-                        }
-                    }
-                    else
-                    {
-                        if (degree < gMatchingOptimality)
-                        {
-                            gMatchingOptimality = degree;
-                            gMatchingVertex = gVertexCandidate;
-                        }
-                    }
-                }
+                var numberOfVerticesToSkip = randomGenerator.Next() % gEnvelope.Count;
+                var gMatchingVertex = gEnvelope.Skip(numberOfVerticesToSkip).First();
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
