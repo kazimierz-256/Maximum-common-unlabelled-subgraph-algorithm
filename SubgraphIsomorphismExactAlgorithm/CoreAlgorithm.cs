@@ -167,7 +167,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gConnectionExistance[kvp.Key, vertexTo] = true;
                 }
             }
-            hConnectionExistance = new bool[h.Vertices.Count, h.Vertices.Count];
+            var hMax = h.Vertices.Max();
+            hConnectionExistance = new bool[hMax + 1, hMax + 1];
             foreach (var kvp in h.Neighbours)
             {
                 foreach (var vertexTo in kvp.Value)

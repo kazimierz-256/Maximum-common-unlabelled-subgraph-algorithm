@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(17);
+            PrintBenchmark(21);
         }
         private const int iterations = 1;
         private static void PrintBenchmark(int n)
@@ -87,7 +87,7 @@ namespace SubgraphIsomorphismBenchmark
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed);
-            var h = GraphFactory.GenerateRandom(n, 1 - density, 129369567 - seed - seed * seed);
+            var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
             //var h = GraphFactory.GeneratePermuted(g, 0);

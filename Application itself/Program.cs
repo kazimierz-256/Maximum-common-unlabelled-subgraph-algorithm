@@ -107,11 +107,10 @@ namespace Application_itself
                     {
                         if (launchInParallel)
                         {
-                            ParallelSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+                            ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                                 g,
                                 h,
                                 valuation,
-                                initialValue,
                                 out bestScore,
                                 out subgraphEdges,
                                 out ghOptimalMapping,
@@ -122,11 +121,10 @@ namespace Application_itself
                         }
                         else
                         {
-                            SerialSubgraphIsomorphismExtractor<double>.ExtractOptimalSubgraph(
+                            SerialSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                                 g,
                                 h,
                                 valuation,
-                                initialValue,
                                 out bestScore,
                                 out subgraphEdges,
                                 out ghOptimalMapping,
@@ -139,11 +137,10 @@ namespace Application_itself
                     else
                     {
                         SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
-                            orderOfPolynomial,
                             g,
                             h,
                             valuation,
-                            initialValue,
+                            0,
                             out bestScore,
                             out subgraphEdges,
                             out ghOptimalMapping,

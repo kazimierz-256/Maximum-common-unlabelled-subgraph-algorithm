@@ -39,5 +39,34 @@ namespace GraphDataStructure
                 }
             }
         }
+
+
+        public static UndirectedGraph GraphOfConnectedComponent(this UndirectedGraph g, int ccVertex)
+        {
+            var vertices = new HashSet<int>() { ccVertex };
+            var analyzed = new HashSet<int>() { ccVertex };
+            BFSSearch(g, ccVertex, vertices, analyzed);
+
+            var edges = new Dictionary<int, HashSet<int>>();
+            var directedEdgeCount = 0;
+
+            foreach (var vertex in vertices)
+            {
+                foreach (var neighbour in g.NeighboursOf(vertex))
+                {
+                    if (vertices.Contains(neighbour))
+                    {
+                        if (!edges.ContainsKey(vertex))
+                            edges.Add(vertex, new HashSet<int>());
+
+                        edges[vertex].Add(neighbour);
+                        directedEdgeCount += 1;
+                    }
+                }
+            }
+
+
+            return new HashGraph(edges, vertices, directedEdgeCount);
+        }
     }
 }
