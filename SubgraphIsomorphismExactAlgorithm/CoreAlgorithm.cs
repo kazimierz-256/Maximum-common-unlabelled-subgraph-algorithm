@@ -279,36 +279,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
             {
-                var gMatchingVertex = -1;
-                var gMatchingOptimality = checkStartingFromBest ? int.MinValue : int.MaxValue;
-                foreach (var gVertexCandidate in gEnvelope)
-                {
-                    var degree = 0;
-                    foreach (var gSub in ghMapping.Keys)
-                    {
-                        if (gConnectionExistance[gVertexCandidate, gSub])
-                        {
-                            degree += 1;
-                        }
-                    }
-
-                    if (checkStartingFromBest)
-                    {
-                        if (degree > gMatchingOptimality)
-                        {
-                            gMatchingOptimality = degree;
-                            gMatchingVertex = gVertexCandidate;
-                        }
-                    }
-                    else
-                    {
-                        if (degree < gMatchingOptimality)
-                        {
-                            gMatchingOptimality = degree;
-                            gMatchingVertex = gVertexCandidate;
-                        }
-                    }
-                }
+                var gMatchingVertex = gEnvelope.First();
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
