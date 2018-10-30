@@ -60,7 +60,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
+                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
                     {
                         if (newScore.CompareTo(localBestScore) > 0)
                         {

@@ -79,7 +79,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = iter / gGraphs.Count;
                 // try matching all h's
                 var algorithm = new CoreAlgorithm();
-                algorithm.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges, depth) =>
+                algorithm.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
                 {
                     if (newScore.CompareTo(localBestScore) > 0)
                     {

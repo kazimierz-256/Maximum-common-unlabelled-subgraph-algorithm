@@ -9,7 +9,90 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(5, 100000, 0.5, 24, 41)]
+        [InlineData(9)]
+        public void TwoCliquesConnectedByChain(int max)
+        {
+            for (int i = 4; i < max; i++)
+            {
+                for (int j = 3; j < i; j++)
+                {
+                    var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + 4));
+                    var vertices2 = new HashSet<int>(Enumerable.Range(0, i + j + 3));
+
+                    var edges1 = new Dictionary<int, HashSet<int>>();
+                    var edges2 = new Dictionary<int, HashSet<int>>();
+
+                    foreach (var vertex in vertices1)
+                        edges1.Add(vertex, new HashSet<int>());
+                    foreach (var vertex in vertices2)
+                        edges2.Add(vertex, new HashSet<int>());
+
+                    void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
+                    {
+                        edges[a].Add(b);
+                        edges[b].Add(a);
+                    }
+
+                    // construct clique 1 and 2
+                    for (int i1 = 0; i1 < i; i1++)
+                        for (int i1helper = 0; i1helper < i1; i1helper++)
+                        {
+                            connect(edges1, i1, i1helper);
+                            connect(edges2, i1, i1helper);
+                        }
+
+                    for (int j1 = i; j1 < i + j; j1++)
+                        for (int j1helper = i; j1helper < j1; j1helper++)
+                        {
+                            connect(edges1, j1, j1helper);
+                            connect(edges2, j1, j1helper);
+                        }
+
+                    connect(edges1, 0, i + j);
+                    connect(edges1, i + j, i + j + 1);
+                    connect(edges1, i + j + 1, i + j + 2);
+                    connect(edges1, i + j + 2, i + j + 3);
+                    connect(edges1, i + j + 3, i);
+
+                    connect(edges2, 0, i + j);
+                    connect(edges2, i + j, i + j + 1);
+                    connect(edges2, i + j + 1, i + j + 2);
+                    connect(edges2, i + j + 2, i);
+
+                    // shuffle them
+
+                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5);
+                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4);
+
+                    // verify result
+
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => edges,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG,
+                        true,
+                        false
+                        );
+
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
+                    // verify the solution
+                    Assert.Equal(subgraphEdges, score);
+                    Assert.Equal(i * (i - 1) / 2 + j * (j - 1) / 2 + 2, score);
+                    Assert.Equal(i + j + 2, gToH.Count);
+                    Assert.Equal(i + j + 2, hToG.Count);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
+            }
+        }
+        [Theory]
+        [InlineData(5, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -134,7 +217,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 1000, 0.5, 24)]
+        [InlineData(5, 100, 0.5, 24)]
         public void ApproximatingGraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)

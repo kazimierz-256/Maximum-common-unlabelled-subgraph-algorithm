@@ -20,10 +20,9 @@ namespace SubgraphIsomorphismExactAlgorithm
         public HashSet<int> gOutsiders;
         public HashSet<int> hOutsiders;
         public int totalNumberOfEdgesInSubgraph;
-        public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
+        public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         public bool analyzeDisconnected;
         public bool findExactMatch;
-        public int recursionDepth;
         public int gInitialChoice;
         public int hInitialChoice;
         public bool checkForEquality;
@@ -48,7 +47,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hOutsiders = new HashSet<int>(hOutsiders),
             graphScoringFunction = graphScoringFunction,
             newSolutionFound = newSolutionFound,
-            recursionDepth = recursionDepth,
             totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
             checkForEquality = checkForEquality,
             checkStartingFromBest = checkStartingFromBest
@@ -68,10 +66,9 @@ namespace SubgraphIsomorphismExactAlgorithm
         private HashSet<int> gOutsiders;
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
-        private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound;
+        private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         private bool analyzeDisconnected;
         private bool findExactMatch;
-        private int recursionDepth;
         private int gInitialChoice;
         private int hInitialChoice;
         private bool checkForEquality;
@@ -95,7 +92,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hOutsiders = hOutsiders,
             graphScoringFunction = graphScoringFunction,
             newSolutionFound = newSolutionFound,
-            recursionDepth = recursionDepth,
             totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
             checkForEquality = checkForEquality,
             checkStartingFromBest = checkStartingFromBest
@@ -119,7 +115,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hOutsiders = state.hOutsiders;
             graphScoringFunction = state.graphScoringFunction;
             newSolutionFound = state.newSolutionFound;
-            recursionDepth = state.recursionDepth;
             totalNumberOfEdgesInSubgraph = state.totalNumberOfEdgesInSubgraph;
             checkForEquality = state.checkForEquality;
             checkStartingFromBest = state.checkStartingFromBest;
@@ -132,10 +127,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g,
             UndirectedGraph h,
             Func<int, int, double> graphScoringFunction,
-            Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int, int> newSolutionFound,
+            Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound,
             bool analyzeDisconnected = false,
-            bool findExactMatch = false,
-            int recursionDepth = int.MaxValue
+            bool findExactMatch = false
             )
         {
             this.g = g;
@@ -143,7 +137,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             this.gInitialChoice = gMatchingVertex;
             this.hInitialChoice = hMatchingVertex;
-            this.recursionDepth = recursionDepth;
             this.findExactMatch = findExactMatch;
             this.newSolutionFound = newSolutionFound;
             this.analyzeDisconnected = analyzeDisconnected;
@@ -235,7 +228,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hOutsiders.Remove(hNeighbour);
                         }
                     }
-                    recursionDepth -= 1;
                     return true;
                 }
                 else
@@ -248,17 +240,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         public void Recurse(ref double bestScore)
         {
-            if (recursionDepth <= 0)
-            {
-                newSolutionFound?.Invoke(
-                   graphScoringFunction(ghMapping.Keys.Count, totalNumberOfEdgesInSubgraph),
-                   () => new Dictionary<int, int>(ghMapping),
-                   () => new Dictionary<int, int>(hgMapping),
-                   totalNumberOfEdgesInSubgraph,
-                   recursionDepth
-                   );
-            }
-            else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
+            if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
 
                 // no more connections could be found
@@ -273,8 +255,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         resultingValuation,
                         () => new Dictionary<int, int>(ghMapping),
                         () => new Dictionary<int, int>(hgMapping),
-                        totalNumberOfEdgesInSubgraph,
-                        recursionDepth
+                        totalNumberOfEdgesInSubgraph
                         );
                 }
             }
@@ -347,11 +328,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 hOutsiders.Remove(hNeighbour);
                             }
                         }
-                        recursionDepth -= 1;
                         Recurse(ref bestScore);
                         if (analyzeDisconnected)
                             DisconnectComponent(ref bestScore);
-                        recursionDepth += 1;
 
                         #region cleanup
                         foreach (var hVertex in hVerticesToRemoveFromEnvelope)
@@ -381,10 +360,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (!findExactMatch)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
-
-                    recursionDepth -= 1;
+                    
                     Recurse(ref bestScore);
-                    recursionDepth += 1;
 
                     g.RestoreVertex(gMatchingVertex, gRestoreOperation);
                 }
@@ -433,7 +410,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             h = hOutsiderGraph,
                             // tocontemplate: how to value disconnected components?
                             graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
-                            newSolutionFound = (newScore, ghMap, hgMap, edges, depth) => newSolutionFound?.Invoke(
+                            newSolutionFound = (newScore, ghMap, hgMap, edges) => newSolutionFound?.Invoke(
                                 newScore,
                                 () =>
                                 {
@@ -449,8 +426,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                                         hgExtended.Add(myMapping.Key, myMapping.Value);
                                     return hgExtended;
                                 },
-                                edges,
-                                depth
+                                edges + totalNumberOfEdgesInSubgraph
                                 )
                             ,
                             ghMapping = new Dictionary<int, int>(),
@@ -463,7 +439,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
                             hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
                             analyzeDisconnected = true,
-                            recursionDepth = recursionDepth - 1,
                             findExactMatch = findExactMatch,
                             gInitialChoice = gMatchingVertex,
                             hInitialChoice = hMatchingCandidate,
