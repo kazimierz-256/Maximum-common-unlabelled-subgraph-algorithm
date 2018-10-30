@@ -21,13 +21,21 @@ namespace SubgraphIsomorphismTests
                 }
                 for (int j = 0; j < max; j++)
                 {
-
                     // randomize a graph of given n and density
                     var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
-
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, out var score, out var subgraphEdges, out var gToH, out var hToG, false, false);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => vertices,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG,
+                        false,
+                        false
+                        );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 
@@ -42,7 +50,7 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(5, 100000, 0.5, 24, 41)]
+        [InlineData(7, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -54,21 +62,36 @@ namespace SubgraphIsomorphismTests
                 }
                 for (int j = 0; j < max; j++)
                 {
+                    var random = new Random(j);
 
                     // randomize a graph of given n and density
                     var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
                     var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
 
-                    // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, out var score, out var subgraphEdges, out var gToH, out var hToG, true, true);
-                    Assert.NotEmpty(gToH);
-                    Assert.NotEmpty(hToG);
-                    // verify the solution
-                    Assert.Equal(g.Vertices.Count, gToH.Count);
-                    Assert.Equal(g.Vertices.Count, hToG.Count);
+                    for (int removed = 0; removed < i; removed++)
+                    {
+                        // run the algorithm
+                        SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                            g,
+                            h,
+                            (vertices, edges) => vertices,
+                            out var score,
+                            out var subgraphEdges,
+                            out var gToH,
+                            out var hToG,
+                            true,
+                            false
+                            );
+                        Assert.NotEmpty(gToH);
+                        Assert.NotEmpty(hToG);
+                        // verify the solution
+                        Assert.Equal(g.Vertices.Count - removed, gToH.Count);
+                        Assert.Equal(g.Vertices.Count - removed, hToG.Count);
 
-                    AreTransitionsCorrect(gToH, hToG);
-                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                        AreTransitionsCorrect(gToH, hToG);
+                        HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                        h.RemoveVertex(h.Vertices.Skip(random.Next(h.Vertices.Count)).First());
+                    }
                 }
             }
         }
@@ -88,11 +111,19 @@ namespace SubgraphIsomorphismTests
                 {
 
                     // randomize a graph of given n and density
-                    var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed + j * j);
+                    var g = GraphFactory.GenerateRandom(2 * i, density, generatingSeed + j * j);
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(g, h, (vertices, edges) => vertices, out var score, out var subgraphEdges, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => vertices,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG
+                        );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 
@@ -103,7 +134,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 10000, 0.5, 24)]
+        [InlineData(5, 1000, 0.5, 24)]
         public void ApproximatingGraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
@@ -121,7 +152,15 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(g, h, (vertices, edges) => vertices, out var score, out var subgraphEdges, out var gToH, out var hToG);
+                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => vertices,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG
+                        );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
 

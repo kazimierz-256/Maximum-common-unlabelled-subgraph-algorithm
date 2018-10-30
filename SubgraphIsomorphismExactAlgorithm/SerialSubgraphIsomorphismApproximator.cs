@@ -96,8 +96,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 if (step == 0)
                 {
-                    var gSkip = random.Next() % gArgument.Vertices.Count;
-                    var hSkip = random.Next() % hArgument.Vertices.Count;
+                    var gSkip = random.Next(gArgument.Vertices.Count);
+                    var hSkip = random.Next(hArgument.Vertices.Count);
                     var gCandidate = gArgument.Vertices.Skip(gSkip).First();
                     var hCandidate = hArgument.Vertices.Skip(hSkip).First();
                     bestLocalSetup = initialSetupPreMatch(gCandidate, hCandidate);

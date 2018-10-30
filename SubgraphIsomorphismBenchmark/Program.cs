@@ -20,7 +20,7 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(10);
+            PrintBenchmark(2);
         }
         private const int iterations = 2;
         private static void PrintBenchmark(int n)
@@ -100,7 +100,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => e+v,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -117,7 +117,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => e+v,
                     out score,
                     out subgraphEdges,
                     out gToH,
