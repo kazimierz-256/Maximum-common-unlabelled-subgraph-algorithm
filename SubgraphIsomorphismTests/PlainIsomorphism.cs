@@ -14,7 +14,7 @@ namespace SubgraphIsomorphismTests
         {
             for (int i = 4; i < max; i++)
             {
-                for (int j = 3; j < i; j++)
+                for (int j = 3; j <= i; j++)
                 {
                     var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + 4));
                     var vertices2 = new HashSet<int>(Enumerable.Range(0, i + j + 3));
@@ -61,15 +61,15 @@ namespace SubgraphIsomorphismTests
 
                     // shuffle them
 
-                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5);
-                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4);
+                    var g = GraphFactory.GeneratePermuted(new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5), 0);
+                    var h = GraphFactory.GeneratePermuted(new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4), 1);
 
                     // verify result
 
                     SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                         g,
                         h,
-                        (vertices, edges) => edges,
+                        (vertices, edges) => vertices + edges,
                         out var score,
                         out var subgraphEdges,
                         out var gToH,
@@ -81,8 +81,8 @@ namespace SubgraphIsomorphismTests
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
                     // verify the solution
-                    Assert.Equal(subgraphEdges, score);
-                    Assert.Equal(i * (i - 1) / 2 + j * (j - 1) / 2 + 2, score);
+                    Assert.Equal((i * (i - 1) / 2 + j * (j - 1) / 2 + 2) + (i + j + 2), score);
+                    Assert.Equal(i * (i - 1) / 2 + j * (j - 1) / 2 + 2, subgraphEdges);
                     Assert.Equal(i + j + 2, gToH.Count);
                     Assert.Equal(i + j + 2, hToG.Count);
 
@@ -256,29 +256,19 @@ namespace SubgraphIsomorphismTests
         private void AreTransitionsCorrect(Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
             foreach (var transitionFunction in gToH)
-            {
                 Assert.Equal(transitionFunction.Key, hToG[transitionFunction.Value]);
-            }
         }
 
         private void HasSubgraphCorrectIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
             // for each pair of g there is and edge iff there is an edge in corresponding h equivalent pair
             foreach (var gVertex1 in gToH.Keys)
-            {
                 foreach (var gVertex2 in gToH.Keys.Where(vertex => vertex != gVertex1))
-                {
                     Assert.Equal(g.ExistsConnectionBetween(gVertex1, gVertex2), h.ExistsConnectionBetween(gToH[gVertex1], gToH[gVertex2]));
-                }
-            }
 
             foreach (var hVertex1 in hToG.Keys)
-            {
                 foreach (var hVertex2 in hToG.Keys.Where(vertex => vertex != hVertex1))
-                {
                     Assert.Equal(h.ExistsConnectionBetween(hVertex1, hVertex2), g.ExistsConnectionBetween(hToG[hVertex1], hToG[hVertex2]));
-                }
-            }
         }
 
         private void VerifyFullSubgraphIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
@@ -288,9 +278,7 @@ namespace SubgraphIsomorphismTests
             {
                 var gFromVertex = connection.Key;
                 foreach (var gToVertex in connection.Value)
-                {
                     Assert.True(h.ExistsConnectionBetween(gToH[gFromVertex], gToH[gToVertex]));
-                }
             }
 
             // all edges in h exsist in g
@@ -298,9 +286,7 @@ namespace SubgraphIsomorphismTests
             {
                 var hFromVertex = connection.Key;
                 foreach (var hToVertex in connection.Value)
-                {
                     Assert.True(g.ExistsConnectionBetween(hToG[hFromVertex], hToG[hToVertex]));
-                }
             }
         }
     }
