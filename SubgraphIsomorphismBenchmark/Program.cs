@@ -20,9 +20,9 @@ namespace SubgraphIsomorphismBenchmark
 
             File.WriteAllText(csvPath, string.Empty);
             File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(17);
+            PrintBenchmark(20);
         }
-        private const int iterations = 20;
+        private const int iterations = 3;
         private static void PrintBenchmark(int n)
         {
             using (var texWriter = File.AppendText(texPath))
@@ -30,6 +30,7 @@ namespace SubgraphIsomorphismBenchmark
 
             //for (double density = 0.05d; density < 1d; density += 0.05d)
             var density = 0.5d;
+            var print = false;
             {
                 var msTime = 0d;
                 //var times = new List<double>();
@@ -42,7 +43,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore, true).TotalMilliseconds;
+                    var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore, print).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
 
@@ -55,7 +56,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 
-                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, true).TotalMilliseconds;
+                    msTime = BenchmarkIsomorphism(true, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, print).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
 

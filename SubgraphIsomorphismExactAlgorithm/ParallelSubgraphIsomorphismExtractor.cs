@@ -43,20 +43,10 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var gGraphs = new List<UndirectedGraph>();
             var gInitialVertices = new List<int>();
-
+            
             while (g.Vertices.Count > 0)
             {
-                var gMatchingVertex = -1;
-                var gMatchingScore = int.MaxValue;
-
-                foreach (var gCandidate in g.Vertices)
-                {
-                    if (g.Degree(gCandidate) < gMatchingScore)
-                    {
-                        gMatchingScore = g.Degree(gCandidate);
-                        gMatchingVertex = gCandidate;
-                    }
-                }
+                var gMatchingVertex = g.Vertices.First();
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingVertex);

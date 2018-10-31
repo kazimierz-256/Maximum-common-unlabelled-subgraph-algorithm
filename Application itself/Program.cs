@@ -4,6 +4,7 @@ using MathParser;
 using SubgraphIsomorphismExactAlgorithm;
 using GraphDataStructure;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Application_itself
 {
@@ -149,6 +150,8 @@ namespace Application_itself
 
                     // print matches if filepath is valid?
 
+                    printTransition(outputAddress, ghOptimalMapping);
+
                     var light = computeExactly ? ConsoleColor.Green : ConsoleColor.Cyan;
                     var dark = computeExactly ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
 
@@ -172,6 +175,11 @@ namespace Application_itself
                 }
                 firstTime = false;
             }
+        }
+
+        private static void printTransition(string outputAddress, Dictionary<int, int> ghOptimalMapping)
+        {
+            var standardised
         }
     }
 }
