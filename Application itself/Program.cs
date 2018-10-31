@@ -5,6 +5,7 @@ using SubgraphIsomorphismExactAlgorithm;
 using GraphDataStructure;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Application_itself
 {
@@ -49,8 +50,16 @@ namespace Application_itself
 
             void inputInstructions()
             {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("1. `address of graph g without quotation marks \"` e.g. `g.csv` `C:\\...\\g.csv`");
+                Console.WriteLine("2. `address of graph h without quotation marks \"`");
+                Console.WriteLine("3. `output file address without quotation marks \"`");
+                Console.WriteLine("4. `monotonic subraph valuation in 'vertices' and 'edges' without white characters` e.g. `v` `v+e` `e` (the only simple valuations that support single character interpretation) `vertices*edges` `vertices*log(1+edges)`");
+                Console.WriteLine("5. `compute exactly or not?` e.g. `yes` `no` `true` `false` `t` `n`");
+                Console.WriteLine("6*. `analyze disconnected?` (defaults to false)");
+                Console.WriteLine("7*. `find exact matching of G in H?` (defaults to false, analyze disconnected must be also true if this is set to true)");
+                Console.WriteLine("8*. `launch in parallel? (if computing exactly)` (defaults to true)");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine("`address of graph g` `address of graph h` `output file address` `monotonic subraph valuation in v and e without white characters` `compute exactly or not?` `analyze disconnected?` `find exact matching of G in H?` `launch in parallel? if exact or order of polynomial if approximate`");
                 Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
                 Console.ResetColor();
             }
@@ -61,9 +70,12 @@ namespace Application_itself
                 if (args.Length < 2 || !firstTime)
                 {
                     // parse input
-                    Console.WriteLine("Please enter necessary arguments according to the following instructions:");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Please enter necessary arguments separated by a semicolon ; in a single line according to the following order:");
+                    Console.ResetColor();
                     inputInstructions();
-                    input = Console.ReadLine().Split(" ");
+                    Console.WriteLine();
+                    input = Console.ReadLine().Split(';', StringSplitOptions.RemoveEmptyEntries);
                 }
 
                 try
@@ -84,23 +96,17 @@ namespace Application_itself
 
                     bool launchInParallel = true;
 
-                    if (input.Length > 7)
+                    if (input.Length > 7 && computeExactly)
                     {
-                        if (computeExactly)
-                        {
-                            launchInParallel = stringToBool(input[7]);
-                        }
-                        else
-                        {
-                            int.Parse(input[7]);
-                        }
+                        launchInParallel = stringToBool(input[7]);
                     }
+
                     // order of polynomial
 
                     double bestScore;
                     int subgraphEdges;
-                    System.Collections.Generic.Dictionary<int, int> ghOptimalMapping;
-                    System.Collections.Generic.Dictionary<int, int> hgOptimalMapping;
+                    Dictionary<int, int> ghOptimalMapping;
+                    Dictionary<int, int> hgOptimalMapping;
 
                     if (computeExactly)
                     {
@@ -150,7 +156,7 @@ namespace Application_itself
 
                     // print matches if filepath is valid?
 
-                    printTransition(outputAddress, ghOptimalMapping);
+                    PrintTransition(outputAddress, ghOptimalMapping);
 
                     var light = computeExactly ? ConsoleColor.Green : ConsoleColor.Cyan;
                     var dark = computeExactly ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
@@ -177,9 +183,20 @@ namespace Application_itself
             }
         }
 
-        private static void printTransition(string outputAddress, Dictionary<int, int> ghOptimalMapping)
+        private static void PrintTransition(string outputAddress, Dictionary<int, int> ghOptimalMapping)
         {
-            var standardised
+            var standardisedFrom = ghOptimalMapping.Keys.ToArray();
+            var standardisedTo = standardisedFrom.Select(from => ghOptimalMapping[from]);
+            var builder = new StringBuilder();
+
+            builder.AppendJoin(',', standardisedFrom);
+            builder.AppendLine();
+            builder.AppendJoin(',', standardisedTo);
+
+            using (var file = new StreamWriter(outputAddress))
+            {
+                file.Write(builder);
+            }
         }
     }
 }

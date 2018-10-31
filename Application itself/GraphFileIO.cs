@@ -44,7 +44,6 @@ namespace Application_itself
             {
                 var vertices = new HashSet<int>(Enumerable.Range(0, v));
                 var neighbours = new Dictionary<int, HashSet<int>>();
-                int directedEdges = 0;
 
                 for (int i = 0; i < v; i++)
                 {
@@ -66,7 +65,7 @@ namespace Application_itself
                     }
                 }
 
-                g = new HashGraph(neighbours, vertices, directedEdges / 2);
+                g = new HashGraph(neighbours, vertices, neighbours.Sum(neighbourhood => neighbourhood.Value.Count) / 2);
             }
             else
             {
