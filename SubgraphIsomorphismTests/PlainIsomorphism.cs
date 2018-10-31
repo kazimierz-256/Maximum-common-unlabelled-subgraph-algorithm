@@ -61,8 +61,8 @@ namespace SubgraphIsomorphismTests
 
                     // shuffle them
 
-                    var g = GraphFactory.GeneratePermuted(new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5), 0);
-                    var h = GraphFactory.GeneratePermuted(new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4), 1);
+                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5).Permute(0);
+                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(1);
 
                     // verify result
 
@@ -91,6 +91,92 @@ namespace SubgraphIsomorphismTests
                 }
             }
         }
+
+        [Theory]
+        [InlineData(9)]
+        public void TwoCliquesConnectedByChainWithTriangle(int max)
+        {
+            for (int i = 4; i < max; i++)
+            {
+                for (int j = 3; j <= i; j++)
+                {
+                    var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + 4));
+                    var vertices2 = new HashSet<int>(Enumerable.Range(0, i + j + 3));
+
+                    var edges1 = new Dictionary<int, HashSet<int>>();
+                    var edges2 = new Dictionary<int, HashSet<int>>();
+
+                    foreach (var vertex in vertices1)
+                        edges1.Add(vertex, new HashSet<int>());
+                    foreach (var vertex in vertices2)
+                        edges2.Add(vertex, new HashSet<int>());
+
+                    void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
+                    {
+                        edges[a].Add(b);
+                        edges[b].Add(a);
+                    }
+
+                    // construct clique 1 and 2
+                    for (int i1 = 0; i1 < i; i1++)
+                        for (int i1helper = 0; i1helper < i1; i1helper++)
+                        {
+                            connect(edges1, i1, i1helper);
+                            connect(edges2, i1, i1helper);
+                        }
+
+                    for (int j1 = i; j1 < i + j; j1++)
+                        for (int j1helper = i; j1helper < j1; j1helper++)
+                        {
+                            connect(edges1, j1, j1helper);
+                            connect(edges2, j1, j1helper);
+                        }
+
+                    connect(edges1, 0, i + j);
+                    connect(edges1, i + j, i + j + 1);
+                    connect(edges1, i + j + 1, i + j + 2);
+                    connect(edges1, i + j + 2, i + j + 3);
+                    connect(edges1, i + j + 1, i + j + 3);
+                    connect(edges1, i + j + 3, i);
+
+                    connect(edges2, 0, i + j);
+                    connect(edges2, i + j, i + j + 1);
+                    connect(edges2, i + j + 1, i + j + 2);
+                    connect(edges2, i + j + 2, i);
+
+                    // shuffle them
+                    var randomSeed = 12;
+                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 6).Permute(10 - randomSeed);
+                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(2 + randomSeed * randomSeed);
+
+                    // verify result
+
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => vertices * edges,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG,
+                        false,
+                        false
+                        );
+
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
+                    // verify the solution
+                    Assert.Equal(i + j + 3, gToH.Count);
+                    Assert.Equal(i + j + 3, hToG.Count);
+                    Assert.Equal(i * (i - 1) / 2 + j * (j - 1) / 2 + 4, subgraphEdges);
+                    Assert.Equal((i * (i - 1) / 2 + j * (j - 1) / 2 + 4) * (i + j + 3), score);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
+            }
+        }
+
         [Theory]
         [InlineData(5, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
@@ -163,17 +249,17 @@ namespace SubgraphIsomorphismTests
                             out var gToH,
                             out var hToG,
                             true,
-                            false
+                            true
                             );
                         Assert.NotEmpty(gToH);
                         Assert.NotEmpty(hToG);
                         // verify the solution
-                        Assert.Equal(g.Vertices.Count - removed, gToH.Count);
-                        Assert.Equal(g.Vertices.Count - removed, hToG.Count);
+                        Assert.Equal(g.Vertices.Count, gToH.Count);
+                        Assert.Equal(g.Vertices.Count, hToG.Count);
 
                         AreTransitionsCorrect(gToH, hToG);
                         HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
-                        h.RemoveVertex(h.Vertices.Skip(random.Next(h.Vertices.Count)).First());
+                        g.RemoveVertex(g.Vertices.Skip(random.Next(g.Vertices.Count)).First());
                     }
                 }
             }
