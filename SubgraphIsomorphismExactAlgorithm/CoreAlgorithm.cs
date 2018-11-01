@@ -71,8 +71,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private bool findExactMatch;
         private int gInitialChoice;
         private int hInitialChoice;
-        private bool checkForEquality;
-        private bool checkStartingFromBest;
 
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
@@ -92,9 +90,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             hOutsiders = hOutsiders,
             graphScoringFunction = graphScoringFunction,
             newSolutionFound = newSolutionFound,
-            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
-            checkForEquality = checkForEquality,
-            checkStartingFromBest = checkStartingFromBest
+            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph
         };
 
         public void ImportShallowInternalState(CoreInternalState state)
@@ -116,8 +112,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             graphScoringFunction = state.graphScoringFunction;
             newSolutionFound = state.newSolutionFound;
             totalNumberOfEdgesInSubgraph = state.totalNumberOfEdgesInSubgraph;
-            checkForEquality = state.checkForEquality;
-            checkStartingFromBest = state.checkStartingFromBest;
         }
 
 
@@ -238,6 +232,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             return false;
         }
 
+
         public void Recurse(ref double bestScore)
         {
             if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
@@ -249,7 +244,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = graphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
-                if (resultingValuation.CompareTo(bestScore) > (checkForEquality ? -1 : 0))
+                if (resultingValuation.CompareTo(bestScore) > 0d)
                 {
                     newSolutionFound?.Invoke(
                         resultingValuation,
@@ -259,7 +254,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
+            else if (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0d)
             {
                 var gMatchingVertex = gEnvelope.First();
 
@@ -388,7 +383,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
 
 
-                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > (checkForEquality ? -1 : 0))
+                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0d)
                 {
                     var gMatchingVertex = -1;
                     var gMatchingScore = int.MaxValue;
@@ -441,9 +436,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             analyzeDisconnected = true,
                             findExactMatch = findExactMatch,
                             gInitialChoice = gMatchingVertex,
-                            hInitialChoice = hMatchingCandidate,
-                            checkForEquality = checkForEquality,
-                            checkStartingFromBest = checkStartingFromBest
+                            hInitialChoice = hMatchingCandidate
                         };
                         subSolver.gOutsiders.Remove(gMatchingVertex);
                         subSolver.hOutsiders.Remove(hMatchingCandidate);
