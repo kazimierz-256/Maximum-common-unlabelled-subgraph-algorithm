@@ -50,17 +50,24 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.HighLevelSetup(gMatchingVertex, hMatchingVertex, g, h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
-                    {
-                        if (newScore.CompareTo(localBestScore) > 0)
+                    solver.HighLevelSetup(
+                        gMatchingVertex,
+                        hMatchingVertex,
+                        g,
+                        h,
+                        graphScoringFunction,
+                        (newScore, ghMap, hgMap, edges) =>
                         {
-                            localBestScore = newScore;
-                            ghLocalOptimalMapping = ghMap();
-                            hgLocalOptimalMapping = hgMap();
-                            localSubgraphEdges = edges;
-                        }
-                    },
-                    analyzeDisconnected, findExactMatch);
+                            if (newScore.CompareTo(localBestScore) > 0)
+                            {
+                                localBestScore = newScore;
+                                ghLocalOptimalMapping = ghMap();
+                                hgLocalOptimalMapping = hgMap();
+                                localSubgraphEdges = edges;
+                            }
+                        },
+                        analyzeDisconnected, findExactMatch
+                        );
                     solver.Recurse(ref localBestScore);
                 }
 

@@ -69,25 +69,32 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 var gIndex = iter % gGraphs.Count;
                 var hIndex = iter / gGraphs.Count;
-                // try matching all h's
+
                 var algorithm = new CoreAlgorithm();
-                algorithm.HighLevelSetup(gInitialVertices[gIndex], hVertices[hIndex], gGraphs[gIndex].DeepClone(), h, graphScoringFunction, (newScore, ghMap, hgMap, edges) =>
-                {
-                    if (newScore.CompareTo(localBestScore) > 0)
-                    {
-                        lock (lockingObject)
-                        {
-                            if (newScore.CompareTo(localBestScore) > 0)
-                            {
-                                localBestScore = newScore;
-                                ghLocalOptimalMapping = ghMap();
-                                hgLocalOptimalMapping = hgMap();
-                                localSubgraphEdges = edges;
-                            }
-                        }
-                    }
-                },
-                analyzeDisconnected, findExactMatch);
+                algorithm.HighLevelSetup(
+                    gInitialVertices[gIndex],
+                    hVertices[hIndex],
+                    gGraphs[gIndex].DeepClone(),
+                    h,
+                    graphScoringFunction,
+                    (newScore, ghMap, hgMap, edges) =>
+                      {
+                          if (newScore.CompareTo(localBestScore) > 0)
+                          {
+                              lock (lockingObject)
+                              {
+                                  if (newScore.CompareTo(localBestScore) > 0)
+                                  {
+                                      localBestScore = newScore;
+                                      ghLocalOptimalMapping = ghMap();
+                                      hgLocalOptimalMapping = hgMap();
+                                      localSubgraphEdges = edges;
+                                  }
+                              }
+                          }
+                      },
+                    analyzeDisconnected, findExactMatch
+                );
                 algorithm.Recurse(ref localBestScore);
             });
 
