@@ -49,6 +49,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             var random = new Random(0);
             int plateau = 10 * Math.Max(gArgument.Vertices.Count, hArgument.Vertices.Count);
             var max = 200 + plateau;
+            var maxInTheory = Math.Min(
+                graphScoringFunction(gArgument.Vertices.Count, gArgument.EdgeCount),
+                graphScoringFunction(hArgument.Vertices.Count, hArgument.EdgeCount)
+                );
             for (int valuationIndex = 0; valuationIndex < max; valuationIndex += 1)
             {
                 SerialSubgraphIsomorphismApproximator.ApproximateOptimalSubgraph(
@@ -73,6 +77,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                     ghOptimalMapping = new Dictionary<int, int>(ghLocalMapping);
                     hgOptimalMapping = new Dictionary<int, int>(hgLocalMapping);
                     max += plateau;
+                    if (bestScore == maxInTheory)
+                    {
+                        break;
+                    }
                 }
             }
         }

@@ -47,7 +47,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var random = new Random(0);
             while (g.Vertices.Count > 0)
             {
-                var gMatchingVertex = g.Vertices.Skip(random.Next(g.Vertices.Count)).First();
+                var gMatchingVertex = g.Vertices.ArgMax(v => -g.Degree(v));
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingVertex);

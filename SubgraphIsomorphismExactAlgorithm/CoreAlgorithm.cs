@@ -360,7 +360,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (!findExactMatch)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
-                    
+
                     Recurse(ref bestScore);
 
                     g.RestoreVertex(gMatchingVertex, gRestoreOperation);
