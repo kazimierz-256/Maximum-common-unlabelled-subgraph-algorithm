@@ -8,7 +8,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 {
     public static class SerialSubgraphIsomorphismGrouppedApproximability
     {
-        // complexity upper bound order of this algorithm is O(D^5) where D is the maximum of the sizes of two input graphs
+        // complexity upper bound order of this algorithm is O(D^3 log D) where D is the maximum of the sizes of two input graphs
         public static void ApproximateOptimalSubgraph(
         UndirectedGraph gArgument,
         UndirectedGraph hArgument,
@@ -33,7 +33,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Dictionary<int, int> hgLocalMapping;
 
             var gMax = gArgument.Vertices.Max();
-            var hMax = gArgument.Vertices.Max();
+            var hMax = hArgument.Vertices.Max();
 
             var gConnectionExistance = new bool[gMax + 1, gMax + 1];
             var hConnectionExistance = new bool[hMax + 1, hMax + 1];

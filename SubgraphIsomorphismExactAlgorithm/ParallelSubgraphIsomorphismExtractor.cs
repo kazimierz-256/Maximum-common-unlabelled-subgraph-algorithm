@@ -64,6 +64,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localSubgraphEdges = 0;
             var lockingObject = new object();
             var hVertices = h.Vertices.ToArray();
+
             Parallel.For(0, gGraphs.Count * hVertices.Length, iter =>
             {
                 var gIndex = iter % gGraphs.Count;
