@@ -260,18 +260,6 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
-
-                // now consider the problem once the best candidate vertex has been removed
-                // remove vertex from graph and then restore it
-                if (!findExactMatch)
-                {
-                    var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
-
-                    Recurse(ref bestScore);
-
-                    g.RestoreVertex(gMatchingVertex, gRestoreOperation);
-                }
-
                 var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
                 var gVerticesToRemoveFromEnvelope = new List<int>();
 
@@ -368,8 +356,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gEnvelope.Remove(gVertex);
                     gOutsiders.Add(gVertex);
                 }
-                gEnvelope.Add(gMatchingVertex);
                 #endregion
+                // now consider the problem once the best candidate vertex has been removed
+                // remove vertex from graph and then restore it
+                if (!findExactMatch)
+                {
+                    var gRestoreOperation = g.RemoveVertex(gMatchingVertex);
+
+                    Recurse(ref bestScore);
+
+                    g.RestoreVertex(gMatchingVertex, gRestoreOperation);
+                }
+                gEnvelope.Add(gMatchingVertex);
             }
         }
 
