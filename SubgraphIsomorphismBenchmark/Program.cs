@@ -25,7 +25,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApproxPath, string.Empty);
             File.WriteAllText(texApproxPath, string.Empty);
 
-            PrintBenchmark(4);
+            PrintBenchmark(40);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -53,8 +53,8 @@ namespace SubgraphIsomorphismBenchmark
                     var aMsTime = BenchmarkIsomorphism(false, n, density, i, out var approximateSubgraphVertices, out var approximateSubgraphEdges, out var approximateScore, print).TotalMilliseconds;
                     Console.Write($"{aMsTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
+                    //Console.WriteLine(approximateScore);
 
-                    //for (int nl = 0; nl < 1; nl++)
                     Console.WriteLine();
 
                     Console.ForegroundColor = ConsoleColor.Black;
@@ -74,7 +74,6 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximateScore}, exact {score}");
 
-                    //for (int nl = 0; nl < 2; nl++)
                     Console.WriteLine();
                 }
 
@@ -88,7 +87,7 @@ namespace SubgraphIsomorphismBenchmark
                     texWriter.Write($"&{msTime:F1}ms");
 
                 using (var texWriter = File.AppendText(texApproxPath))
-                    texWriter.Write($"&{approximationQualityString}\%");
+                    texWriter.Write($"&{approximationQualityString}\\% ");
             }
             Console.WriteLine();
             using (var texWriter = File.AppendText(texExactPath))
@@ -114,7 +113,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v + e,
+                    (v, e) => v,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -131,7 +130,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v + e,
+                    (v, e) => v,
                     out score,
                     out subgraphEdges,
                     out gToH,
