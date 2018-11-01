@@ -10,30 +10,37 @@ namespace SubgraphIsomorphismBenchmark
 {
     class Program
     {
-        private const string csvPath = @"benchmark.csv";
-        private const string texPath = @"benchmark.tex";
+        private const string csvExactPath = @"benchmark.csv";
+        private const string texExactPath = @"benchmark.tex";
+        private const string csvApproxPath = @"approximability.csv";
+        private const string texApproxPath = @"approximability.tex";
         private static Func<int, int, double> criterion;
         static void Main(string[] args)
         {
             //Console.WriteLine("Please enter an optimization criterion (please make sure it is non-decreasing in 'vertices' and 'edges')");
             //criterion = Parse.ParseInput(Console.ReadLine());
 
-            File.WriteAllText(csvPath, string.Empty);
-            File.WriteAllText(texPath, string.Empty);
-            PrintBenchmark(20);
+            File.WriteAllText(csvExactPath, string.Empty);
+            File.WriteAllText(texExactPath, string.Empty);
+            File.WriteAllText(csvApproxPath, string.Empty);
+            File.WriteAllText(texApproxPath, string.Empty);
+
+            PrintBenchmark(4);
         }
-        private const int iterations = 3;
+        private const int iterations = 0;
         private static void PrintBenchmark(int n)
         {
-            using (var texWriter = File.AppendText(texPath))
+            using (var texWriter = File.AppendText(texExactPath))
+                texWriter.Write($"{n}&{n}");
+            using (var texWriter = File.AppendText(texApproxPath))
                 texWriter.Write($"{n}&{n}");
 
-            //for (double density = 0.05d; density < 1d; density += 0.05d)
-            var density = 0.5d;
-            var print = false;
+            for (double density = 0.2d; density <= 0.8d; density += 0.1d)
+            //var density = 0.5d;
             {
+                var print = false;
                 var msTime = 0d;
-                //var times = new List<double>();
+                var approximationQualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
 
@@ -62,7 +69,8 @@ namespace SubgraphIsomorphismBenchmark
 
                     Console.Write($"Quality of approximation: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write($"{100d * approximateScore / score:F1}%");
+                    approximationQualityString = string.Format($"{ 100d * approximateScore / score:F1}");
+                    Console.Write($"{approximationQualityString}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximateScore}, exact {score}");
 
@@ -70,17 +78,22 @@ namespace SubgraphIsomorphismBenchmark
                     Console.WriteLine();
                 }
 
-                //times.Sort();
-                //msTime = times[times.Count / 2];
-
-                using (var csvWriter = File.AppendText(csvPath))
+                using (var csvWriter = File.AppendText(csvExactPath))
                     csvWriter.WriteLine($"{n},{density},{msTime}");
 
-                using (var texWriter = File.AppendText(texPath))
+                using (var csvWriter = File.AppendText(csvApproxPath))
+                    csvWriter.WriteLine($"{n},{density},{approximationQualityString}");
+
+                using (var texWriter = File.AppendText(texExactPath))
                     texWriter.Write($"&{msTime:F1}ms");
+
+                using (var texWriter = File.AppendText(texApproxPath))
+                    texWriter.Write($"&{approximationQualityString}\%");
             }
             Console.WriteLine();
-            using (var texWriter = File.AppendText(texPath))
+            using (var texWriter = File.AppendText(texExactPath))
+                texWriter.WriteLine($"\\\\\\hline");
+            using (var texWriter = File.AppendText(texApproxPath))
                 texWriter.WriteLine($"\\\\\\hline");
             PrintBenchmark(n + 1);
         }

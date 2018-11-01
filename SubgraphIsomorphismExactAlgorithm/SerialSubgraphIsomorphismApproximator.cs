@@ -32,8 +32,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             
             CoreInternalState initialSetupPreMatch(int gMatchingVertex, int hMatchingVertex, int additionalOrder = 0)
             {
-                // todo: cache more immutable!
-                //setupCore.HighLevelSetup(gMatchingVertex, hMatchingVertex, gArgument, hArgument, graphScoringFunction, null, analyzeDisconnected, findExactMatch);
                 var stateToImport = new CoreInternalState()
                 {
                     g = gArgument,

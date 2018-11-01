@@ -43,10 +43,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var gGraphs = new List<UndirectedGraph>();
             var gInitialVertices = new List<int>();
-            
+
+            var random = new Random(0);
             while (g.Vertices.Count > 0)
             {
-                var gMatchingVertex = g.Vertices.First();
+                var gMatchingVertex = g.Vertices.Skip(random.Next(g.Vertices.Count)).First();
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingVertex);

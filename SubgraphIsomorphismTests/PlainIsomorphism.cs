@@ -93,7 +93,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(9)]
+        [InlineData(10)]
         public void TwoCliquesConnectedByChainWithTriangle(int max)
         {
             for (int i = 4; i < max; i++)
@@ -256,6 +256,7 @@ namespace SubgraphIsomorphismTests
                         // verify the solution
                         Assert.Equal(g.Vertices.Count, gToH.Count);
                         Assert.Equal(g.Vertices.Count, hToG.Count);
+                        Assert.Equal(g.EdgeCount, subgraphEdges);
 
                         AreTransitionsCorrect(gToH, hToG);
                         HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
