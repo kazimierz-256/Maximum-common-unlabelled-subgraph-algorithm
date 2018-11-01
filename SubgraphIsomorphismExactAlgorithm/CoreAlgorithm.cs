@@ -263,7 +263,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
                 var gVerticesToRemoveFromEnvelope = new List<int>();
 
-                foreach (var gNeighbour in gOutsiders.ToArray())
+                foreach (var gNeighbour in gOutsiders)
                 {
                     // if the neighbour is in the subgraph
                     if (gConnectionExistance[gMatchingVertex, gNeighbour])
@@ -271,8 +271,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // if it is new to the envelope
                         gEnvelope.Add(gNeighbour);
                         gVerticesToRemoveFromEnvelope.Add(gNeighbour);
-                        gOutsiders.Remove(gNeighbour);
                     }
+                }
+                foreach (var gNeighbour in gVerticesToRemoveFromEnvelope)
+                {
+                    gOutsiders.Remove(gNeighbour);
                 }
                 #endregion
 
@@ -314,15 +317,19 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var hVerticesToRemoveFromEnvelope = new List<int>();
 
                         // spread the id to all neighbours on the envelope & discover new neighbours
-                        foreach (var hNeighbour in hOutsiders.ToArray())
+                        foreach (var hNeighbour in hOutsiders)
                         {
                             if (hConnectionExistance[hNeighbour, hMatchingCandidate])
                             {
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope.Add(hNeighbour);
-                                hOutsiders.Remove(hNeighbour);
                             }
                         }
+                        foreach (var hNeighbour in hVerticesToRemoveFromEnvelope)
+                        {
+                            hOutsiders.Remove(hNeighbour);
+                        }
+
                         Recurse(ref bestScore);
                         if (analyzeDisconnected)
                             DisconnectComponent(ref bestScore);
