@@ -262,7 +262,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 if (leftoverSteps > 0)
                     leftoverSteps -= 1;
-                var gMatchingVertex = gEnvelope.First();
+
+                var gMatchingVertex = -1;
+
+                if (leftoverSteps > 0)
+                    gMatchingVertex = gEnvelope.ArgMax(v => g.Degree(v));
+                else
+                    gMatchingVertex = gEnvelope.First();
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
