@@ -235,13 +235,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         public void Recurse(ref double bestScore)
         {
-            if (leftoverSteps == 0)
+            if (leftoverSteps == 0 || gEnvelope.Count == 0 || hEnvelope.Count == 0)
             {
-                return;
-            }
-            else if (gEnvelope.Count == 0 || hEnvelope.Count == 0)
-            {
-
                 // no more connections could be found
                 // check for optimality
 
