@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(4);
+            PrintBenchmark(19);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -142,12 +142,12 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => v + e,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
-                    true,
+                    false,
                     false
                     );
                 sw.Stop();
@@ -176,15 +176,15 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => e + v,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
-                    true,
                     false,
-                    (g.EdgeCount + h.Vertices.Count) * 150,
-                    2
+                    false,
+                    (g.EdgeCount + g.Vertices.Count + h.EdgeCount + h.Vertices.Count) * 100,
+                    0
                     );
                 sw.Stop();
 
