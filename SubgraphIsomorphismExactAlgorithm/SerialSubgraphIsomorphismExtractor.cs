@@ -43,7 +43,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var ghLocalOptimalMapping = new Dictionary<int, int>();
             var hgLocalOptimalMapping = new Dictionary<int, int>();
             var localSubgraphEdges = 0;
-            var random = new Random(0);
+
             while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0)
             {
                 var gMatchingVertex = g.Vertices.ArgMax(v => -g.Degree(v));
