@@ -36,8 +36,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     g = gArgument,
                     h = hArgument,
-                    gInitialChoice = gMatchingVertex,
-                    hInitialChoice = hMatchingVertex,
                     findExactMatch = findExactMatch,
                     analyzeDisconnected = analyzeDisconnected,
                     graphScoringFunction = graphScoringFunction,

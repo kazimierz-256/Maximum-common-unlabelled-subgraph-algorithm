@@ -174,7 +174,7 @@ namespace Application_itself
                                 out hgOptimalMapping,
                                 analyzeDisconnected,
                                 findExactMatch,
-                                (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
+                                (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 150
                                 );
                         }
                         else

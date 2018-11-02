@@ -23,8 +23,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         public bool analyzeDisconnected;
         public bool findExactMatch;
-        public int gInitialChoice;
-        public int hInitialChoice;
         public bool checkForEquality;
         public bool checkStartingFromBest;
         public int leftoverSteps;
@@ -44,8 +42,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hEnvelope = new HashSet<int>(hEnvelope),
             ghMapping = new Dictionary<int, int>(ghMapping),
             hgMapping = new Dictionary<int, int>(hgMapping),
-            gInitialChoice = gInitialChoice,
-            hInitialChoice = hInitialChoice,
             gOutsiders = new HashSet<int>(gOutsiders),
             hOutsiders = new HashSet<int>(hOutsiders),
             graphScoringFunction = graphScoringFunction,
