@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(1);
+            PrintBenchmark(4);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -41,7 +41,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.3d; density <= 0.71d; density += 0.1d)
+            for (double density = 0.2d; density <= 0.81d; density += 0.1d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -183,7 +183,8 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     true,
                     false,
-                    (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 40
+                    (g.EdgeCount + h.Vertices.Count) * 150,
+                    2
                     );
                 sw.Stop();
 
