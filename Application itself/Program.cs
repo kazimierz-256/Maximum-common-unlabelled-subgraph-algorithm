@@ -55,7 +55,7 @@ namespace Application_itself
                 Console.WriteLine("2. `address of graph h without quotation marks \"`");
                 Console.WriteLine("3. `output file address without quotation marks \"`");
                 Console.WriteLine("4. `monotonic subraph valuation in 'vertices' and 'edges' without white characters` e.g. `v` `v+e` `e` (the only simple valuations that support single character interpretation) `vertices*edges` `vertices*log(1+edges)`");
-                Console.WriteLine("5. `compute exactly or not?` e.g. `yes` `no` `true` `false` `t` `n`");
+                Console.WriteLine("5. `compute exactly or not (if not please provide the index of approximating algorithm)?` e.g. `yes` `no` `true` `false` `t` `n` `1` `2`");
                 Console.WriteLine("6*. `analyze disconnected?` (defaults to false)");
                 Console.WriteLine("7*. `find exact matching of G in H?` (defaults to false, analyze disconnected must be also true if this is set to true)");
                 Console.WriteLine("8*. `launch in parallel? (if computing exactly)` (defaults to true)");
@@ -84,7 +84,13 @@ namespace Application_itself
                     GraphFileIO.Read(input[1], out var h);
                     var outputAddress = input[2];
                     var valuation = stringToValuation(input[3]);
-                    var computeExactly = stringToBool(input[4]);
+                    var computeExactly = false;
+                    int approximatingIndex;
+
+                    if (!int.TryParse(input[4], out approximatingIndex))
+                    {
+                        computeExactly = stringToBool(input[4]);
+                    }
 
                     bool analyzeDisconnected = false;
                     if (input.Length > 5)
@@ -141,17 +147,40 @@ namespace Application_itself
                     }
                     else
                     {
-                        SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
-                            g,
-                            h,
-                            valuation,
-                            out bestScore,
-                            out subgraphEdges,
-                            out ghOptimalMapping,
-                            out hgOptimalMapping,
-                            analyzeDisconnected,
-                            findExactMatch
-                            );
+                        if (approximatingIndex == 1)
+                        {
+
+                            SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                                g,
+                                h,
+                                valuation,
+                                out bestScore,
+                                out subgraphEdges,
+                                out ghOptimalMapping,
+                                out hgOptimalMapping,
+                                analyzeDisconnected,
+                                findExactMatch
+                                );
+                        }
+                        else if (approximatingIndex == 2)
+                        {
+                            ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                                g,
+                                h,
+                                valuation,
+                                out bestScore,
+                                out subgraphEdges,
+                                out ghOptimalMapping,
+                                out hgOptimalMapping,
+                                analyzeDisconnected,
+                                findExactMatch,
+                                (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
+                                );
+                        }
+                        else
+                        {
+                            throw new Exception("Incorrect index of approximating algorithm. Please use `1` or `2`.");
+                        }
                     }
 
                     // print matches if filepath is valid?

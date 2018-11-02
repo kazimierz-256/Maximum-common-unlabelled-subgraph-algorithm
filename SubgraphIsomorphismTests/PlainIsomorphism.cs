@@ -305,7 +305,7 @@ namespace SubgraphIsomorphismTests
 
         [Theory]
         [InlineData(5, 100, 0.5, 24)]
-        public void ApproximatingGraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
+        public void Approximating1GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
             {
@@ -330,6 +330,43 @@ namespace SubgraphIsomorphismTests
                         out var subgraphEdges,
                         out var gToH,
                         out var hToG
+                        );
+                    Assert.NotEmpty(gToH);
+                    Assert.NotEmpty(hToG);
+
+                    AreTransitionsCorrect(gToH, hToG);
+                    HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
+                }
+            }
+        }
+        [Theory]
+        [InlineData(5, 100, 0.5, 24)]
+        public void Approximating2GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                var max = repetitions;
+                if (i == 2)
+                {
+                    max = 1;
+                }
+                for (int j = 0; j < max; j++)
+                {
+
+                    // randomize a graph of given n and density
+                    var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed + j * j);
+                    var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
+
+                    // run the algorithm
+                    SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        g,
+                        h,
+                        (vertices, edges) => vertices,
+                        out var score,
+                        out var subgraphEdges,
+                        out var gToH,
+                        out var hToG,
+                        leftoverSteps: (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
                         );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);

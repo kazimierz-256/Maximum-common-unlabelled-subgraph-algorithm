@@ -16,7 +16,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
             bool analyzeDisconnected = false,
-            bool findExactMatch = false
+            bool findExactMatch = false,
+            int leftoverSteps = -1
             )
         {
             if (!analyzeDisconnected && findExactMatch)
@@ -66,7 +67,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 localSubgraphEdges = edges;
                             }
                         },
-                        analyzeDisconnected, findExactMatch
+                        analyzeDisconnected,
+                        findExactMatch,
+                        leftoverSteps
                         );
                     solver.Recurse(ref localBestScore);
                 }
