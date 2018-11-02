@@ -69,8 +69,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         private bool analyzeDisconnected;
         private bool findExactMatch;
-        private int gInitialChoice;
-        private int hInitialChoice;
 
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
@@ -84,8 +82,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hEnvelope = hEnvelope,
             ghMapping = ghMapping,
             hgMapping = hgMapping,
-            gInitialChoice = gInitialChoice,
-            hInitialChoice = hInitialChoice,
             gOutsiders = gOutsiders,
             hOutsiders = hOutsiders,
             graphScoringFunction = graphScoringFunction,
@@ -105,8 +101,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             hEnvelope = state.hEnvelope;
             ghMapping = state.ghMapping;
             hgMapping = state.hgMapping;
-            gInitialChoice = state.gInitialChoice;
-            hInitialChoice = state.hInitialChoice;
             gOutsiders = state.gOutsiders;
             hOutsiders = state.hOutsiders;
             graphScoringFunction = state.graphScoringFunction;
@@ -129,8 +123,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.g = g;
             this.h = h;
 
-            this.gInitialChoice = gMatchingVertex;
-            this.hInitialChoice = hMatchingVertex;
             this.findExactMatch = findExactMatch;
             this.newSolutionFound = newSolutionFound;
             this.analyzeDisconnected = analyzeDisconnected;
@@ -193,8 +185,17 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 if (verticesTrulyIsomorphic)
                 {
-                    gEnvelope.Remove(gMatchingVertex);
 
+                    totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
+                    // by definition add the transition functions (which means adding to the subgraph)
+                    ghMapping.Add(gMatchingVertex, hMatchingCandidate);
+                    hgMapping.Add(hMatchingCandidate, gMatchingVertex);
+
+                    // if the matching vertex was on the envelope then remove it
+                    gEnvelope.Remove(gMatchingVertex);
+                    hEnvelope.Remove(hMatchingCandidate);
+
+                    // spread the id to all neighbours on the envelope & discover new neighbours
                     foreach (var gNeighbour in gOutsiders.ToArray())
                     {
                         // if the neighbour is in the subgraph
@@ -205,15 +206,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gOutsiders.Remove(gNeighbour);
                         }
                     }
-                    totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
-                    // by definition add the transition functions (which means adding to the subgraph)
-                    ghMapping.Add(gMatchingVertex, hMatchingCandidate);
-                    hgMapping.Add(hMatchingCandidate, gMatchingVertex);
-
-                    // if the matching vertex was on the envelope then remove it
-                    hEnvelope.Remove(hMatchingCandidate);
-
-                    // spread the id to all neighbours on the envelope & discover new neighbours
                     foreach (var hNeighbour in hOutsiders.ToArray())
                     {
                         if (hConnectionExistance[hNeighbour, hMatchingCandidate])
@@ -222,10 +214,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                             hOutsiders.Remove(hNeighbour);
                         }
                     }
+
+                    // successful match
                     return true;
                 }
                 else
                 {
+                    // not locally isomorphic
                     return false;
                 }
             }
@@ -389,71 +384,71 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutsiderGraph = tmp;
                 }
 
-
-                while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count) + currentVertices, Math.Min(gOutsiderGraph.EdgeCount, hOutsiderGraph.EdgeCount) + currentEdges).CompareTo(bestScore) > 0d)
+                if (graphScoringFunction(hOutsiderGraph.Vertices.Count + currentVertices, hOutsiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0d)
                 {
-                    var gMatchingVertex = -1;
-                    var gMatchingScore = int.MaxValue;
-
-                    foreach (var gCandidate in gOutsiderGraph.Vertices)
+                    while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutsiderGraph.Vertices.Count + currentVertices, gOutsiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0d)
                     {
-                        if (gOutsiderGraph.Degree(gCandidate) < gMatchingScore)
+                        var gMatchingVertex = -1;
+                        var gMatchingScore = int.MaxValue;
+
+                        foreach (var gCandidate in gOutsiderGraph.Vertices)
                         {
-                            gMatchingScore = gOutsiderGraph.Degree(gCandidate);
-                            gMatchingVertex = gCandidate;
+                            if (gOutsiderGraph.Degree(gCandidate) < gMatchingScore)
+                            {
+                                gMatchingScore = gOutsiderGraph.Degree(gCandidate);
+                                gMatchingVertex = gCandidate;
+                            }
                         }
-                    }
 
-                    foreach (var hMatchingCandidate in hOutsiderGraph.Vertices.ToArray())
-                    {
-                        var subSolver = new CoreAlgorithm()
+                        foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
                         {
-                            g = gOutsiderGraph,
-                            h = hOutsiderGraph,
-                            // tocontemplate: how to value disconnected components?
-                            graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
-                            newSolutionFound = (newScore, ghMap, hgMap, edges) => newSolutionFound?.Invoke(
-                                newScore,
-                                () =>
-                                {
-                                    var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                    foreach (var myMapping in ghMapping)
-                                        ghExtended.Add(myMapping.Key, myMapping.Value);
-                                    return ghExtended;
-                                },
-                                () =>
-                                {
-                                    var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                    foreach (var myMapping in hgMapping)
-                                        hgExtended.Add(myMapping.Key, myMapping.Value);
-                                    return hgExtended;
-                                },
-                                edges + totalNumberOfEdgesInSubgraph
-                                )
-                            ,
-                            ghMapping = new Dictionary<int, int>(),
-                            hgMapping = new Dictionary<int, int>(),
-                            gEnvelope = new HashSet<int>() { gMatchingVertex },
-                            hEnvelope = new HashSet<int>() { hMatchingCandidate },
-                            gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
-                            hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
-                            totalNumberOfEdgesInSubgraph = 0,
-                            gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
-                            hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
-                            analyzeDisconnected = true,
-                            findExactMatch = findExactMatch,
-                            gInitialChoice = gMatchingVertex,
-                            hInitialChoice = hMatchingCandidate
-                        };
-                        subSolver.gOutsiders.Remove(gMatchingVertex);
-                        subSolver.hOutsiders.Remove(hMatchingCandidate);
-                        subSolver.Recurse(ref bestScore);
+                            var subSolver = new CoreAlgorithm()
+                            {
+                                g = gOutsiderGraph,
+                                h = hOutsiderGraph,
+                                // tocontemplate: how to value disconnected components?
+                                graphScoringFunction = (int vertices, int edges) => graphScoringFunction(vertices + currentVertices, edges + currentEdges),
+                                newSolutionFound = (newScore, ghMap, hgMap, edges) => newSolutionFound?.Invoke(
+                                    newScore,
+                                    () =>
+                                    {
+                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                        foreach (var myMapping in ghMapping)
+                                            ghExtended.Add(myMapping.Key, myMapping.Value);
+                                        return ghExtended;
+                                    },
+                                    () =>
+                                    {
+                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                        foreach (var myMapping in hgMapping)
+                                            hgExtended.Add(myMapping.Key, myMapping.Value);
+                                        return hgExtended;
+                                    },
+                                    edges + totalNumberOfEdgesInSubgraph
+                                    )
+                                ,
+                                ghMapping = new Dictionary<int, int>(),
+                                hgMapping = new Dictionary<int, int>(),
+                                gEnvelope = new HashSet<int>() { gMatchingVertex },
+                                hEnvelope = new HashSet<int>() { hMatchingCandidate },
+                                gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
+                                hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
+                                totalNumberOfEdgesInSubgraph = 0,
+                                gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
+                                hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
+                                analyzeDisconnected = true,
+                                findExactMatch = findExactMatch
+                            };
+                            subSolver.gOutsiders.Remove(gMatchingVertex);
+                            subSolver.hOutsiders.Remove(hMatchingCandidate);
+                            subSolver.Recurse(ref bestScore);
+                        }
+
+                        if (findExactMatch)
+                            break;
+
+                        gOutsiderGraph.RemoveVertex(gMatchingVertex);
                     }
-
-                    if (findExactMatch)
-                        break;
-
-                    gOutsiderGraph.RemoveVertex(gMatchingVertex);
                 }
             }
         }

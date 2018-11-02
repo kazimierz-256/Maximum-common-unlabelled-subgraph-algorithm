@@ -38,7 +38,7 @@ namespace SubgraphIsomorphismBenchmark
             for (double density = 0.3d; density <= 0.7d; density += 0.1d)
             //var density = 0.5d;
             {
-                var print = false;
+                var print = true;
                 var msTime = 0d;
                 var approximationQualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i++)

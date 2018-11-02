@@ -44,7 +44,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             var gGraphs = new List<UndirectedGraph>();
             var gInitialVertices = new List<int>();
 
-            var random = new Random(0);
             while (g.Vertices.Count > 0)
             {
                 var gMatchingVertex = g.Vertices.ArgMax(v => -g.Degree(v));
