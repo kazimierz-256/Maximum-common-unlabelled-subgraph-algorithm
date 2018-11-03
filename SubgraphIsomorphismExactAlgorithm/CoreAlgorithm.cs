@@ -274,7 +274,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gMatchingVertex = -1;
 
                 if (leftoverSteps > 0)
-                    gMatchingVertex = gEnvelope.ArgMax(v => g.Degree(v));
+                    gMatchingVertex = gEnvelope.ArgMax(v => -ghMapping.Count(mapping => gConnectionExistance[mapping.Key, v]));
                 else
                     gMatchingVertex = gEnvelope.First();
 

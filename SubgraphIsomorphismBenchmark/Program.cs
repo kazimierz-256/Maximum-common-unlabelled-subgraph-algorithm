@@ -31,7 +31,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(40);
+            PrintBenchmark(19);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -43,10 +43,10 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.5d; density <= 0.8d; density += 0.1d)
+            for (double density = 0.1d; density <= 0.8d; density += 0.1d)
             //var density = 0.5d;
             {
-                var print = true;
+                var print = false;
                 var msTime = 0d;
                 var approximation1QualityString = string.Empty;
                 var approximation2QualityString = string.Empty;
@@ -150,7 +150,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => v + e,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -167,7 +167,7 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => e,
+                    (v, e) => v + e,
                     out score,
                     out subgraphEdges,
                     out gToH,
@@ -184,14 +184,14 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) =>  e,
+                    (v, e) => v + e,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
                     false,
                     false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count,+ h.Vertices.Count)) * 500,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 100,
                     0
                     );
                 sw.Stop();
