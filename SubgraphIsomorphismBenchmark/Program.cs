@@ -1,4 +1,6 @@
-﻿using GraphDataStructure;
+﻿#define aprox1
+#define aprox2
+using GraphDataStructure;
 using MathParser;
 using System;
 using System.Collections.Generic;
@@ -29,7 +31,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(20);
+            PrintBenchmark(40);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -41,34 +43,37 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.2d; density <= 0.8d; density += 0.1d)
+            for (double density = 0.5d; density <= 0.8d; density += 0.1d)
             //var density = 0.5d;
             {
-                var print = false;
+                var print = true;
                 var msTime = 0d;
                 var approximation1QualityString = string.Empty;
                 var approximation2QualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
+#if (aprox1 || approx2)
 
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkCyan;
                     Console.Write("APPROXIMATE");
                     Console.ResetColor();
                     Console.WriteLine(".");
-
+#endif
+#if (aprox1)
                     var aMsTime1 = BenchmarkIsomorphism(1, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime1:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate1Score}");
                     Console.WriteLine();
-
+#endif
+#if (aprox2)
                     var aMsTime2 = BenchmarkIsomorphism(2, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime2:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate2Score}");
                     Console.WriteLine();
-
+#endif
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
                     Console.Write("EXACT");
@@ -78,6 +83,7 @@ namespace SubgraphIsomorphismBenchmark
                     msTime = BenchmarkIsomorphism(0, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, print).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
+#if (aprox1)
 
                     Console.Write($"Quality of approximation 1: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -85,6 +91,8 @@ namespace SubgraphIsomorphismBenchmark
                     Console.Write($"{approximation1QualityString}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximate1Score}, exact {score}");
+#endif
+#if (aprox2)
 
                     Console.Write($"Quality of approximation 2: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -92,6 +100,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.Write($"{approximation2QualityString}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximate2Score}, exact {score}");
+#endif
 
                     Console.WriteLine();
                     Console.WriteLine();
@@ -133,7 +142,6 @@ namespace SubgraphIsomorphismBenchmark
             var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed).Permute(seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
-            //var h = GraphFactory.GeneratePermuted(g, 0);
 
             // run the algorithm
             sw.Start();
@@ -183,7 +191,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     false,
                     false,
-                    (g.EdgeCount + g.Vertices.Count + h.EdgeCount + h.Vertices.Count) * 150,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count,+ h.Vertices.Count)) * 500,
                     0
                     );
                 sw.Stop();

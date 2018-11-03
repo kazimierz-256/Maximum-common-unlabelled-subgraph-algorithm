@@ -268,7 +268,7 @@ namespace SubgraphIsomorphismTests
 
         [Theory]
         [InlineData(5, 10000, 0.5, 24)]
-        public void GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
+        public void GraphOfQuadrupleSize(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i++)
             {
@@ -281,14 +281,14 @@ namespace SubgraphIsomorphismTests
                 {
 
                     // randomize a graph of given n and density
-                    var g = GraphFactory.GenerateRandom(2 * i, density, generatingSeed + j * j);
+                    var g = GraphFactory.GenerateRandom(4 * i, density, generatingSeed + j * j);
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
                     SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                         g,
                         h,
-                        (vertices, edges) => vertices,
+                        (vertices, edges) => edges,
                         out var score,
                         out var subgraphEdges,
                         out var gToH,
@@ -296,7 +296,7 @@ namespace SubgraphIsomorphismTests
                         );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
-
+                    Assert.Equal(score, subgraphEdges);
                     AreTransitionsCorrect(gToH, hToG);
                     HasSubgraphCorrectIsomorphism(g, h, gToH, hToG);
                 }
