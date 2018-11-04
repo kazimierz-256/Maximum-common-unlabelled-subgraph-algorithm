@@ -1,4 +1,4 @@
-﻿#define aprox1
+﻿#define aprox1_
 #define aprox2
 using GraphDataStructure;
 using MathParser;
@@ -31,7 +31,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(19);
+            PrintBenchmark(4);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -43,7 +43,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.1d; density <= 0.8d; density += 0.1d)
+            for (double density = 0.05d; density <= 1d; density += 0.1d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -52,7 +52,7 @@ namespace SubgraphIsomorphismBenchmark
                 var approximation2QualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
-#if (aprox1 || approx2)
+#if (aprox1 || aprox2)
 
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkCyan;
@@ -143,6 +143,9 @@ namespace SubgraphIsomorphismBenchmark
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
 
+            Func<int, int, double> valuation = (v, e) => e;
+            var disconnected = true;
+
             // run the algorithm
             sw.Start();
             if (algorithm == 0)
@@ -150,12 +153,12 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v + e,
+                    valuation,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
-                    false,
+                    disconnected,
                     false
                     );
                 sw.Stop();
@@ -167,12 +170,12 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v + e,
+                    valuation,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
-                    false,
+                    disconnected,
                     false
                     );
                 sw.Stop();
@@ -184,14 +187,14 @@ namespace SubgraphIsomorphismBenchmark
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
-                    (v, e) => v + e,
+                    valuation,
                     out score,
                     out subgraphEdges,
                     out gToH,
                     out hToG,
+                    disconnected,
                     false,
-                    false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 100,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 50,
                     0
                     );
                 sw.Stop();
