@@ -1,5 +1,5 @@
-﻿#define aprox1_
-#define aprox2
+﻿#define approx1_
+#define approx2
 using GraphDataStructure;
 using MathParser;
 using System;
@@ -52,7 +52,7 @@ namespace SubgraphIsomorphismBenchmark
                 var approximation2QualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i++)
                 {
-#if (aprox1 || aprox2)
+#if (approx1 || approx2)
 
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkCyan;
@@ -60,14 +60,14 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 #endif
-#if (aprox1)
+#if (approx1)
                     var aMsTime1 = BenchmarkIsomorphism(1, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime1:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate1Score}");
                     Console.WriteLine();
 #endif
-#if (aprox2)
+#if (approx2)
                     var aMsTime2 = BenchmarkIsomorphism(2, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime2:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
@@ -83,7 +83,7 @@ namespace SubgraphIsomorphismBenchmark
                     msTime = BenchmarkIsomorphism(0, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, print).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
-#if (aprox1)
+#if (approx1)
 
                     Console.Write($"Quality of approximation 1: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -92,7 +92,7 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximate1Score}, exact {score}");
 #endif
-#if (aprox2)
+#if (approx2)
 
                     Console.Write($"Quality of approximation 2: ");
                     Console.ForegroundColor = ConsoleColor.Yellow;
@@ -143,8 +143,8 @@ namespace SubgraphIsomorphismBenchmark
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
 
-            Func<int, int, double> valuation = (v, e) => e;
-            var disconnected = true;
+            Func<int, int, double> valuation = (v, e) => v+e;
+            var disconnected = false;
 
             // run the algorithm
             sw.Start();
