@@ -45,10 +45,14 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var gGraphs = new List<UndirectedGraph>();
             var gInitialVertices = new List<int>();
+            var latelyRemovedVertices = new HashSet<int>();
 
             while (g.Vertices.Count > 0)
             {
-                var gMatchingVertex = g.Vertices.ArgMax(v => -g.Degree(v));
+                var gMatchingVertex = g.Vertices.ArgMax(
+                    v => -g.Degree(v),
+                    v => -latelyRemovedVertices.Count(r => gArgument.ExistsConnectionBetween(r, v))
+                    );
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingVertex);
@@ -57,6 +61,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     break;
                 // ignore previous g-vertices
                 g.RemoveVertex(gMatchingVertex);
+                latelyRemovedVertices.Add(gMatchingVertex);
             }
 
             var localBestScore = initialScore;
@@ -94,7 +99,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                               }
                           }
                       },
-                    analyzeDisconnected, 
+                    analyzeDisconnected,
                     findExactMatch,
                     leftoverSteps,
                     deepnessTakeawaySteps

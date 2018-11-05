@@ -273,7 +273,10 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 var gMatchingVertex = -1;
 
-                gMatchingVertex = gEnvelope.ArgMax(v => -g.Degree(v));
+                gMatchingVertex = gEnvelope.ArgMax(
+                    v => -g.Degree(v),
+                    v => -ghMapping.Count(map => gConnectionExistance[map.Key, v])
+                    );
 
                 #region prepare to recurse
                 gEnvelope.Remove(gMatchingVertex);
@@ -414,7 +417,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     while (gOutsiderGraph.Vertices.Count > 0 && graphScoringFunction(gOutsiderGraph.Vertices.Count + currentVertices, gOutsiderGraph.EdgeCount + currentEdges).CompareTo(bestScore) > 0d)
                     {
-                        var gMatchingVertex = gOutsiderGraph.Vertices.ArgMax(v => gOutsiderGraph.Degree(v));
+                        var gMatchingVertex = gOutsiderGraph.Vertices.ArgMax(
+                            v => gOutsiderGraph.Degree(v),
+                            v => g.Degree(v)
+                            );
 
                         foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
                         {
