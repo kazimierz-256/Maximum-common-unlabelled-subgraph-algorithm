@@ -1,4 +1,4 @@
-﻿#define approx1_
+﻿#define approx1
 #define approx2
 using GraphDataStructure;
 using MathParser;
@@ -31,7 +31,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(4);
+            PrintBenchmark(18);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -43,7 +43,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.05d; density <= 1d; density += 0.1d)
+            for (double density = 0.5d; density <= 1d; density += 0.01d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -138,18 +138,18 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false)
         {
             var sw = new Stopwatch();
-            var g = GraphFactory.GenerateRandom(n, density, 365325556 + seed - seed * seed).Permute(seed * (seed * seed - 1));
-            var h = GraphFactory.GenerateRandom(n, density, 129369567 - seed - seed * seed).Permute(seed * seed);
+            var g = GraphFactory.GenerateRandom(n, density, (int)(123456789 * density) + seed * n - seed * seed).Permute(seed * (seed * seed - 1));
+            var h = GraphFactory.GenerateRandom(n, density, (int)(987654321 * density) - seed * n - seed * seed).Permute(seed * seed);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
 
-            Func<int, int, double> valuation = (v, e) => v+e;
+            Func<int, int, double> valuation = (v, e) => v + e;
             var disconnected = false;
 
             // run the algorithm
-            sw.Start();
             if (algorithm == 0)
             {
+                sw.Start();
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
@@ -167,6 +167,7 @@ namespace SubgraphIsomorphismBenchmark
             }
             else if (algorithm == 1)
             {
+                sw.Start();
                 SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
@@ -184,6 +185,7 @@ namespace SubgraphIsomorphismBenchmark
             }
             else if (algorithm == 2)
             {
+                sw.Start();
                 SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                     g,
                     h,
