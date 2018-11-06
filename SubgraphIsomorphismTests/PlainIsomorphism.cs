@@ -366,7 +366,7 @@ namespace SubgraphIsomorphismTests
                         out var subgraphEdges,
                         out var gToH,
                         out var hToG,
-                        leftoverSteps: (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
+                        heuristicStepsAvailable: (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
                         );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);

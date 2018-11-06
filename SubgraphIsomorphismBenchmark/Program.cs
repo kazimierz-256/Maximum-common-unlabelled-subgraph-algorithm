@@ -10,6 +10,8 @@ using System.Linq;
 
 namespace SubgraphIsomorphismBenchmark
 {
+    // this class is used to perform experiments and benchmarks so clean code is not a priority in this module
+
     class Program
     {
         private const string csvExactPath = @"benchmark.csv";
@@ -19,6 +21,7 @@ namespace SubgraphIsomorphismBenchmark
         private const string csvApprox2Path = @"approximability2.csv";
         private const string texApprox2Path = @"approximability2.tex";
         private static Func<int, int, double> criterion;
+
         static void Main(string[] args)
         {
             //Console.WriteLine("Please enter an optimization criterion (please make sure it is non-decreasing in 'vertices' and 'edges')");

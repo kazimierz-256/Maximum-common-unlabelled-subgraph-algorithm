@@ -8,6 +8,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 {
     public struct CoreInternalState
     {
+        // A class used to manipulate/clone algorithm's internal state
+
         public Func<int, int, double> graphScoringFunction;
         public UndirectedGraph g;
         public UndirectedGraph h;

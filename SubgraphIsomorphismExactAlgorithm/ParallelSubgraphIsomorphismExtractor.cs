@@ -13,17 +13,17 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph gArgument,
             UndirectedGraph hArgument,
             Func<int, int, double> graphScoringFunction,
-            out double bestScore,
+            out double subgraphScore,
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
-            bool analyzeDisconnected = false,
-            bool findExactMatch = false,
-            int leftoverSteps = -1,
-            int deepnessTakeawaySteps = 0
+            bool analyzeDisconnectedComponents = false,
+            bool findGraphGinH = false,
+            int heuristicStepsAvailable = -1,
+            int heuristicDeepnessToStartCountdown = 0
             )
         {
-            if (!analyzeDisconnected && findExactMatch)
+            if (!analyzeDisconnectedComponents && findGraphGinH)
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
 
             var initialScore = double.MinValue;
@@ -31,7 +31,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             UndirectedGraph g;
             UndirectedGraph h;
 
-            if (!findExactMatch && hArgument.EdgeCount < gArgument.EdgeCount)
+            if (!findGraphGinH && hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;
@@ -45,81 +45,84 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var gGraphs = new List<UndirectedGraph>();
             var gInitialVertices = new List<int>();
-            var latelyRemovedVertices = new HashSet<int>();
+            var removedVertices = new HashSet<int>();
 
+            // repeat until the resulting graph is nonempty
             while (g.Vertices.Count > 0)
             {
+                // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
                 var gMatchingVertex = g.Vertices.ArgMax(
                     v => -g.Degree(v),
-                    v => -latelyRemovedVertices.Count(r => gArgument.ExistsConnectionBetween(r, v))
+                    v => -removedVertices.Count(r => gArgument.ExistsConnectionBetween(r, v))
                     );
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingVertex);
 
-                if (findExactMatch)
+                // do not remove vertices from G if requested to find G within H
+                if (findGraphGinH)
                     break;
-                // ignore previous g-vertices
+
                 g.RemoveVertex(gMatchingVertex);
-                latelyRemovedVertices.Add(gMatchingVertex);
+                removedVertices.Add(gMatchingVertex);
             }
 
             var localBestScore = initialScore;
             var ghLocalOptimalMapping = new Dictionary<int, int>();
             var hgLocalOptimalMapping = new Dictionary<int, int>();
             var localSubgraphEdges = 0;
-            var lockingObject = new object();
-            var hVertices = h.Vertices.ToArray();
+            var threadSynchronizingObject = new object();
+            var hVerticesOrdered = h.Vertices.ToArray();
 
-            Parallel.For(0, gGraphs.Count * hVertices.Length, iter =>
+            Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
             {
-                var gIndex = iter % gGraphs.Count;
-                var hIndex = iter / gGraphs.Count;
+                var gIndex = i % gGraphs.Count;
+                var hIndex = i / gGraphs.Count;
 
-                var algorithm = new CoreAlgorithm();
-                algorithm.HighLevelSetup(
+                var threadAlgorithm = new CoreAlgorithm();
+                threadAlgorithm.HighLevelSetup(
                     gInitialVertices[gIndex],
-                    hVertices[hIndex],
+                    hVerticesOrdered[hIndex],
                     gGraphs[gIndex].DeepClone(),
                     h,
                     graphScoringFunction,
                     (newScore, ghMap, hgMap, edges) =>
                       {
                           if (newScore.CompareTo(localBestScore) > 0)
-                          {
-                              lock (lockingObject)
-                              {
+                              // to increase the performance lock is performed only if there is a chance to improve the local result
+                              lock (threadSynchronizingObject)
                                   if (newScore.CompareTo(localBestScore) > 0)
                                   {
                                       localBestScore = newScore;
+                                      // lazy evaluation for best performance
                                       ghLocalOptimalMapping = ghMap();
                                       hgLocalOptimalMapping = hgMap();
                                       localSubgraphEdges = edges;
                                   }
-                              }
-                          }
                       },
-                    analyzeDisconnected,
-                    findExactMatch,
-                    leftoverSteps,
-                    deepnessTakeawaySteps
+                    analyzeDisconnectedComponents,
+                    findGraphGinH,
+                    heuristicStepsAvailable,
+                    heuristicDeepnessToStartCountdown
                 );
-                algorithm.Recurse(ref localBestScore);
+                threadAlgorithm.Recurse(ref localBestScore);
             });
 
-            if (findExactMatch && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
+            // if requested to find G within H and could not find such then quit with dummy results
+            if (findGraphGinH && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
             {
-                // did not find an exact match
-                bestScore = initialScore;
+                subgraphScore = initialScore;
                 subgraphEdges = 0;
                 ghOptimalMapping = new Dictionary<int, int>();
                 hgOptimalMapping = new Dictionary<int, int>();
             }
             else
             {
-                // return the solution
-                bestScore = localBestScore;
+                // return found solution
+                subgraphScore = localBestScore;
                 subgraphEdges = localSubgraphEdges;
+
+                // swap again to return correct answers
                 if (swappedGraphs)
                 {
                     ghOptimalMapping = hgLocalOptimalMapping;
