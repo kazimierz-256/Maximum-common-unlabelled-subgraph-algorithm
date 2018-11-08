@@ -8,8 +8,8 @@ namespace SubgraphIsomorphismExactAlgorithm
     public class SerialSubgraphIsomorphismExtractor
     {
         public static void ExtractOptimalSubgraph(
-            UndirectedGraph gArgument,
-            UndirectedGraph hArgument,
+            Graph gArgument,
+            Graph hArgument,
             Func<int, int, double> graphScoringFunction,
             out double bestScore,
             out int subgraphEdges,
@@ -25,7 +25,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
 
             var initialScore = double.MinValue;
-            UndirectedGraph g, h;
+            Graph g, h;
             var solver = new CoreAlgorithm();
             var swappedGraphs = false;
 

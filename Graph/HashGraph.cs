@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace GraphDataStructure
 {
-    public class HashGraph : UndirectedGraph
+    public class Graph
     {
         // note: this does not copy it reassigns
-        public HashGraph(Dictionary<int, HashSet<int>> neighbours, HashSet<int> vertices, int edges)
+        public Graph(Dictionary<int, HashSet<int>> neighbours, HashSet<int> vertices, int edges)
         {
             Neighbours = neighbours;
             Vertices = vertices;
@@ -70,14 +70,14 @@ namespace GraphDataStructure
                 return null;
             }
         }
-        public UndirectedGraph DeepClone()
+        public Graph DeepClone()
         {
             var neighboursCopy = new Dictionary<int, HashSet<int>>();
             foreach (var connection in Neighbours)
             {
                 neighboursCopy.Add(connection.Key, new HashSet<int>(connection.Value));
             }
-            return new HashGraph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
+            return new Graph(neighboursCopy, new HashSet<int>(Vertices), EdgeCount);
         }
 
         // note: this does not copy it reassigns
@@ -95,7 +95,7 @@ namespace GraphDataStructure
             }
         }
 
-        public UndirectedGraph DeepCloneIntersecting(HashSet<int> intersection)
+        public Graph DeepCloneIntersecting(HashSet<int> intersection)
         {
             var neighboursCopy = new Dictionary<int, HashSet<int>>();
             var directedEdgesInClone = 0;
@@ -113,7 +113,7 @@ namespace GraphDataStructure
                     directedEdgesInClone += newHashSet.Count;
                 }
             }
-            return new HashGraph(neighboursCopy, new HashSet<int>(intersection), directedEdgesInClone / 2);
+            return new Graph(neighboursCopy, new HashSet<int>(intersection), directedEdgesInClone / 2);
         }
     }
 }

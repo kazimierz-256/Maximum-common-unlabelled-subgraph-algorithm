@@ -7,7 +7,7 @@ namespace GraphDataStructure
 {
     public class GraphFactory
     {
-        public static UndirectedGraph GenerateRandom(int n, double density, int generatingSeed)
+        public static Graph GenerateRandom(int n, double density, int generatingSeed)
         {
             var random = new Random(generatingSeed);
             var neighbours = new Dictionary<int, HashSet<int>>();
@@ -42,10 +42,10 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, new HashSet<int>(Enumerable.Range(0, n).ToArray()), edges);
+            return new Graph(neighbours, new HashSet<int>(Enumerable.Range(0, n).ToArray()), edges);
         }
 
-        public static UndirectedGraph GeneratePermuted(UndirectedGraph g, int permutingSeed)
+        public static Graph GeneratePermuted(Graph g, int permutingSeed)
         {
             // permute the vertices and make another graph
 
@@ -75,10 +75,10 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
+            return new Graph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
         }
 
-        public static UndirectedGraph GeneratePermuted(UndirectedGraph g, Func<int, double> valuation)
+        public static Graph GeneratePermuted(Graph g, Func<int, double> valuation)
         {
             // permute the vertices and make another graph
 
@@ -111,7 +111,7 @@ namespace GraphDataStructure
                 }
             }
 
-            return new HashGraph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
+            return new Graph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
         }
 
         private static void Permute(int seed, ref int[] vertices)

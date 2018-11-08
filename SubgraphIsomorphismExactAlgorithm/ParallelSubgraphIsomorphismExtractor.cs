@@ -10,8 +10,8 @@ namespace SubgraphIsomorphismExactAlgorithm
     public static class ParallelSubgraphIsomorphismExtractor
     {
         public static void ExtractOptimalSubgraph(
-            UndirectedGraph gArgument,
-            UndirectedGraph hArgument,
+            Graph gArgument,
+            Graph hArgument,
             Func<int, int, double> graphScoringFunction,
             out double subgraphScore,
             out int subgraphEdges,
@@ -28,8 +28,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             var initialScore = double.MinValue;
             var swappedGraphs = false;
-            UndirectedGraph g;
-            UndirectedGraph h;
+            Graph g;
+            Graph h;
 
             if (!findGraphGinH && hArgument.EdgeCount < gArgument.EdgeCount)
             {
@@ -43,7 +43,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = hArgument;
             }
 
-            var gGraphs = new List<UndirectedGraph>();
+            var gGraphs = new List<Graph>();
             var gInitialVertices = new List<int>();
             var removedVertices = new HashSet<int>();
 

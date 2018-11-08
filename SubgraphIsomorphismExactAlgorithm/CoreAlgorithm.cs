@@ -11,8 +11,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         // A class used to manipulate/clone algorithm's internal state
 
         public Func<int, int, double> graphScoringFunction;
-        public UndirectedGraph g;
-        public UndirectedGraph h;
+        public Graph g;
+        public Graph h;
         public bool[,] gConnectionExistance;
         public bool[,] hConnectionExistance;
         public Dictionary<int, int> ghMapping;
@@ -59,8 +59,8 @@ namespace SubgraphIsomorphismExactAlgorithm
     public class CoreAlgorithm
     {
         private Func<int, int, double> graphScoringFunction = null;
-        private UndirectedGraph g;
-        private UndirectedGraph h;
+        private Graph g;
+        private Graph h;
         private bool[,] gConnectionExistance;
         private bool[,] hConnectionExistance;
         private Dictionary<int, int> ghMapping;
@@ -126,8 +126,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         public void HighLevelSetup(
             int gMatchingVertex,
             int hMatchingVertex,
-            UndirectedGraph g,
-            UndirectedGraph h,
+            Graph g,
+            Graph h,
             Func<int, int, double> graphScoringFunction,
             Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound,
             bool analyzeDisconnected = false,

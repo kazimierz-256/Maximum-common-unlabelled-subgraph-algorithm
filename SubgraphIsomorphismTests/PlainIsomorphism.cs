@@ -61,8 +61,8 @@ namespace SubgraphIsomorphismTests
 
                     // shuffle them
 
-                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5).Permute(0);
-                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(1);
+                    var g = new Graph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5).Permute(0);
+                    var h = new Graph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(1);
 
                     // verify result
 
@@ -146,8 +146,8 @@ namespace SubgraphIsomorphismTests
 
                     // shuffle them
                     var randomSeed = 12;
-                    var g = new HashGraph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 6).Permute(10 - randomSeed);
-                    var h = new HashGraph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(2 + randomSeed * randomSeed);
+                    var g = new Graph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 6).Permute(10 - randomSeed);
+                    var h = new Graph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(2 + randomSeed * randomSeed);
 
                     // verify result
 
@@ -383,7 +383,7 @@ namespace SubgraphIsomorphismTests
                 Assert.Equal(transitionFunction.Key, hToG[transitionFunction.Value]);
         }
 
-        private void HasSubgraphCorrectIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
+        private void HasSubgraphCorrectIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
             // for each pair of g there is and edge iff there is an edge in corresponding h equivalent pair
             foreach (var gVertex1 in gToH.Keys)
@@ -395,7 +395,7 @@ namespace SubgraphIsomorphismTests
                     Assert.Equal(h.ExistsConnectionBetween(hVertex1, hVertex2), g.ExistsConnectionBetween(hToG[hVertex1], hToG[hVertex2]));
         }
 
-        private void VerifyFullSubgraphIsomorphism(UndirectedGraph g, UndirectedGraph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
+        private void VerifyFullSubgraphIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
         {
             // all edges in g exist in h
             foreach (var connection in g.Neighbours)

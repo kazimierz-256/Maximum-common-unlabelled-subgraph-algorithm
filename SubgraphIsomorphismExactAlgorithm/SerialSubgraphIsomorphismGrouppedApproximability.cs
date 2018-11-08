@@ -10,8 +10,8 @@ namespace SubgraphIsomorphismExactAlgorithm
     {
         // complexity upper bound order of this algorithm is O(D^3 log D) where D is the maximum of the sizes of two input graphs
         public static void ApproximateOptimalSubgraph(
-        UndirectedGraph gArgument,
-        UndirectedGraph hArgument,
+        Graph gArgument,
+        Graph hArgument,
         Func<int, int, double> graphScoringFunction,
         out double bestScore,
         out int subgraphEdges,

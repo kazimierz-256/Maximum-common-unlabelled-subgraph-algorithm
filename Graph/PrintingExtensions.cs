@@ -6,7 +6,7 @@ namespace GraphDataStructure
 {
     public static class PrintingExtensions
     {
-        public static void PrintSubgraph(this UndirectedGraph g, int[] gSubgraphVertexOrder, Dictionary<int, int> ghMap, ConsoleColor dark = ConsoleColor.DarkGreen, ConsoleColor light = ConsoleColor.Green)
+        public static void PrintSubgraph(this Graph g, int[] gSubgraphVertexOrder, Dictionary<int, int> ghMap, ConsoleColor dark = ConsoleColor.DarkGreen, ConsoleColor light = ConsoleColor.Green)
         {
             var ordering = new int[g.Vertices.Count];
             gSubgraphVertexOrder.CopyTo(ordering, 0);

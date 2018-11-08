@@ -11,8 +11,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         // let D be max{|G|,|H|}
         // upper bound polynomial is on the order of O(D^4)
         public static void ApproximateOptimalSubgraph(
-            UndirectedGraph gArgument,
-            UndirectedGraph hArgument,
+            Graph gArgument,
+            Graph hArgument,
             bool[,] gConnectionExistance,
             bool[,] hConnectionExistance,
             Func<int, int, double> graphScoringFunction,

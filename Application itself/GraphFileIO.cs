@@ -9,7 +9,7 @@ namespace Application_itself
 {
     public static class GraphFileIO
     {
-        public static bool Read(string uri, out UndirectedGraph g)
+        public static bool Read(string uri, out Graph g)
         {
             g = null;
             string[] lines = File.ReadAllLines(uri);
@@ -65,7 +65,7 @@ namespace Application_itself
                     }
                 }
 
-                g = new HashGraph(neighbours, vertices, neighbours.Sum(neighbourhood => neighbourhood.Value.Count) / 2);
+                g = new Graph(neighbours, vertices, neighbours.Sum(neighbourhood => neighbourhood.Value.Count) / 2);
             }
             else
             {
@@ -75,7 +75,7 @@ namespace Application_itself
             return true;
         }
 
-        public static void Write(UndirectedGraph g, string uri)
+        public static void Write(Graph g, string uri)
         {
             var vertices = g.Vertices.ToArray();
 
