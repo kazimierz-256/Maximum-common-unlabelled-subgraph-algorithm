@@ -1,4 +1,4 @@
-﻿#define approx1_
+﻿#define approx1
 #define approx2
 using GraphDataStructure;
 using MathParser;
@@ -34,7 +34,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(18);
+            PrintBenchmark(20);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -180,7 +180,9 @@ namespace SubgraphIsomorphismBenchmark
                     out gToH,
                     out hToG,
                     disconnected,
-                    false
+                    false,
+                    0,
+                    10000
                     );
                 sw.Stop();
 
@@ -199,7 +201,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 30,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 100,
                     0
                     );
                 sw.Stop();
