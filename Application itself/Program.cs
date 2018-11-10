@@ -188,6 +188,9 @@ namespace Application_itself
                     var lightColour = computeExactly ? ConsoleColor.Green : ConsoleColor.Cyan;
                     var darkColour = computeExactly ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
 
+                    Console.WriteLine("Indices in the first row and first column stand for indices of vertices in the relevant graph.");
+                    Console.WriteLine("Green indicees belong to the isomorphic subgraph and are ordered so that the mapping between the vertices between two subgraphs becomes trivial to figure out.");
+
                     Console.WriteLine("Graph G:");
                     g.PrintSubgraph(ghOptimalMapping.Keys.ToArray(), ghOptimalMapping, darkColour, lightColour);
                     Console.WriteLine();

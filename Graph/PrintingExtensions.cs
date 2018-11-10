@@ -50,17 +50,17 @@ namespace GraphDataStructure
                 for (int j = 0; j < g.Vertices.Count; j++)
                 {
                     var isInSubgraph = i < gSubgraphVertexOrder.Length && j < gSubgraphVertexOrder.Length;
-                    if (i > j)
+                    if (j <= i)
                     {
                         Console.Write(string.Empty.PadLeft(3));
                     }
-                    else if (i == j)
-                    {
+                    //else if (i == j)
+                    //{
 
-                        Console.ForegroundColor = isInSubgraph ? dark : ConsoleColor.DarkGray;
+                    //    Console.ForegroundColor = isInSubgraph ? dark : ConsoleColor.DarkGray;
 
-                        Console.Write($"{g.VertexDegree(ordering[i])} ".PadLeft(3));
-                    }
+                    //    Console.Write($"{g.VertexDegree(ordering[i])} ".PadLeft(3));
+                    //}
                     else
                     {
 
