@@ -339,6 +339,49 @@ namespace SubgraphIsomorphismTests
                 }
             }
         }
+
+        [Theory]
+        [InlineData(6, 24)]
+        public void ApproximatingAlgorithmIsNotBetterThanActual(int n, int generatingSeed)
+        {
+            for (int i = 1; i < n; i++)
+            {
+                for (int j = 1; j < i; j++)
+                {
+                    for (double density = 0.1; density < 1d; density += 0.1)
+                    {
+                        // randomize a graph of given n and density
+                        var g = GraphFactory.GenerateRandom(j, density, generatingSeed + j * j + i);
+                        var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
+                        foreach (var valuation in new Func<int, int, double>[] { (v, e) => v })
+                        {
+                            // run the algorithm
+                            SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                                g,
+                                h,
+                                valuation,
+                                out var score,
+                                out var subgraphEdges,
+                                out var gToH,
+                                out var hToG
+                                );
+                            SubgraphIsomorphismExactAlgorithm.SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                                g,
+                                h,
+                                valuation,
+                                out var approximateScore,
+                                out var _,
+                                out var __,
+                                out var ___,
+                                milisecondTimeLimit: 100d
+                                );
+                            Assert.True(approximateScore <= score);
+                        }
+                    }
+                }
+            }
+        }
+
         [Theory]
         [InlineData(5, 100, 0.5, 24)]
         public void Approximating2GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)

@@ -1,4 +1,4 @@
-﻿#define parallel_
+﻿#define parallel
 
 using GraphDataStructure;
 using System;
@@ -23,7 +23,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         bool analyzeDisconnected = false,
         bool findExactMatch = false,
         int atLeastSteps = 200,
-        double milisecondTimeLimit = 0
+        double milisecondTimeLimit = 0d
         )
         {
             // initialize and precompute
@@ -47,7 +47,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var max = atLeastSteps;
             if (milisecondTimeLimit > 0)
             {
-                max = int.MaxValue / 2;
+                max = int.MaxValue - Environment.ProcessorCount;
             }
 
             var theoreticalMaximumScoreValue = Math.Min(
@@ -59,7 +59,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var sw = new Stopwatch();
             sw.Start();
             TimeSpan getElapsedTimespan() => sw.Elapsed;
-            var timespanlimit = milisecondTimeLimit < 0 ? TimeSpan.Zero : TimeSpan.FromMilliseconds(milisecondTimeLimit);
+            var timespanlimit = milisecondTimeLimit <= 0 ? TimeSpan.Zero : TimeSpan.FromMilliseconds(milisecondTimeLimit);
 
             var localBestScore = double.MinValue;
             var localSubgraphEdges = 0;
@@ -74,7 +74,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 #endif
             {
                 var part = (max + Environment.ProcessorCount - 1) / Environment.ProcessorCount;
-                for (int valuationIndex = 0; valuationIndex < part; valuationIndex += 1)
+                for (int valuationIndex = part * processorIndex; valuationIndex < part * (processorIndex + 1); valuationIndex += 1)
                 {
                     ApproximateOptimalSubgraph(
                         gArgument.Vertices,
@@ -82,7 +82,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         gConnectionExistance,
                         hConnectionExistance,
                         graphScoringFunction,
-                        new Random(processorIndex * processorIndex),
+                        new Random(valuationIndex),
                         out var localScore,
                         out var localEdges,
                         out var ghLocalMapping,
@@ -105,7 +105,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
                     }
-                    if (localBestScore == theoreticalMaximumScoreValue || (timespanlimit.TotalMilliseconds > 0 && getElapsedTimespan().CompareTo(timespanlimit) > 0))
+                    if (localBestScore == theoreticalMaximumScoreValue || (max == (int.MaxValue - Environment.ProcessorCount) && getElapsedTimespan().CompareTo(timespanlimit) > 0))
                     {
                         break;
                     }

@@ -35,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(20);
+            PrintBenchmark(40);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -47,7 +47,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.01d; density <= 1d; density += 0.01d)
+            for (double density = 0.025d; density < 1d; density += 0.05d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -64,18 +64,20 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 #endif
-#if (approx1)
-                    var aMsTime1 = BenchmarkIsomorphism(2, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print).TotalMilliseconds;
-                    Console.Write($"{aMsTime1:F2}ms,   ".PadLeft(20));
-                    Console.WriteLine($"vertices: {n}, density: { density}");
-                    Console.WriteLine($"score: {approximate1Score}");
-                    Console.WriteLine();
-#endif
 #if (approx2)
-                    var aMsTime2 = BenchmarkIsomorphism(1, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print, timeout: aMsTime1).TotalMilliseconds;
+                    Console.WriteLine("Limited recursion algorithm");
+                    var aMsTime2 = BenchmarkIsomorphism(2, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime2:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate2Score}");
+                    Console.WriteLine();
+#endif
+#if (approx1)
+                    Console.WriteLine("Randomized approximation algorithm");
+                    var aMsTime1 = BenchmarkIsomorphism(1, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print, timeout: aMsTime2).TotalMilliseconds;
+                    Console.Write($"{aMsTime1:F2}ms,   ".PadLeft(20));
+                    Console.WriteLine($"vertices: {n}, density: { density}");
+                    Console.WriteLine($"score: {approximate1Score}");
                     Console.WriteLine();
 #endif
 #if (exact)
@@ -87,7 +89,7 @@ namespace SubgraphIsomorphismBenchmark
 
                     msTime = BenchmarkIsomorphism(0, n, density, i, out var subgraphVertices, out var subgraphEdges, out var score, print).TotalMilliseconds;
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
-                    Console.WriteLine($"vertices: {n}, density: { density}"); 
+                    Console.WriteLine($"vertices: {n}, density: { density}");
 #endif
 #if (approx1 && exact)
 
@@ -110,17 +112,17 @@ namespace SubgraphIsomorphismBenchmark
 #if (approx1 && approx2)
                     switch (Math.Sign(approximate1Score - approximate2Score))
                     {
-                        case 1:
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write($"Approximating Algorithm 1 wins!");
+                        case -1:
+                            Console.ForegroundColor = ConsoleColor.Magenta;
+                            Console.Write($"Limited Recursion wins by {approximate2Score - approximate1Score}");
                             break;
                         case 0:
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                            Console.Write($"Approximating algorithms draw!");
+                            //Console.ForegroundColor = ConsoleColor.Gray;
+                            //Console.Write($"Approximating algorithms draw!");
                             break;
-                        case -1:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write($"Approximating Algorithm 2 wins!");
+                        case 1:
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.Write($"Randomized choice wins by {approximate1Score - approximate2Score}");
                             break;
                     }
                     Console.ResetColor();
@@ -159,7 +161,7 @@ namespace SubgraphIsomorphismBenchmark
             PrintBenchmark(n + 1);
         }
 
-        private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0)
+        private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0d)
         {
             var sw = new Stopwatch();
             var g = GraphFactory.GenerateRandom(n, density, (int)(123456789 * density) + seed * n - seed * seed).Permute(seed * (seed * seed - 1));
@@ -167,7 +169,7 @@ namespace SubgraphIsomorphismBenchmark
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
 
-            Func<int, int, double> valuation = (v, e) => v + e;
+            Func<int, int, double> valuation = (v, e) => e + v;
             var disconnected = false;
 
             // run the algorithm
@@ -202,7 +204,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    1000,
+                    100,
                     timeout
                     );
                 sw.Stop();
@@ -222,7 +224,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 30,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3,
                     0
                     );
                 sw.Stop();
