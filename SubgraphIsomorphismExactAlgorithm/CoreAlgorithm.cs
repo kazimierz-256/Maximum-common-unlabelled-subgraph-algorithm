@@ -63,6 +63,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Dictionary<int, int> hgMapping;
         private HashSet<int> gEnvelope;
         private HashSet<int> hEnvelope;
+        public int[] gExportEnvelope { get => gEnvelope.ToArray(); }
+        public int[] hExportEnvelope { get => hEnvelope.ToArray(); }
         private HashSet<int> gOutsiders;
         private HashSet<int> hOutsiders;
         private int totalNumberOfEdgesInSubgraph;
