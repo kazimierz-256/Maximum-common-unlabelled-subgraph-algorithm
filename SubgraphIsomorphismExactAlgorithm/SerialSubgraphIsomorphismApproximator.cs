@@ -36,7 +36,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     g = gArgument,
                     h = hArgument,
-                    findExactMatching = findExactMatch,
+                    findGraphGinH = findExactMatch,
                     analyzeDisconnected = analyzeDisconnected,
                     subgraphScoringFunction = graphScoringFunction,
                     ghMapping = new Dictionary<int, int>(),

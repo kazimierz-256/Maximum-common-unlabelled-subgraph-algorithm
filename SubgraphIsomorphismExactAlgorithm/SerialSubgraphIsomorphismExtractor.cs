@@ -16,12 +16,12 @@ namespace SubgraphIsomorphismExactAlgorithm
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
             bool analyzeDisconnected = false,
-            bool findExactMatch = false,
+            bool findGraphGinH = false,
             int leftoverSteps = -1,
             int deepnessTakeawaySteps = 0
             )
         {
-            if (!analyzeDisconnected && findExactMatch)
+            if (!analyzeDisconnected && findGraphGinH)
                 throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
 
             var initialScore = double.MinValue;
@@ -29,7 +29,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var solver = new CoreAlgorithm();
             var swappedGraphs = false;
 
-            if (!findExactMatch && hArgument.EdgeCount < gArgument.EdgeCount)
+            if (!findGraphGinH && hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;
@@ -46,43 +46,45 @@ namespace SubgraphIsomorphismExactAlgorithm
             var hgLocalOptimalMapping = new Dictionary<int, int>();
             var localSubgraphEdges = 0;
 
-            while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0)
-            {
-                var gMatchingVertex = g.Vertices.ArgMax(v => -g.Degree(v));
-
-                foreach (var hMatchingVertex in h.Vertices)
+            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount).CompareTo(localBestScore) > 0d)
+                while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0d)
                 {
-                    solver.InternalStateSetup(
-                        gMatchingVertex,
-                        hMatchingVertex,
-                        g,
-                        h,
-                        graphScoringFunction,
-                        (newScore, ghMap, hgMap, edges) =>
-                        {
-                            if (newScore.CompareTo(localBestScore) > 0)
+                    var gMatchingCandidate = g.Vertices.ArgMax(v => -g.Degree(v));
+
+                    foreach (var hMatchingVertex in h.Vertices)
+                    {
+                        solver.InternalStateSetup(
+                            gMatchingCandidate,
+                            hMatchingVertex,
+                            g,
+                            h,
+                            graphScoringFunction,
+                            (newScore, ghMap, hgMap, edges) =>
                             {
-                                localBestScore = newScore;
-                                ghLocalOptimalMapping = ghMap();
-                                hgLocalOptimalMapping = hgMap();
-                                localSubgraphEdges = edges;
-                            }
-                        },
-                        analyzeDisconnected,
-                        findExactMatch,
-                        leftoverSteps,
-                        deepnessTakeawaySteps
-                        );
-                    solver.Recurse(ref localBestScore);
+                                if (newScore.CompareTo(localBestScore) > 0)
+                                {
+                                    localBestScore = newScore;
+                                    ghLocalOptimalMapping = ghMap();
+                                    hgLocalOptimalMapping = hgMap();
+                                    localSubgraphEdges = edges;
+                                }
+                            },
+                            analyzeDisconnected,
+                            findGraphGinH,
+                            leftoverSteps,
+                            deepnessTakeawaySteps
+                            );
+                        solver.Recurse(ref localBestScore);
+                    }
+
+                    if (findGraphGinH)
+                        break;
+
+                    // repeat the procedure but without the considered vertex
+                    g.RemoveVertex(gMatchingCandidate);
                 }
 
-                if (findExactMatch)
-                    break;
-                // ignore previous g-vertices
-                g.RemoveVertex(gMatchingVertex);
-            }
-
-            if (findExactMatch && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
+            if (findGraphGinH && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
             {
                 // did not find an exact match
                 bestScore = initialScore;
@@ -92,9 +94,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                // return the solution
+                // return found  solution
                 bestScore = localBestScore;
                 subgraphEdges = localSubgraphEdges;
+
+                // swap again to return correct answers
                 if (swappedGraphs)
                 {
                     ghOptimalMapping = hgLocalOptimalMapping;

@@ -24,7 +24,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int totalNumberOfEdgesInSubgraph;
         public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
         public bool analyzeDisconnected;
-        public bool findExactMatching;
+        public bool findGraphGinH;
         public int leftoverSteps;
         public int deepnessTakeawaySteps;
         public int originalLeftoverSteps;
@@ -33,7 +33,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         => new CoreInternalState()
         {
             analyzeDisconnected = analyzeDisconnected,
-            findExactMatching = findExactMatching,
+            findGraphGinH = findGraphGinH,
             g = gClone ? g.DeepClone() : g,
             h = hClone ? h.DeepClone() : h,
             gConnectionExistance = gConnectionExistance.Clone() as bool[,],
@@ -68,7 +68,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int totalNumberOfEdgesInSubgraph;
         private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFoundNotificationAction;
         private bool analyzeDisconnected;
-        private bool findExactMatching;
+        private bool findGraphGinH;
         private int leftoverSteps;
         private int deepness = 0;
         private int deepnessTakeawaySteps;
@@ -77,7 +77,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
             analyzeDisconnected = analyzeDisconnected,
-            findExactMatching = findExactMatching,
+            findGraphGinH = findGraphGinH,
             g = g,
             h = h,
             gConnectionExistance = gConnectionExistance,
@@ -99,7 +99,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public void ImportShallowInternalState(CoreInternalState state)
         {
             analyzeDisconnected = state.analyzeDisconnected;
-            findExactMatching = state.findExactMatching;
+            findGraphGinH = state.findGraphGinH;
             g = state.g;
             h = state.h;
             gConnectionExistance = state.gConnectionExistance;
@@ -127,7 +127,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Func<int, int, double> subgraphScoringFunction,
             Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFoundNotificationAction,
             bool analyzeDisconnected = false,
-            bool findExactMatching = false,
+            bool findGraphGinH = false,
             int leftoverSteps = -1,
             int deepnessTakeawaySteps = 0
             )
@@ -137,7 +137,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.subgraphScoringFunction = subgraphScoringFunction;
             this.newSolutionFoundNotificationAction = newSolutionFoundNotificationAction;
             this.analyzeDisconnected = analyzeDisconnected;
-            this.findExactMatching = findExactMatching;
+            this.findGraphGinH = findGraphGinH;
             this.leftoverSteps = leftoverSteps;
             originalLeftoverSteps = leftoverSteps;
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
@@ -389,7 +389,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findExactMatching)
+                if (!findGraphGinH)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingCandidate);
                     deepness += 1;
@@ -412,7 +412,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (
                 gOutsiders.Count > 0
                 && hOutsiders.Count > 0
-                && (!findExactMatching || gEnvelope.Count == 0)
+                && (!findGraphGinH || gEnvelope.Count == 0)
                 && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
                 && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
                 )
@@ -420,7 +420,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
                 var hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
                 var subgraphsSwapped = false;
-                if (!findExactMatching && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
+                if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
                 {
                     subgraphsSwapped = true;
                     var tmp = gOutsiderGraph;
@@ -481,7 +481,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 gConnectionExistance = subgraphsSwapped ? hConnectionExistance : gConnectionExistance,
                                 hConnectionExistance = subgraphsSwapped ? gConnectionExistance : hConnectionExistance,
                                 analyzeDisconnected = true,
-                                findExactMatching = findExactMatching,
+                                findGraphGinH = findGraphGinH,
                                 leftoverSteps = leftoverSteps,
                                 deepness = deepness
                             };
@@ -490,7 +490,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             subSolver.Recurse(ref bestScore);
                         }
 
-                        if (findExactMatching)
+                        if (findGraphGinH)
                             break;
 
                         gOutsiderGraph.RemoveVertex(gMatchingCandidate);

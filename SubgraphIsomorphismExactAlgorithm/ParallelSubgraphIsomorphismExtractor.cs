@@ -51,20 +51,20 @@ namespace SubgraphIsomorphismExactAlgorithm
             while (g.Vertices.Count > 0)
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
-                var gMatchingVertex = g.Vertices.ArgMax(
+                var gMatchingCandidate = g.Vertices.ArgMax(
                     v => -g.Degree(v),
                     v => -removedVertices.Count(r => gArgument.ExistsConnectionBetween(r, v))
                     );
 
                 gGraphs.Add(g.DeepClone());
-                gInitialVertices.Add(gMatchingVertex);
+                gInitialVertices.Add(gMatchingCandidate);
 
                 // do not remove vertices from G if requested to find G within H
                 if (findGraphGinH)
                     break;
 
-                g.RemoveVertex(gMatchingVertex);
-                removedVertices.Add(gMatchingVertex);
+                g.RemoveVertex(gMatchingCandidate);
+                removedVertices.Add(gMatchingCandidate);
             }
 
             var localBestScore = initialScore;
@@ -74,39 +74,43 @@ namespace SubgraphIsomorphismExactAlgorithm
             var threadSynchronizingObject = new object();
             var hVerticesOrdered = h.Vertices.ToArray();
 
-            Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
-            {
-                var gIndex = i % gGraphs.Count;
-                var hIndex = i / gGraphs.Count;
+            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount).CompareTo(localBestScore) > 0d)
+                Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
+                {
+                    var gIndex = i % gGraphs.Count;
+                    var hIndex = i / gGraphs.Count;
 
-                var threadAlgorithm = new CoreAlgorithm();
-                threadAlgorithm.InternalStateSetup(
-                    gInitialVertices[gIndex],
-                    hVerticesOrdered[hIndex],
-                    gGraphs[gIndex].DeepClone(),
-                    h,
-                    graphScoringFunction,
-                    (newScore, ghMap, hgMap, edges) =>
-                      {
-                          if (newScore.CompareTo(localBestScore) > 0)
-                              // to increase the performance lock is performed only if there is a chance to improve the local result
-                              lock (threadSynchronizingObject)
+                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount).CompareTo(localBestScore) > 0d)
+                    {
+                        var threadAlgorithm = new CoreAlgorithm();
+                        threadAlgorithm.InternalStateSetup(
+                            gInitialVertices[gIndex],
+                            hVerticesOrdered[hIndex],
+                            gGraphs[gIndex].DeepClone(),
+                            h,
+                            graphScoringFunction,
+                            (newScore, ghMap, hgMap, edges) =>
+                              {
                                   if (newScore.CompareTo(localBestScore) > 0)
-                                  {
-                                      localBestScore = newScore;
-                                      // lazy evaluation for best performance
-                                      ghLocalOptimalMapping = ghMap();
-                                      hgLocalOptimalMapping = hgMap();
-                                      localSubgraphEdges = edges;
-                                  }
-                      },
-                    analyzeDisconnectedComponents,
-                    findGraphGinH,
-                    heuristicStepsAvailable,
-                    heuristicDeepnessToStartCountdown
-                );
-                threadAlgorithm.Recurse(ref localBestScore);
-            });
+                                      // to increase the performance lock is performed only if there is a chance to improve the local result
+                                      lock (threadSynchronizingObject)
+                                          if (newScore.CompareTo(localBestScore) > 0)
+                                          {
+                                              localBestScore = newScore;
+                                              // lazy evaluation for best performance
+                                              ghLocalOptimalMapping = ghMap();
+                                              hgLocalOptimalMapping = hgMap();
+                                              localSubgraphEdges = edges;
+                                          }
+                              },
+                            analyzeDisconnectedComponents,
+                            findGraphGinH,
+                            heuristicStepsAvailable,
+                            heuristicDeepnessToStartCountdown
+                        );
+                        threadAlgorithm.Recurse(ref localBestScore);
+                    }
+                });
 
             // if requested to find G within H and could not find such then quit with dummy results
             if (findGraphGinH && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)
