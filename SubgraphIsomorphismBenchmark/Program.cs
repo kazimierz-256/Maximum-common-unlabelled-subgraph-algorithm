@@ -1,5 +1,5 @@
 ﻿#define approx1
-#define approx2_
+#define approx2
 #define exact_
 using GraphDataStructure;
 using MathParser;
@@ -35,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(100);
+            PrintBenchmark(50);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -64,9 +64,10 @@ namespace SubgraphIsomorphismBenchmark
                     Console.ResetColor();
                     Console.WriteLine(".");
 #endif
+                    var aMsTime2 = 500d;
 #if (approx2)
                     Console.WriteLine("Limited recursion algorithm");
-                    var aMsTime2 = BenchmarkIsomorphism(2, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print).TotalMilliseconds;
+                    aMsTime2 = BenchmarkIsomorphism(2, n, density, i, out var approximate2SubgraphVertices, out var approximate2SubgraphEdges, out var approximate2Score, print).TotalMilliseconds;
                     Console.Write($"{aMsTime2:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate2Score}");
@@ -74,7 +75,7 @@ namespace SubgraphIsomorphismBenchmark
 #endif
 #if (approx1)
                     Console.WriteLine("Randomized approximation algorithm");
-                    var aMsTime1 = BenchmarkIsomorphism(1, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print, timeout: 5000).TotalMilliseconds;
+                    var aMsTime1 = BenchmarkIsomorphism(1, n, density, i, out var approximate1SubgraphVertices, out var approximate1SubgraphEdges, out var approximate1Score, print, timeout: aMsTime2).TotalMilliseconds;
                     Console.Write($"{aMsTime1:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
                     Console.WriteLine($"score: {approximate1Score}");
