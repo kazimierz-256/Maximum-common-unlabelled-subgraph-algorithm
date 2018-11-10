@@ -1,6 +1,4 @@
-﻿#define parallel
-
-using GraphDataStructure;
+﻿using GraphDataStructure;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +21,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         bool analyzeDisconnected = false,
         bool findExactMatch = false,
         int atLeastSteps = 200,
-        double milisecondTimeLimit = 0d
+        double milisecondTimeLimit = 0d,
+        bool computeInParallel = true
         )
         {
             // initialize and precompute
@@ -44,10 +43,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hConnectionExistance[kvp.Key, vertexTo] = true;
 
 
+            var batches = Environment.ProcessorCount * 10;
             var max = atLeastSteps;
             if (milisecondTimeLimit > 0)
             {
-                max = int.MaxValue - Environment.ProcessorCount;
+                max = int.MaxValue - 1 - batches;
             }
 
             var theoreticalMaximumScoreValue = Math.Min(
@@ -58,7 +58,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             var synchronizingObject = new object();
             var sw = new Stopwatch();
             sw.Start();
-            TimeSpan getElapsedTimespan() => sw.Elapsed;
+            TimeSpan getElapsedTimespan() => milisecondTimeLimit <= 0 ? TimeSpan.Zero : sw.Elapsed;
             var timespanlimit = milisecondTimeLimit <= 0 ? TimeSpan.Zero : TimeSpan.FromMilliseconds(milisecondTimeLimit);
 
             var localBestScore = double.MinValue;
@@ -67,14 +67,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             var hgLocalOptimalMapping = new Dictionary<int, int>();
 
             // repeat randomized approximations
-#if parallel
-            Parallel.For(0, Environment.ProcessorCount, processorIndex =>
-#else
-            for (int processorIndex = 0; processorIndex < Environment.ProcessorCount; processorIndex++)
-#endif
+
+            void batchDo(int batch)
             {
-                var part = (max + Environment.ProcessorCount - 1) / Environment.ProcessorCount;
-                for (int valuationIndex = part * processorIndex; valuationIndex < part * (processorIndex + 1); valuationIndex += 1)
+                var part = (max + batches - 1) / batches;
+                for (int valuationIndex = part * batch; valuationIndex < part * (batch + 1); valuationIndex += 1)
                 {
                     ApproximateOptimalSubgraph(
                         gArgument.Vertices,
@@ -105,16 +102,18 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
                     }
-                    if (localBestScore == theoreticalMaximumScoreValue || (max == (int.MaxValue - Environment.ProcessorCount) && getElapsedTimespan().CompareTo(timespanlimit) > 0))
+                    if (localBestScore == theoreticalMaximumScoreValue || getElapsedTimespan().CompareTo(timespanlimit) > 0)
                     {
                         break;
                     }
                 }
-#if parallel
-            });
-#else
             }
-#endif
+
+            if (computeInParallel)
+                Parallel.For(0, batches, batch => batchDo(batch));
+            else
+                for (int batch = 0; batch < batches; batch++)
+                    batchDo(batch);
 
             bestScore = localBestScore;
             subgraphEdges = localSubgraphEdges;
