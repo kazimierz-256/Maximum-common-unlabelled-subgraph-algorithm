@@ -322,7 +322,7 @@ namespace SubgraphIsomorphismTests
                     var h = GraphFactory.GenerateRandom(i, density, generatingSeed * generatingSeed - j);
 
                     // run the algorithm
-                    SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                    SubgraphIsomorphismExactAlgorithm.SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                         g,
                         h,
                         (vertices, edges) => vertices,

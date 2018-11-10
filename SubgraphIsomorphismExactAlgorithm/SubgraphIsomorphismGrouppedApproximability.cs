@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public static class SerialSubgraphIsomorphismGrouppedApproximability
+    public static class SubgraphIsomorphismGrouppedApproximability
     {
         public static void ApproximateOptimalSubgraph(
         Graph gArgument,

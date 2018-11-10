@@ -192,7 +192,7 @@ namespace SubgraphIsomorphismBenchmark
             else if (algorithm == 1)
             {
                 sw.Start();
-                SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                SubgraphIsomorphismExactAlgorithm.SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                     g,
                     h,
                     valuation,

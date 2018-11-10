@@ -149,7 +149,7 @@ namespace Application_itself
                         if (approximatingIndex == 1)
                         {
 
-                            SerialSubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                            SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                                 g,
                                 h,
                                 valuation,
