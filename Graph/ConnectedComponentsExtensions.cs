@@ -5,7 +5,7 @@ namespace GraphDataStructure
 {
     public static class ConnectedComponentsExtensions
     {
-        public static List<HashSet<int>> ConnectedComponents(this Graph g)
+        public static List<HashSet<int>> ExtractAllConnectedComponents(this Graph g)
         {
             var connectedComponents = new List<HashSet<int>>();
             var analyzed = new HashSet<int>();
@@ -28,7 +28,7 @@ namespace GraphDataStructure
 
         private static void BFSSearch(Graph g, int vertex, HashSet<int> cc, HashSet<int> analyzed)
         {
-            foreach (var neighbour in g.NeighboursOf(vertex))
+            foreach (var neighbour in g.VertexNeighbours(vertex))
             {
                 if (!cc.Contains(neighbour))
                 {
@@ -41,7 +41,7 @@ namespace GraphDataStructure
         }
 
 
-        public static Graph GraphOfConnectedComponent(this Graph g, int ccVertex)
+        public static Graph ExtractConnectedComponentThatIncludes(this Graph g, int ccVertex)
         {
             var vertices = new HashSet<int>() { ccVertex };
             var analyzed = new HashSet<int>() { ccVertex };
@@ -52,7 +52,7 @@ namespace GraphDataStructure
 
             foreach (var vertex in vertices)
             {
-                foreach (var neighbour in g.NeighboursOf(vertex))
+                foreach (var neighbour in g.VertexNeighbours(vertex))
                 {
                     if (vertices.Contains(neighbour))
                     {

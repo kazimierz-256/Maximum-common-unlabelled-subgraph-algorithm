@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Application itself": {
+      "commandName": "Project",
+      "commandLineArgs": "\"../g whitespace characters work.csv\" ../h.csv output.csv vertices*edges yes"
+    }
+  }
+}

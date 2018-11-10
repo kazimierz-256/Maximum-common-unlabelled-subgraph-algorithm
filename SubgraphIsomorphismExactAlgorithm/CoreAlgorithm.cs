@@ -275,7 +275,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // choose a vertex with smallest degree in the graph g
                 // if there is ambiguity then choose the one with least connections with the existing subgraph
                 var gMatchingCandidate = gEnvelope.ArgMax(
-                    v => -g.Degree(v),
+                    v => -g.VertexDegree(v),
                     v => -ghMapping.Count(map => gConnectionExistance[map.Key, v])
                     );
 
@@ -417,8 +417,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
                 )
             {
-                var gOutsiderGraph = g.DeepCloneIntersecting(gOutsiders);
-                var hOutsiderGraph = h.DeepCloneIntersecting(hOutsiders);
+                var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
+                var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(hOutsiders);
                 var subgraphsSwapped = false;
                 if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
                 {
@@ -439,8 +439,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // choose the candidate with largest degree within the graph of outsiders
                         // if there is an ambiguity then choose the vertex with the largest degree in the original graph
                         var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
-                            v => gOutsiderGraph.Degree(v),
-                            v => g.Degree(v)
+                            v => gOutsiderGraph.VertexDegree(v),
+                            v => g.VertexDegree(v)
                             );
 
                         foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)

@@ -55,7 +55,7 @@ namespace Application_itself
                 Console.WriteLine("2. `address of graph h without quotation marks \"`");
                 Console.WriteLine("3. `output file address without quotation marks \"`");
                 Console.WriteLine("4. `monotonic subraph valuation in 'vertices' and 'edges' without white characters` e.g. `v` `v+e` `e` (the only simple valuations that support single character interpretation) `vertices*edges` `vertices*log(1+edges)`");
-                Console.WriteLine("5. `compute exactly or not (if not please provide the index of approximating algorithm)?` e.g. `yes` `no` `true` `false` `t` `n` `1` `2`");
+                Console.WriteLine("5. `compute exactly or not (if not please provide the index of approximating algorithm)?` e.g. `yes` `true` `t` `1` `2`");
                 Console.WriteLine("6*. `analyze disconnected?` (defaults to false)");
                 Console.WriteLine("7*. `find exact matching of G in H?` (defaults to false, analyze disconnected must be also true if this is set to true)");
                 Console.WriteLine("8*. `launch in parallel? (if computing exactly)` (defaults to true)");
@@ -85,9 +85,8 @@ namespace Application_itself
                     var outputAddress = input[2];
                     var valuation = stringToValuation(input[3]);
                     var computeExactly = false;
-                    int approximatingIndex;
 
-                    if (!int.TryParse(input[4], out approximatingIndex))
+                    if (!int.TryParse(input[4], out var approximatingIndex))
                     {
                         computeExactly = stringToBool(input[4]);
                     }
@@ -183,26 +182,25 @@ namespace Application_itself
                         }
                     }
 
-                    // print matches if filepath is valid?
-
+                    // print matches if filepath is valid
                     PrintTransition(outputAddress, ghOptimalMapping);
 
-                    var light = computeExactly ? ConsoleColor.Green : ConsoleColor.Cyan;
-                    var dark = computeExactly ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
+                    var lightColour = computeExactly ? ConsoleColor.Green : ConsoleColor.Cyan;
+                    var darkColour = computeExactly ? ConsoleColor.DarkGreen : ConsoleColor.DarkCyan;
 
                     Console.WriteLine("Graph G:");
-                    g.PrintSubgraph(ghOptimalMapping.Keys.ToArray(), ghOptimalMapping, dark, light);
+                    g.PrintSubgraph(ghOptimalMapping.Keys.ToArray(), ghOptimalMapping, darkColour, lightColour);
                     Console.WriteLine();
 
                     Console.WriteLine("Graph H:");
-                    h.PrintSubgraph(ghOptimalMapping.Keys.Select(key => ghOptimalMapping[key]).ToArray(), hgOptimalMapping, dark, light);
+                    h.PrintSubgraph(ghOptimalMapping.Keys.Select(key => ghOptimalMapping[key]).ToArray(), hgOptimalMapping, darkColour, lightColour);
                     Console.WriteLine();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("An error occured. Make sure the arguments are entered correctly (without backticks):");
                     inputInstructions();
-                    Console.WriteLine("Affirmative answers supported: true, yes, y, t, tak. Any other answer is treated as negative.");
+                    Console.WriteLine("Affirmative answers supported: true, yes, y, t, tak. Any other answer is treated as negative (or as a special command in some cases).");
                     Console.WriteLine();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Details of the error: {e.ToString()}");

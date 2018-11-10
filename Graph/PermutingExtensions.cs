@@ -12,11 +12,5 @@ namespace GraphDataStructure
             g = permuted;
             return g;
         }
-        public static Graph Permute(this Graph g, Func<int, double> valuation)
-        {
-            var permuted = GraphFactory.GeneratePermuted(g, valuation);
-            g = permuted;
-            return g;
-        }
     }
 }

@@ -49,7 +49,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount).CompareTo(localBestScore) > 0d)
                 while (graphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(localBestScore) > 0d)
                 {
-                    var gMatchingCandidate = g.Vertices.ArgMax(v => -g.Degree(v));
+                    var gMatchingCandidate = g.Vertices.ArgMax(v => -g.VertexDegree(v));
 
                     foreach (var hMatchingVertex in h.Vertices)
                     {

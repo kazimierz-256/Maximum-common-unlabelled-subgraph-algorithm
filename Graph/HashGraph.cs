@@ -5,7 +5,7 @@ namespace GraphDataStructure
 {
     public class Graph
     {
-        // note: this does not copy it reassigns
+        // important note: this is a shallow copy
         public Graph(Dictionary<int, HashSet<int>> neighbours, HashSet<int> vertices, int edges)
         {
             Neighbours = neighbours;
@@ -13,20 +13,19 @@ namespace GraphDataStructure
             EdgeCount = edges;
         }
 
-        // todo: implement two data structures to optimize performance
         public Dictionary<int, HashSet<int>> Neighbours { get; private set; } = new Dictionary<int, HashSet<int>>();
         public HashSet<int> Vertices { get; private set; } = new HashSet<int>();
         private readonly HashSet<int> emptyHashSet = new HashSet<int>();
         public int EdgeCount { get; private set; } = 0;
 
-        public HashSet<int> NeighboursOf(int vertex)
+        public HashSet<int> VertexNeighbours(int vertex)
         {
             if (Neighbours.ContainsKey(vertex))
                 return Neighbours[vertex];
             else
                 return emptyHashSet;
         }
-        public bool ExistsConnectionBetween(int gVertexInSubgraph, int gNeighbour)
+        public bool AreVerticesConnected(int gVertexInSubgraph, int gNeighbour)
         {
             if (Neighbours.ContainsKey(gVertexInSubgraph))
             {
@@ -38,7 +37,7 @@ namespace GraphDataStructure
             }
         }
 
-        public int Degree(int v)
+        public int VertexDegree(int v)
         {
             if (Neighbours.ContainsKey(v))
             {
@@ -95,7 +94,7 @@ namespace GraphDataStructure
             }
         }
 
-        public Graph DeepCloneIntersecting(HashSet<int> intersection)
+        public Graph DeepCloneHavingVerticesIntersectedWith(HashSet<int> intersection)
         {
             var neighboursCopy = new Dictionary<int, HashSet<int>>();
             var directedEdgesInClone = 0;

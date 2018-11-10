@@ -26,7 +26,7 @@ namespace GraphDataStructure
             {
                 for (int j = 0; j < i; j++)
                 {
-                    connections[i, j] = connections[j, i] = g.ExistsConnectionBetween(ordering[i], ordering[j]);
+                    connections[i, j] = connections[j, i] = g.AreVerticesConnected(ordering[i], ordering[j]);
                 }
             }
 
@@ -59,7 +59,7 @@ namespace GraphDataStructure
 
                         Console.ForegroundColor = isInSubgraph ? dark : ConsoleColor.DarkGray;
 
-                        Console.Write($"{g.Degree(ordering[i])} ".PadLeft(3));
+                        Console.Write($"{g.VertexDegree(ordering[i])} ".PadLeft(3));
                     }
                     else
                     {

@@ -78,42 +78,7 @@ namespace GraphDataStructure
             return new Graph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
         }
 
-        public static Graph GeneratePermuted(Graph g, Func<int, double> valuation)
-        {
-            // permute the vertices and make another graph
-
-            var permutedIntegers = g.Vertices.ToArray();
-            var smallestInteger = 0;
-            Permute(ref permutedIntegers, valuation);
-            var translation = new Dictionary<int, int>();
-
-            var neighbours = new Dictionary<int, HashSet<int>>();
-            foreach (var kvp in g.Neighbours)
-            {
-                var fromVertex = kvp.Key;
-                if (!translation.ContainsKey(fromVertex))
-                {
-                    translation.Add(fromVertex, smallestInteger);
-                    smallestInteger += 1;
-                }
-                foreach (var toVertex in kvp.Value)
-                {
-                    if (!translation.ContainsKey(toVertex))
-                    {
-                        translation.Add(toVertex, smallestInteger);
-                        smallestInteger += 1;
-                    }
-                    if (!neighbours.ContainsKey(translation[fromVertex]))
-                    {
-                        neighbours.Add(translation[fromVertex], new HashSet<int>());
-                    }
-                    neighbours[translation[fromVertex]].Add(translation[toVertex]);
-                }
-            }
-
-            return new Graph(neighbours, new HashSet<int>(g.Vertices), g.EdgeCount);
-        }
-
+        // permuting helper
         private static void Permute(int seed, ref int[] vertices)
         {
             var random = new Random(seed);
@@ -122,6 +87,7 @@ namespace GraphDataStructure
             Array.Sort(randomValues, vertices);
         }
 
+        // permuting helper
         private static void Permute(ref int[] vertices, Func<int, double> valuation)
         {
             var valuations = vertices.Select(v => valuation(v)).ToArray();

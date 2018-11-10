@@ -46,7 +46,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.93d; density <= 1d; density += 0.01d)
+            for (double density = 0.01d; density <= 1d; density += 0.02d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -199,7 +199,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 20,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 30,
                     0
                     );
                 sw.Stop();

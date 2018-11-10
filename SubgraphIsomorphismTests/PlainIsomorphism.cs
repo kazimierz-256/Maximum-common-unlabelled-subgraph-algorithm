@@ -209,7 +209,7 @@ namespace SubgraphIsomorphismTests
                     Assert.NotEmpty(hToG);
 
                     // verify the solution
-                    var maximumConnectedComponentSize = g.ConnectedComponents().Max(cc => cc.Count);
+                    var maximumConnectedComponentSize = g.ExtractAllConnectedComponents().Max(cc => cc.Count);
                     Assert.Equal(maximumConnectedComponentSize, gToH.Count);
                     Assert.Equal(maximumConnectedComponentSize, hToG.Count);
 
@@ -388,11 +388,11 @@ namespace SubgraphIsomorphismTests
             // for each pair of g there is and edge iff there is an edge in corresponding h equivalent pair
             foreach (var gVertex1 in gToH.Keys)
                 foreach (var gVertex2 in gToH.Keys.Where(vertex => vertex != gVertex1))
-                    Assert.Equal(g.ExistsConnectionBetween(gVertex1, gVertex2), h.ExistsConnectionBetween(gToH[gVertex1], gToH[gVertex2]));
+                    Assert.Equal(g.AreVerticesConnected(gVertex1, gVertex2), h.AreVerticesConnected(gToH[gVertex1], gToH[gVertex2]));
 
             foreach (var hVertex1 in hToG.Keys)
                 foreach (var hVertex2 in hToG.Keys.Where(vertex => vertex != hVertex1))
-                    Assert.Equal(h.ExistsConnectionBetween(hVertex1, hVertex2), g.ExistsConnectionBetween(hToG[hVertex1], hToG[hVertex2]));
+                    Assert.Equal(h.AreVerticesConnected(hVertex1, hVertex2), g.AreVerticesConnected(hToG[hVertex1], hToG[hVertex2]));
         }
 
         private void VerifyFullSubgraphIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
@@ -402,7 +402,7 @@ namespace SubgraphIsomorphismTests
             {
                 var gFromVertex = connection.Key;
                 foreach (var gToVertex in connection.Value)
-                    Assert.True(h.ExistsConnectionBetween(gToH[gFromVertex], gToH[gToVertex]));
+                    Assert.True(h.AreVerticesConnected(gToH[gFromVertex], gToH[gToVertex]));
             }
 
             // all edges in h exsist in g
@@ -410,7 +410,7 @@ namespace SubgraphIsomorphismTests
             {
                 var hFromVertex = connection.Key;
                 foreach (var hToVertex in connection.Value)
-                    Assert.True(g.ExistsConnectionBetween(hToG[hFromVertex], hToG[hToVertex]));
+                    Assert.True(g.AreVerticesConnected(hToG[hFromVertex], hToG[hToVertex]));
             }
         }
     }

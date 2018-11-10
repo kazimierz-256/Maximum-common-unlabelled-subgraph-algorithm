@@ -86,7 +86,7 @@ namespace Application_itself
             {
                 for (int j = 0; j < vertices.Length; j++)
                 {
-                    if (g.ExistsConnectionBetween(vertices[i], vertices[j]))
+                    if (g.AreVerticesConnected(vertices[i], vertices[j]))
                     {
                         builder.Append("1");
                     }
