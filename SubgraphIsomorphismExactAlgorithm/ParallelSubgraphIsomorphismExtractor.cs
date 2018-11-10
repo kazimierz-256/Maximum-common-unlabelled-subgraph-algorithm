@@ -80,7 +80,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var hIndex = i / gGraphs.Count;
 
                 var threadAlgorithm = new CoreAlgorithm();
-                threadAlgorithm.HighLevelSetup(
+                threadAlgorithm.InternalStateSetup(
                     gInitialVertices[gIndex],
                     hVerticesOrdered[hIndex],
                     gGraphs[gIndex].DeepClone(),

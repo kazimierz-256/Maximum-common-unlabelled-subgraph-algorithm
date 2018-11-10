@@ -52,7 +52,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 foreach (var hMatchingVertex in h.Vertices)
                 {
-                    solver.HighLevelSetup(
+                    solver.InternalStateSetup(
                         gMatchingVertex,
                         hMatchingVertex,
                         g,
