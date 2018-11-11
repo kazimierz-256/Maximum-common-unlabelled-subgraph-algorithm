@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Application_itself
+namespace Application
 {
     public static class GraphFileIO
     {

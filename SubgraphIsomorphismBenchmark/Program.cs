@@ -35,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(50);
+            PrintBenchmark(15);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -92,30 +92,30 @@ namespace SubgraphIsomorphismBenchmark
                     Console.WriteLine($"{msTime:F2}ms,   ".PadLeft(20));
                     Console.WriteLine($"vertices: {n}, density: { density}");
 #endif
-#if (approx1 && exact)
-
-                    Console.Write($"Quality of approximation 1: ");
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    approximation1QualityString = string.Format($"{ 100d * approximate1Score / score:F1}");
-                    Console.Write($"{approximation1QualityString}%");
-                    Console.ResetColor();
-                    Console.WriteLine($", approximate {approximate1Score}, exact {score}");
-#endif
 #if (approx2 && exact)
 
-                    Console.Write($"Quality of approximation 2: ");
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"Quality of Limited recursion algorithm: ");
+                    Console.ForegroundColor = approximate2Score == score ? ConsoleColor.DarkGreen : ConsoleColor.DarkYellow;
                     approximation2QualityString = string.Format($"{ 100d * approximate2Score / score:F1}");
                     Console.Write($"{approximation2QualityString}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximate2Score}, exact {score}");
+#endif
+#if (approx1 && exact)
+
+                    Console.Write($"Quality of Randomized approximation algorithm: ");
+                    Console.ForegroundColor = approximate1Score == score ? ConsoleColor.DarkGreen : ConsoleColor.DarkYellow;
+                    approximation1QualityString = string.Format($"{ 100d * approximate1Score / score:F1}");
+                    Console.Write($"{approximation1QualityString}%");
+                    Console.ResetColor();
+                    Console.WriteLine($", approximate {approximate1Score}, exact {score}");
 #endif
 #if (approx1 && approx2)
                     switch (Math.Sign(approximate1Score - approximate2Score))
                     {
                         case -1:
                             Console.ForegroundColor = ConsoleColor.Magenta;
-                            Console.Write($"Limited Recursion wins by {approximate2Score - approximate1Score}");
+                            Console.Write($"Limited Recursion wins by {(approximate2Score - approximate1Score) * 100d / approximate1Score:F1}%");
                             break;
                         case 0:
                             //Console.ForegroundColor = ConsoleColor.Gray;
@@ -123,12 +123,14 @@ namespace SubgraphIsomorphismBenchmark
                             break;
                         case 1:
                             Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.Write($"Randomized choice wins by {approximate1Score - approximate2Score}");
+                            Console.Write($"Randomized choice wins by {(approximate1Score - approximate2Score) * 100d / approximate2Score:F1}%");
                             break;
                     }
                     Console.ResetColor();
 #endif
 
+                    Console.WriteLine();
+                    Console.WriteLine();
                     Console.WriteLine();
                     Console.WriteLine();
                     Console.WriteLine();
