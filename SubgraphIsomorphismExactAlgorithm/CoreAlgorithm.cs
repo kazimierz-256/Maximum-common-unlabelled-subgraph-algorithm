@@ -433,6 +433,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
                 {
                     // if there is hope to improve the score then recurse
+                    var removedVertices = new HashSet<int>();
                     while (
                         gOutsiderGraph.Vertices.Count > 0
                         && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges).CompareTo(bestScore) > 0d
@@ -442,7 +443,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // if there is an ambiguity then choose the vertex with the largest degree in the original graph
                         var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
                             v => gOutsiderGraph.VertexDegree(v),
-                            v => g.VertexDegree(v)
+                            v => removedVertices.Count(r => gConnectionExistance[r, v])
                             );
 
                         foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
@@ -496,6 +497,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             break;
 
                         gOutsiderGraph.RemoveVertex(gMatchingCandidate);
+                        removedVertices.Add(gMatchingCandidate);
                     }
                 }
             }

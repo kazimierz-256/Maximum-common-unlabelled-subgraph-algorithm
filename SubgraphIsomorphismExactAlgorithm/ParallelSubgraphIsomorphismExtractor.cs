@@ -1,8 +1,11 @@
-﻿using GraphDataStructure;
+﻿#define debug_
+
+using GraphDataStructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SubgraphIsomorphismExactAlgorithm
@@ -73,6 +76,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localSubgraphEdges = 0;
             var threadSynchronizingObject = new object();
             var hVerticesOrdered = h.Vertices.ToArray();
+#if debug
+            var left = gGraphs.Count * hVerticesOrdered.Length; 
+#endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount).CompareTo(localBestScore) > 0d)
                 Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
@@ -110,6 +116,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                         threadAlgorithm.Recurse(ref localBestScore);
                     }
+#if debug
+                    Console.WriteLine($"Left: {Interlocked.Add(ref left, -1)}"); 
+#endif
                 });
 
             // if requested to find G within H and could not find such then quit with dummy results

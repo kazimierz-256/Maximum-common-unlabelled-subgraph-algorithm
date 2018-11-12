@@ -1,6 +1,6 @@
 ﻿#define approx1
 #define approx2
-#define exact_
+#define exact
 using GraphDataStructure;
 using MathParser;
 using System;
@@ -35,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(15);
+            PrintBenchmark(18);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -47,7 +47,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.05d; density < 1d; density += 0.1d)
+            for (double density = 0.93d; density < 1d; density += 0.1d)
             //var density = 0.5d;
             {
                 var print = false;
@@ -227,7 +227,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3,
+                    (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 30,
                     0
                     );
                 sw.Stop();
