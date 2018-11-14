@@ -75,7 +75,7 @@ namespace Application
             return true;
         }
 
-        public static void Write(Graph g, string uri)
+        public static void Write(this Graph g, string uri)
         {
             var vertices = g.Vertices.ToArray();
 

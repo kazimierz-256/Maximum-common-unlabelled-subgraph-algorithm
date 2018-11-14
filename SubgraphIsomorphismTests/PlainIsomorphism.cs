@@ -16,53 +16,8 @@ namespace SubgraphIsomorphismTests
             {
                 for (int j = 3; j <= i; j++)
                 {
-                    var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + 4));
-                    var vertices2 = new HashSet<int>(Enumerable.Range(0, i + j + 3));
-
-                    var edges1 = new Dictionary<int, HashSet<int>>();
-                    var edges2 = new Dictionary<int, HashSet<int>>();
-
-                    foreach (var vertex in vertices1)
-                        edges1.Add(vertex, new HashSet<int>());
-                    foreach (var vertex in vertices2)
-                        edges2.Add(vertex, new HashSet<int>());
-
-                    void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
-                    {
-                        edges[a].Add(b);
-                        edges[b].Add(a);
-                    }
-
-                    // construct clique 1 and 2
-                    for (int i1 = 0; i1 < i; i1++)
-                        for (int i1helper = 0; i1helper < i1; i1helper++)
-                        {
-                            connect(edges1, i1, i1helper);
-                            connect(edges2, i1, i1helper);
-                        }
-
-                    for (int j1 = i; j1 < i + j; j1++)
-                        for (int j1helper = i; j1helper < j1; j1helper++)
-                        {
-                            connect(edges1, j1, j1helper);
-                            connect(edges2, j1, j1helper);
-                        }
-
-                    connect(edges1, 0, i + j);
-                    connect(edges1, i + j, i + j + 1);
-                    connect(edges1, i + j + 1, i + j + 2);
-                    connect(edges1, i + j + 2, i + j + 3);
-                    connect(edges1, i + j + 3, i);
-
-                    connect(edges2, 0, i + j);
-                    connect(edges2, i + j, i + j + 1);
-                    connect(edges2, i + j + 1, i + j + 2);
-                    connect(edges2, i + j + 2, i);
-
-                    // shuffle them
-
-                    var g = new Graph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + 5).Permute(0);
-                    var h = new Graph(edges2, vertices2, i * (i - 1) / 2 + j * (j - 1) / 2 + 4).Permute(1);
+                    var g = GraphFactory.GenerateCliquesConnectedByChain(i, j, 5).Permute(0);
+                    var h = GraphFactory.GenerateCliquesConnectedByChain(i, j, 4).Permute(1);
 
                     // verify result
 
@@ -436,25 +391,6 @@ namespace SubgraphIsomorphismTests
             foreach (var hVertex1 in hToG.Keys)
                 foreach (var hVertex2 in hToG.Keys.Where(vertex => vertex != hVertex1))
                     Assert.Equal(h.AreVerticesConnected(hVertex1, hVertex2), g.AreVerticesConnected(hToG[hVertex1], hToG[hVertex2]));
-        }
-
-        private void VerifyFullSubgraphIsomorphism(Graph g, Graph h, Dictionary<int, int> gToH, Dictionary<int, int> hToG)
-        {
-            // all edges in g exist in h
-            foreach (var connection in g.Neighbours)
-            {
-                var gFromVertex = connection.Key;
-                foreach (var gToVertex in connection.Value)
-                    Assert.True(h.AreVerticesConnected(gToH[gFromVertex], gToH[gToVertex]));
-            }
-
-            // all edges in h exsist in g
-            foreach (var connection in h.Neighbours)
-            {
-                var hFromVertex = connection.Key;
-                foreach (var hToVertex in connection.Value)
-                    Assert.True(g.AreVerticesConnected(hToG[hFromVertex], hToG[hToVertex]));
-            }
         }
     }
 }

@@ -31,16 +31,16 @@ namespace SubgraphIsomorphismExactAlgorithm
             var gMax = gArgument.Vertices.Max();
             var hMax = hArgument.Vertices.Max();
 
-            var gConnectionExistance = new bool[gMax + 1, gMax + 1];
-            var hConnectionExistance = new bool[hMax + 1, hMax + 1];
+            var gConnectionExistence = new bool[gMax + 1, gMax + 1];
+            var hConnectionExistence = new bool[hMax + 1, hMax + 1];
 
             foreach (var kvp in gArgument.Neighbours)
                 foreach (var vertexTo in kvp.Value)
-                    gConnectionExistance[kvp.Key, vertexTo] = true;
+                    gConnectionExistence[kvp.Key, vertexTo] = true;
 
             foreach (var kvp in hArgument.Neighbours)
                 foreach (var vertexTo in kvp.Value)
-                    hConnectionExistance[kvp.Key, vertexTo] = true;
+                    hConnectionExistence[kvp.Key, vertexTo] = true;
 
 
             var batches = Environment.ProcessorCount * 10;
@@ -76,8 +76,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     ApproximateOptimalSubgraph(
                         gArgument.Vertices,
                         hArgument.Vertices,
-                        gConnectionExistance,
-                        hConnectionExistance,
+                        gConnectionExistence,
+                        hConnectionExistence,
                         graphScoringFunction,
                         new Random(valuationIndex),
                         out var localScore,
@@ -124,8 +124,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         private static void ApproximateOptimalSubgraph(
             HashSet<int> gVertices,
             HashSet<int> hVertices,
-            bool[,] gConnectionExistance,
-            bool[,] hConnectionExistance,
+            bool[,] gConnectionExistence,
+            bool[,] hConnectionExistence,
             Func<int, int, double> graphScoringFunction,
             Random random,
             out double bestScore,
@@ -171,8 +171,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         hOutsiders = new HashSet<int>(hVertices),
                         totalNumberOfEdgesInSubgraph = 0,
 
-                        gConnectionExistance = gConnectionExistance,
-                        hConnectionExistance = hConnectionExistance,
+                        gConnectionExistence = gConnectionExistence,
+                        hConnectionExistence = hConnectionExistence,
                     };
 
                     stateToImport.gOutsiders.Remove(gCandidate);

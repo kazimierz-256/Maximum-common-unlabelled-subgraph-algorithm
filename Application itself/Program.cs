@@ -191,12 +191,13 @@ namespace Application
                     Console.WriteLine("Indices in the first row and first column stand for indices of vertices in the relevant graph.");
                     Console.WriteLine("Green indicees belong to the isomorphic subgraph and are ordered so that the mapping between the vertices between two subgraphs becomes trivial to figure out.");
 
+                    var order = ghOptimalMapping.Keys.ToArray();
                     Console.WriteLine("Graph G:");
-                    g.PrintSubgraph(ghOptimalMapping.Keys.ToArray(), ghOptimalMapping, darkColour, lightColour);
+                    g.PrintSubgraph(order, ghOptimalMapping, darkColour, lightColour);
                     Console.WriteLine();
 
                     Console.WriteLine("Graph H:");
-                    h.PrintSubgraph(ghOptimalMapping.Keys.Select(key => ghOptimalMapping[key]).ToArray(), hgOptimalMapping, darkColour, lightColour);
+                    h.PrintSubgraph(order.Select(key => ghOptimalMapping[key]).ToArray(), hgOptimalMapping, darkColour, lightColour);
                     Console.WriteLine();
                 }
                 catch (Exception e)

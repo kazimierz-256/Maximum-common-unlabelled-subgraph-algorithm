@@ -7,6 +7,54 @@ namespace GraphDataStructure
 {
     public class GraphFactory
     {
+        public static Graph GenerateCliquesConnectedByChain(int i, int j, int chainLength)
+        {
+            if (chainLength < 2)
+                throw new Exception("The chain is too short, try at least 2 edges");
+
+            var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + chainLength - 1));
+            var edges1 = new Dictionary<int, HashSet<int>>();
+
+            foreach (var vertex in vertices1)
+                edges1.Add(vertex, new HashSet<int>());
+
+            void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
+            {
+                edges[a].Add(b);
+                edges[b].Add(a);
+            }
+
+            for (int i1 = 0; i1 < i; i1++)
+                for (int i1helper = 0; i1helper < i1; i1helper++)
+                    connect(edges1, i1, i1helper);
+
+            for (int j1 = i; j1 < i + j; j1++)
+                for (int j1helper = i; j1helper < j1; j1helper++)
+                    connect(edges1, j1, j1helper);
+
+            connect(edges1, 0, i + j);
+            for (int chain = 0; chain < chainLength - 2; chain++)
+                connect(edges1, i + j + chain, i + j + chain + 1);
+            connect(edges1, i + j + chainLength - 2, i);
+
+            return new Graph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + chainLength);
+        }
+        public static Graph GenerateCycle(int n)
+        {
+            var vertices = new HashSet<int>(Enumerable.Range(0, n));
+            var neighbours = new Dictionary<int, HashSet<int>>
+            {
+                { 0, new HashSet<int>() { 1 } }
+            };
+            for (int i = 0; i < n - 1; i++)
+            {
+                neighbours[i].Add(i + 1);
+                neighbours.Add(i + 1, new HashSet<int>() { i });
+            }
+            neighbours[n - 1].Add(0);
+            neighbours[0].Add(n - 1);
+            return new Graph(neighbours, vertices, n);
+        }
         public static Graph GenerateRandom(int n, double density, int generatingSeed)
         {
             var random = new Random(generatingSeed);
