@@ -1,4 +1,6 @@
-﻿using GraphDataStructure;
+﻿#define induced
+
+using GraphDataStructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -184,7 +186,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var hVertexInSubgraph = ghSingleMapping.Value;
                     var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
                     var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+#if induced
                     if (gConnection != hConnection)
+#else
+                    if (gConnection && gConnection != hConnection)
+#endif
                     {
                         candidatesTrulyIsomorphic = false;
                         break;
@@ -319,7 +325,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var hVertexInSubgraph = ghSingleMapping.Value;
                         var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
                         var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+#if induced
                         if (gConnection != hConnection)
+#else
+                        if (gConnection && gConnection != hConnection)
+#endif
                         {
                             candidatesTrulyIsomorphic = false;
                             break;
