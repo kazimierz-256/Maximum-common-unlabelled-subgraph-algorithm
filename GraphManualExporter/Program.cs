@@ -13,9 +13,11 @@ namespace GraphManualExporter
         static void Main(string[] args)
         {
             Graph g, h;
-            GenerateCliquesConnectedByChain(9, 8, out g, out h);
+            //GenerateCliquesConnectedByChain(9, 8, out g, out h);
             //GenerateRandomWithCycle(50, 14, out g, out h);
             //GenerateRandom0406(11, 11000, out g, out h);
+            //GenerateRandom0908(24, 23, out g, out h);
+            GenerateClebschPetersen(out g, out h);
 
             //Export("Random", g, h);
             Func<int, int, double> valuation = (v, e) => v + e;
@@ -30,8 +32,8 @@ namespace GraphManualExporter
                 out var gToH,
                 out var hToG,
                 disconnected,
-                false,
-                (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3
+                false
+                //(Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3
                 );
 #else
             SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
@@ -52,17 +54,30 @@ namespace GraphManualExporter
             g.PrintSubgraph(order, gToH);
             h.PrintSubgraph(order.Select(key => gToH[key]).ToArray(), hToG);
         }
+
+        private static void GenerateClebschPetersen(out Graph g, out Graph h)
+        {
+            g = GraphFactory.Generate5RegularClebschGraph().Permute(0);
+            h = GraphFactory.GeneratePetersenGraph().Permute(1);
+        }
+
         private static void GenerateRandom0406(int i, int j, out Graph g, out Graph h)
         {
             // random graph and a cycle
             g = GraphFactory.GenerateRandom(i, 0.4, 0);
             h = GraphFactory.GenerateRandom(j, 0.6, 1);
         }
+        private static void GenerateRandom0908(int i, int j, out Graph g, out Graph h)
+        {
+            // random graph and a cycle
+            g = GraphFactory.GenerateRandom(i, 0.9, 0);
+            h = GraphFactory.GenerateRandom(j, 0.8, 1);
+        }
         private static void GenerateRandomWithCycle(int i, int j, out Graph g, out Graph h)
         {
             // random graph and a cycle
             g = GraphFactory.GenerateRandom(i, 0.4, 0);
-            h = GraphFactory.GenerateCycle(j);
+            h = GraphFactory.GenerateCycle(j).Permute(1);
         }
         private static void GenerateCliquesConnectedByChain(int i, int j, out Graph g, out Graph h)
         {

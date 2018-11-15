@@ -7,37 +7,91 @@ namespace GraphDataStructure
 {
     public class GraphFactory
     {
+
+        private static void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
+        {
+            if (!edges.ContainsKey(a))
+                edges.Add(a, new HashSet<int>());
+            if (!edges.ContainsKey(b))
+                edges.Add(b, new HashSet<int>());
+
+            edges[a].Add(b);
+            edges[b].Add(a);
+        }
+
+        public static Graph Generate5RegularClebschGraph()
+        {
+            var vertices = new HashSet<int>(Enumerable.Range(0, 16));
+            var edges = new Dictionary<int, HashSet<int>>();
+            for (int i = 0; i < 5; i++)
+            {
+                connect(edges, i, (i + 1) % 5);
+                connect(edges, i, i + 5);
+            }
+
+            connect(edges, 5, 7);
+            connect(edges, 5, 8);
+            connect(edges, 6, 8);
+            connect(edges, 6, 9);
+            connect(edges, 7, 9);
+
+
+            for (int i = 10; i < 15; i++)
+            {
+                connect(edges, i, 15);
+                connect(edges, i, 5 + (i - 10));
+                connect(edges, i, 5 + ((i - 9) % 5));
+                connect(edges, i, (4 + (i - 10)) % 5);
+                connect(edges, i, (2 + (i - 10)) % 5);
+            }
+
+            return new Graph(edges, vertices, 5 + 5 + 5 + 5 * 5);
+        }
+
+        public static Graph GeneratePetersenGraph()
+        {
+
+            var vertices = new HashSet<int>(Enumerable.Range(0, 10));
+            var edges = new Dictionary<int, HashSet<int>>();
+            for (int i = 0; i < 5; i++)
+            {
+                connect(edges, i, (i + 1) % 5);
+                connect(edges, i, i + 5);
+            }
+
+            connect(edges, 5, 7);
+            connect(edges, 5, 8);
+            connect(edges, 6, 8);
+            connect(edges, 6, 9);
+            connect(edges, 7, 9);
+
+            return new Graph(edges, vertices, 15);
+        }
         public static Graph GenerateCliquesConnectedByChain(int i, int j, int chainLength)
         {
             if (chainLength < 2)
                 throw new Exception("The chain is too short, try at least 2 edges");
 
-            var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + chainLength - 1));
-            var edges1 = new Dictionary<int, HashSet<int>>();
+            var vertices = new HashSet<int>(Enumerable.Range(0, i + j + chainLength - 1));
+            var edges = new Dictionary<int, HashSet<int>>();
 
-            foreach (var vertex in vertices1)
-                edges1.Add(vertex, new HashSet<int>());
-
-            void connect(Dictionary<int, HashSet<int>> edges, int a, int b)
-            {
-                edges[a].Add(b);
-                edges[b].Add(a);
-            }
+            foreach (var vertex in vertices)
+                edges.Add(vertex, new HashSet<int>());
 
             for (int i1 = 0; i1 < i; i1++)
                 for (int i1helper = 0; i1helper < i1; i1helper++)
-                    connect(edges1, i1, i1helper);
+                    connect(edges, i1, i1helper);
 
             for (int j1 = i; j1 < i + j; j1++)
                 for (int j1helper = i; j1helper < j1; j1helper++)
-                    connect(edges1, j1, j1helper);
+                    connect(edges, j1, j1helper);
 
-            connect(edges1, 0, i + j);
+            connect(edges, 0, i + j);
             for (int chain = 0; chain < chainLength - 2; chain++)
-                connect(edges1, i + j + chain, i + j + chain + 1);
-            connect(edges1, i + j + chainLength - 2, i);
+                connect(edges, i + j + chain, i + j + chain + 1);
+            connect(edges, i + j + chainLength - 2, i);
 
-            return new Graph(edges1, vertices1, i * (i - 1) / 2 + j * (j - 1) / 2 + chainLength);
+            return new Graph(edges, vertices, i * (i - 1) / 2 + j * (j - 1) / 2 + chainLength);
         }
         public static Graph GenerateCycle(int n)
         {
