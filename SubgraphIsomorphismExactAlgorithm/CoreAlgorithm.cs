@@ -391,7 +391,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findGraphGinH)
+                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)).CompareTo(bestScore) > 0d)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingCandidate);
                     deepness += 1;

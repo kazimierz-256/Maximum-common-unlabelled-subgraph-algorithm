@@ -12,48 +12,62 @@ namespace GraphManualExporter
     {
         static void Main(string[] args)
         {
-            //ExportGraphs1(9, 8, out var g, out var h);
-            //ExportGraphs2(50, 14, out var g, out var h);
-            ExportGraphs3(11, 11000, out var g, out var h);
+            Graph g, h;
+            GenerateCliquesConnectedByChain(9, 8, out g, out h);
+            //GenerateRandomWithCycle(50, 14, out g, out h);
+            //GenerateRandom0406(11, 11000, out g, out h);
 
+            //Export("Random", g, h);
+            Func<int, int, double> valuation = (v, e) => v + e;
+            var disconnected = true;
+#if true
             ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                 g,
                 h,
-                (vertices, edges) => vertices + edges,
+                valuation,
                 out var score,
                 out var subgraphEdges,
                 out var gToH,
                 out var hToG,
+                disconnected,
                 false,
-                false
+                (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3
                 );
+#else
+            SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
+                    g,
+                    h,
+                    valuation,
+                    out var score,
+                    out var subgraphEdges,
+                    out var gToH,
+                    out var hToG,
+                    disconnected,
+                    false,
+                    100000
+                    );
+#endif
 
             var order = gToH.Keys.ToArray();
             g.PrintSubgraph(order, gToH);
             h.PrintSubgraph(order.Select(key => gToH[key]).ToArray(), hToG);
         }
-        private static void ExportGraphs3(int i, int j, out Graph g, out Graph h)
+        private static void GenerateRandom0406(int i, int j, out Graph g, out Graph h)
         {
             // random graph and a cycle
             g = GraphFactory.GenerateRandom(i, 0.4, 0);
             h = GraphFactory.GenerateRandom(j, 0.6, 1);
-
-            Export("Random", g, h);
         }
-        private static void ExportGraphs2(int i, int j, out Graph g, out Graph h)
+        private static void GenerateRandomWithCycle(int i, int j, out Graph g, out Graph h)
         {
             // random graph and a cycle
             g = GraphFactory.GenerateRandom(i, 0.4, 0);
             h = GraphFactory.GenerateCycle(j);
-
-            Export("Finding_cycles", g, h);
         }
-        private static void ExportGraphs1(int i, int j, out Graph g, out Graph h)
+        private static void GenerateCliquesConnectedByChain(int i, int j, out Graph g, out Graph h)
         {
             g = GraphFactory.GenerateCliquesConnectedByChain(i, j, 5);
             h = GraphFactory.GenerateCliquesConnectedByChain(i, j, 4);
-
-            Export("Discovering_cliques_connected_by_a_chain", g, h);
         }
 
         private static void Export(string foldername, Graph g, Graph h)
