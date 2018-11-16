@@ -409,7 +409,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     Recurse(ref bestScore);
 
                     deepness -= 1;
-                    g.RestoreVertex(gMatchingCandidate, gRestoreOperation);
+                    g.AddVertex(gMatchingCandidate, gRestoreOperation);
                 }
                 gEnvelope.Add(gMatchingCandidate);
                 // the procedure has left the recursion step having the internal state unchanged

@@ -80,7 +80,7 @@ namespace GraphDataStructure
         }
 
         // note: this does not copy it reassigns
-        public void RestoreVertex(int restoreVertex, HashSet<int> restoreNeighbours)
+        public void AddVertex(int restoreVertex, HashSet<int> restoreNeighbours)
         {
             Vertices.Add(restoreVertex);
             if (restoreNeighbours != null)
