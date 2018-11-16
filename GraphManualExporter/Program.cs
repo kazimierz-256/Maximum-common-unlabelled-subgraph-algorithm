@@ -18,7 +18,7 @@ namespace GraphManualExporter
             //GenerateRandom09Petersen(200, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);
             //GenerateClebschPetersen(out g, out h);
-            //GenerateCopyWithRedundant(21, 3, out g, out h);
+            GenerateCopyWithRedundant(21, 3, out g, out h);
 
             Func<int, int, double> valuation = (v, e) => v + e;
             var disconnected = false;
