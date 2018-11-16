@@ -15,10 +15,10 @@ namespace GraphManualExporter
             Graph g, h;
             //GenerateCliquesConnectedByChain(9, 8, out g, out h);
             //GenerateRandomWithCycle(50, 14, out g, out h);
-            //GenerateRandom0406(11, 11000, out g, out h);
+            //GenerateRandom09Petersen(200, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);
             //GenerateClebschPetersen(out g, out h);
-            GenerateCopyWithRedundant(21, 3, out g, out h);
+            //GenerateCopyWithRedundant(21, 3, out g, out h);
 
             Func<int, int, double> valuation = (v, e) => v + e;
             var disconnected = false;
@@ -74,11 +74,11 @@ namespace GraphManualExporter
             Export("Clebsch_Petersen", g, h);
         }
 
-        private static void GenerateRandom0406(int i, int j, out Graph g, out Graph h)
+        private static void GenerateRandom09Petersen(int i, out Graph g, out Graph h)
         {
-            g = GraphFactory.GenerateRandom(i, 0.4, 0);
-            h = GraphFactory.GenerateRandom(j, 0.6, 1);
-            Export("Random_04_06", g, h);
+            g = GraphFactory.GeneratePetersenGraph();
+            h = GraphFactory.GenerateRandom(i, 0.9, 1);
+            Export("Random_Petersen_06", g, h);
         }
         private static void GenerateRandom0908(int i, int j, out Graph g, out Graph h)
         {
