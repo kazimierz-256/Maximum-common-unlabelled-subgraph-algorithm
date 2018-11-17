@@ -293,7 +293,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         locallyIsomorphic = true;
                         foreach (var gMap in ghMapping)
                         {
+#if induced
                             if (gConnectionExistence[gCan, gMap.Key] != hConnectionExistence[hCan, gMap.Value])
+#else
+                            if (gConnectionExistence[gCan, gMap.Key] && !hConnectionExistence[hCan, gMap.Value])
+#endif
                             {
                                 locallyIsomorphic = false;
                                 break;
@@ -328,7 +332,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gMatchingCandidate = gCan;
                         }
                     }
-                } 
+                }
                 #endregion
 
                 #region G setup
@@ -372,7 +376,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 #if induced
                         if (gConnection != hConnection)
 #else
-                        if (gConnection && gConnection != hConnection)
+                        if (gConnection && !hConnection)
 #endif
                         {
                             locallyIsomorphic = false;

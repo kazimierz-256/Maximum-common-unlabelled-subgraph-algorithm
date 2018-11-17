@@ -21,7 +21,6 @@ namespace SubgraphIsomorphismBenchmark
         private const string texApprox1Path = @"approximability1.tex";
         private const string csvApprox2Path = @"approximability2.csv";
         private const string texApprox2Path = @"approximability2.tex";
-        private static Func<int, int, double> criterion;
 
         static void Main(string[] args)
         {
