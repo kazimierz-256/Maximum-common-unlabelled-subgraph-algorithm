@@ -282,10 +282,21 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 // choose a vertex with smallest degree in the graph g
                 // if there is ambiguity then choose the one with least connections with the existing subgraph
-                var gMatchingCandidate = gEnvelope.ArgMax(
-                    v => -g.VertexDegree(v),
-                    v => -ghMapping.Count(map => gConnectionExistence[map.Key, v])
-                    );
+
+                var gMatchingCandidate = -1;
+                if (g.EdgeCount > g.Vertices.Count * (g.Vertices.Count - 1) / 2 * 0.9d)
+                    gMatchingCandidate = gEnvelope.ArgMax(
+                        v => -g.VertexDegree(v),
+                        v => -ghMapping.Count(map => gConnectionExistence[map.Key, v])
+                        );
+                else
+                    gMatchingCandidate = gEnvelope.ArgMax(
+                        v => -hEnvelope.Count(
+                            hCandidate => ghMapping.All(
+                                kvp => gConnectionExistence[v, kvp.Key] == hConnectionExistence[hCandidate, kvp.Value]
+                                )
+                            )
+                        );
 
                 #region G setup
                 gEnvelope.Remove(gMatchingCandidate);
@@ -312,35 +323,33 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 var hVerticesToRemoveFromEnvelope = new List<int>();
 
+
                 // a necessary in-place copy to an array since hEnvelope is modified during recursion
                 foreach (var hMatchingCandidate in hEnvelope.ToArray())
                 {
                     // verify mutual agreement connections of neighbours
-                    var candidatesTrulyIsomorphic = true;
+
+                    bool locallyIsomorphic = true;
                     var potentialNumberOfNewEdges = 0;
 
                     foreach (var ghSingleMapping in ghMapping)
                     {
-                        var gVertexInSubgraph = ghSingleMapping.Key;
-                        var hVertexInSubgraph = ghSingleMapping.Value;
-                        var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
-                        var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+                        var gConnection = gConnectionExistence[gMatchingCandidate, ghSingleMapping.Key];
+                        var hConnection = hConnectionExistence[hMatchingCandidate, ghSingleMapping.Value];
 #if induced
                         if (gConnection != hConnection)
 #else
                         if (gConnection && gConnection != hConnection)
 #endif
                         {
-                            candidatesTrulyIsomorphic = false;
+                            locallyIsomorphic = false;
                             break;
                         }
                         else if (gConnection)
-                        {
                             potentialNumberOfNewEdges += 1;
-                        }
                     }
 
-                    if (candidatesTrulyIsomorphic)
+                    if (locallyIsomorphic)
                     {
                         #region H setup
                         totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;

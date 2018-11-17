@@ -3,6 +3,7 @@ using GraphDataStructure;
 using SubgraphIsomorphismExactAlgorithm;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -10,19 +11,22 @@ namespace GraphManualExporter
 {
     class Program
     {
+        private static bool doExport = true;
         static void Main(string[] args)
         {
             Graph g, h;
-            GenerateCliquesConnectedByChain(100, 40, out g, out h);
-            //GenerateRandomWithCycle(50, 14, out g, out h);
-            //GenerateRandom09Petersen(200, out g, out h);
+            //GenerateCliquesConnectedByChain(1000, 500, out g, out h);
+            //GenerateRandomWithCycle(100, 10, out g, out h);
+            //GenerateRandom09Petersen(1000, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);
             //GenerateClebschPetersen(out g, out h);
-            //GenerateCopyWithRedundant(21, 3, out g, out h);
+            GenerateCopyWithRedundant(21, 3, out g, out h);
 
             Func<int, int, double> valuation = (v, e) => v + e;
             var disconnected = false;
-#if false
+            var time = new Stopwatch();
+            time.Start();
+#if true
             ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                 g,
                 h,
@@ -46,10 +50,11 @@ namespace GraphManualExporter
                     out var hToG,
                     disconnected,
                     false,
-                    1000
+                    100000
                     );
 #endif
-
+            time.Stop();
+            Console.WriteLine($"Score {score}, time {time.ElapsedMilliseconds:F2}");
             var order = gToH.Keys.ToArray();
             g.PrintSubgraph(order, gToH);
             h.PrintSubgraph(order.Select(key => gToH[key]).ToArray(), hToG);
@@ -102,17 +107,22 @@ namespace GraphManualExporter
 
         private static void Export(string foldername, Graph g, Graph h)
         {
-            if (g.Vertices.Count > h.Vertices.Count)
+            if (doExport)
             {
-                var tmp = h;
-                h = g;
-                g = tmp;
+
+
+                if (g.Vertices.Count > h.Vertices.Count)
+                {
+                    var tmp = h;
+                    h = g;
+                    g = tmp;
+                }
+
+                Directory.CreateDirectory(foldername);
+
+                g.Write($"{foldername}/{g.Vertices.Count}_{h.Vertices.Count}_A_Wojciechowski.csv");
+                h.Write($"{foldername}/{g.Vertices.Count}_{h.Vertices.Count}_B_Wojciechowski.csv");
             }
-
-            Directory.CreateDirectory(foldername);
-
-            g.Write($"{foldername}/{g.Vertices.Count}_{h.Vertices.Count}_A_Wojciechowski.csv");
-            h.Write($"{foldername}/{g.Vertices.Count}_{h.Vertices.Count}_B_Wojciechowski.csv");
         }
     }
 }
