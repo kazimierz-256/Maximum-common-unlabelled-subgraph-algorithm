@@ -158,7 +158,8 @@ namespace Application
                                 out ghOptimalMapping,
                                 out hgOptimalMapping,
                                 analyzeDisconnected,
-                                findExactMatch
+                                findExactMatch,
+                                1000
                                 );
                         }
                         else if (approximatingIndex == 2)
@@ -190,6 +191,8 @@ namespace Application
 
                     Console.WriteLine("Indices in the first row and first column stand for indices of vertices in the relevant graph.");
                     Console.WriteLine("Green indicees belong to the isomorphic subgraph and are ordered so that the mapping between the vertices between two subgraphs becomes trivial to figure out.");
+
+                    Console.WriteLine($"Achieved score: {bestScore}");
 
                     var order = ghOptimalMapping.Keys.ToArray();
                     Console.WriteLine("Graph G:");

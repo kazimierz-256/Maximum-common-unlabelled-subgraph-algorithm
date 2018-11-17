@@ -13,16 +13,16 @@ namespace GraphManualExporter
         static void Main(string[] args)
         {
             Graph g, h;
-            //GenerateCliquesConnectedByChain(9, 8, out g, out h);
+            GenerateCliquesConnectedByChain(109, 108, out g, out h);
             //GenerateRandomWithCycle(50, 14, out g, out h);
             //GenerateRandom09Petersen(200, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);
             //GenerateClebschPetersen(out g, out h);
-            GenerateCopyWithRedundant(21, 3, out g, out h);
+            //GenerateCopyWithRedundant(21, 3, out g, out h);
 
             Func<int, int, double> valuation = (v, e) => v + e;
             var disconnected = false;
-#if true
+#if false
             ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                 g,
                 h,
@@ -33,7 +33,7 @@ namespace GraphManualExporter
                 out var hToG,
                 disconnected,
                 false
-                //(Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3
+                //, (Math.Min(g.EdgeCount, h.EdgeCount) + Math.Min(g.Vertices.Count, h.Vertices.Count)) * 3
                 );
 #else
             SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
@@ -46,7 +46,7 @@ namespace GraphManualExporter
                     out var hToG,
                     disconnected,
                     false,
-                    100000
+                    1000
                     );
 #endif
 

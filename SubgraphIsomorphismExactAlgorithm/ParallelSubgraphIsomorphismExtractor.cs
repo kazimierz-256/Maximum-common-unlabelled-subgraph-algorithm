@@ -80,13 +80,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             var left = gGraphs.Count * hVerticesOrdered.Length; 
 #endif
 
-            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount).CompareTo(localBestScore) > 0d)
+            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
                 Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
 
-                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount).CompareTo(localBestScore) > 0d)
+                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) > localBestScore)
                     {
                         var threadAlgorithm = new CoreAlgorithm();
                         threadAlgorithm.InternalStateSetup(
@@ -97,10 +97,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graphScoringFunction,
                             (newScore, ghMap, hgMap, edges) =>
                               {
-                                  if (newScore.CompareTo(localBestScore) > 0)
+                                  if (newScore > localBestScore)
                                       // to increase the performance lock is performed only if there is a chance to improve the local result
                                       lock (threadSynchronizingObject)
-                                          if (newScore.CompareTo(localBestScore) > 0)
+                                          if (newScore > localBestScore)
                                           {
                                               localBestScore = newScore;
                                               // lazy evaluation for best performance

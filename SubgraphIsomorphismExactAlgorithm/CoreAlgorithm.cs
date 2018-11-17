@@ -258,7 +258,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
                 var resultingValuation = subgraphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
-                if (resultingValuation.CompareTo(bestScore) > 0d)
+                if (resultingValuation > bestScore)
                 {
                     // notify about the found solution (a local maximum) and provide a lazy evaluation method that creates the necessary mapping
                     newSolutionFoundNotificationAction?.Invoke(
@@ -269,7 +269,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (subgraphScoringFunction(g.Vertices.Count, g.EdgeCount).CompareTo(bestScore) > 0d)
+            else if (subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) > bestScore)
             {
                 // if there is hope for a larger score then recurse further
 
@@ -401,7 +401,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)).CompareTo(bestScore) > 0d)
+                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)) > bestScore)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingCandidate);
                     deepness += 1;
@@ -425,8 +425,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 gOutsiders.Count > 0
                 && hOutsiders.Count > 0
                 && (!findGraphGinH || gEnvelope.Count == 0)
-                && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
-                && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
+                && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) > bestScore)
+                && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) > bestScore)
                 )
             {
                 var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
@@ -440,13 +440,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutsiderGraph = tmp;
                 }
 
-                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges).CompareTo(bestScore) > 0d)
+                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) > bestScore)
                 {
                     // if there is hope to improve the score then recurse
                     var removedVertices = new HashSet<int>();
                     while (
                         gOutsiderGraph.Vertices.Count > 0
-                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges).CompareTo(bestScore) > 0d
+                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) > bestScore
                         )
                     {
                         // choose the candidate with largest degree within the graph of outsiders
