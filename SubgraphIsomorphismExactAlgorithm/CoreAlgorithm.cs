@@ -280,23 +280,56 @@ namespace SubgraphIsomorphismExactAlgorithm
                 else if (leftoverSteps > 0)
                     leftoverSteps -= 1;
 
-                // choose a vertex with smallest degree in the graph g
-                // if there is ambiguity then choose the one with least connections with the existing subgraph
-
+                #region Choosing the next candidate
                 var gMatchingCandidate = -1;
-                if (g.EdgeCount > g.Vertices.Count * (g.Vertices.Count - 1) / 2 * 0.9d)
-                    gMatchingCandidate = gEnvelope.ArgMax(
-                        v => -g.VertexDegree(v),
-                        v => -ghMapping.Count(map => gConnectionExistence[map.Key, v])
-                        );
-                else
-                    gMatchingCandidate = gEnvelope.ArgMax(
-                        v => -hEnvelope.Count(
-                            hCandidate => ghMapping.All(
-                                kvp => gConnectionExistence[v, kvp.Key] == hConnectionExistence[hCandidate, kvp.Value]
-                                )
+                var minScore = int.MaxValue;
+                var degree = int.MaxValue;
+                foreach (var gCan in gEnvelope)
+                {
+                    var score = 0;
+                    var locallyIsomorphic = true;
+                    foreach (var hCan in hEnvelope)
+                    {
+                        locallyIsomorphic = true;
+                        foreach (var gMap in ghMapping)
+                        {
+                            if (gConnectionExistence[gCan, gMap.Key] != hConnectionExistence[hCan, gMap.Value])
+                            {
+                                locallyIsomorphic = false;
+                                break;
+                            }
+                        }
+                        if (locallyIsomorphic)
+                        {
+                            score += 1;
+                            if (score > minScore)
+                                break;
+                        }
+                    }
+                    if (score < minScore)
+                    {
+                        minScore = score;
+                        degree = -1;
+                        gMatchingCandidate = gCan;
+                    }
+                    else if (score == minScore)
+                    {
+                        var thisDegree = g.VertexDegree(gCan);
+                        if (degree == -1)
+                        {
+                            degree = g.VertexDegree(gMatchingCandidate);
+                        }
+                        if (
+                            thisDegree < degree
+                            || (thisDegree == degree && ghMapping.Count(map => gConnectionExistence[map.Key, gCan]) < ghMapping.Count(map => gConnectionExistence[map.Key, gMatchingCandidate]))
                             )
-                        );
+                        {
+                            degree = thisDegree;
+                            gMatchingCandidate = gCan;
+                        }
+                    }
+                } 
+                #endregion
 
                 #region G setup
                 gEnvelope.Remove(gMatchingCandidate);
