@@ -20,8 +20,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             out int subgraphEdges,
             out Dictionary<int, int> ghOptimalMapping,
             out Dictionary<int, int> hgOptimalMapping,
-            bool analyzeDisconnectedComponents = false,
-            bool findGraphGinH = false,
+            bool analyzeDisconnectedComponents,
+            bool findGraphGinH,
             int heuristicStepsAvailable = -1,
             int heuristicDeepnessToStartCountdown = 0
             )

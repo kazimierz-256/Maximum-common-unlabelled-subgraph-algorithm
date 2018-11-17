@@ -13,7 +13,7 @@ namespace GraphManualExporter
         static void Main(string[] args)
         {
             Graph g, h;
-            GenerateCliquesConnectedByChain(109, 108, out g, out h);
+            GenerateCliquesConnectedByChain(100, 40, out g, out h);
             //GenerateRandomWithCycle(50, 14, out g, out h);
             //GenerateRandom09Petersen(200, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);

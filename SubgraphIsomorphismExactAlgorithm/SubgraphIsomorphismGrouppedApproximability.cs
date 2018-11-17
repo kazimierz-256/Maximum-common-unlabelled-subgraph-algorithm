@@ -18,9 +18,9 @@ namespace SubgraphIsomorphismExactAlgorithm
         out int subgraphEdges,
         out Dictionary<int, int> ghOptimalMapping,
         out Dictionary<int, int> hgOptimalMapping,
-        bool analyzeDisconnected = false,
-        bool findExactMatch = false,
-        int atLeastSteps = 200,
+        bool analyzeDisconnected,
+        bool findExactMatch,
+        int atLeastSteps,
         double milisecondTimeLimit = 0d,
         bool computeInParallel = true
         )

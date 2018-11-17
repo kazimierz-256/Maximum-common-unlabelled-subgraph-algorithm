@@ -247,7 +247,9 @@ namespace SubgraphIsomorphismTests
                         out var score,
                         out var subgraphEdges,
                         out var gToH,
-                        out var hToG
+                        out var hToG,
+                        false,
+                        false
                         );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
@@ -284,7 +286,10 @@ namespace SubgraphIsomorphismTests
                         out var score,
                         out var subgraphEdges,
                         out var gToH,
-                        out var hToG
+                        out var hToG,
+                        false,
+                        false,
+                        1000
                         );
                     Assert.NotEmpty(gToH);
                     Assert.NotEmpty(hToG);
@@ -318,7 +323,9 @@ namespace SubgraphIsomorphismTests
                                 out var score,
                                 out var subgraphEdges,
                                 out var gToH,
-                                out var hToG
+                                out var hToG,
+                                false,
+                                false
                                 );
                             SubgraphIsomorphismExactAlgorithm.SubgraphIsomorphismGrouppedApproximability.ApproximateOptimalSubgraph(
                                 g,
@@ -328,6 +335,9 @@ namespace SubgraphIsomorphismTests
                                 out var _,
                                 out var __,
                                 out var ___,
+                                false,
+                                false,
+                                1000,
                                 milisecondTimeLimit: 100d
                                 );
                             Assert.True(approximateScore <= score);
@@ -364,6 +374,8 @@ namespace SubgraphIsomorphismTests
                         out var subgraphEdges,
                         out var gToH,
                         out var hToG,
+                        false,
+                        false,
                         heuristicStepsAvailable: (g.EdgeCount + h.EdgeCount + g.Vertices.Count + h.Vertices.Count) * 20
                         );
                     Assert.NotEmpty(gToH);
