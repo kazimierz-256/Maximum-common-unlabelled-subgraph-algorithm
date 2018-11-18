@@ -342,6 +342,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         tmp = isomorphicCandidates;
                         isomorphicCandidates = isomorphicH;
                         isomorphicH = tmp;
+                        if (totalNumberOfCandidates == 0)
+                            break;
                     }
                     else if (score2 == minScore2)
                     {
@@ -364,93 +366,95 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 #endregion
 
-                #region G setup
                 gEnvelope.Remove(gMatchingCandidate);
-                var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
-                var gVerticesToRemoveFromEnvelope = new List<int>();
-
-                foreach (var gOutsider in gOutsiders)
+                if (totalNumberOfCandidates > 0)
                 {
-                    // if the vertex ia a neighbour of the matching vertex
-                    if (gConnectionExistence[gMatchingCandidate, gOutsider])
+                    #region G setup
+                    var edgeCountInSubgraphBackup = totalNumberOfEdgesInSubgraph;
+                    var gVerticesToRemoveFromEnvelope = new List<int>();
+
+                    foreach (var gOutsider in gOutsiders)
                     {
-                        // the outsider vertex is new to the envelope
-                        gEnvelope.Add(gOutsider);
-                        gVerticesToRemoveFromEnvelope.Add(gOutsider);
-                    }
-                }
-
-                // for minor performance improvement removal of the outsiders that are neighbours of gMatchingCandidate looks quite different from the way it is implemented in the TryMatchFromEnvelopeMutateInternalState procedure
-                foreach (var gNeighbour in gVerticesToRemoveFromEnvelope)
-                {
-                    gOutsiders.Remove(gNeighbour);
-                }
-                #endregion
-
-                var hVerticesToRemoveFromEnvelope = new List<int>();
-
-
-                // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
-                {
-                    var hMatchingCandidate = isomorphicH[hCandidate];
-                    // verify mutual agreement connections of neighbours
-
-                    var potentialNumberOfNewEdges = newEdges;
-
-                    #region H setup
-                    totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
-
-                    ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                    hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
-
-                    hEnvelope.Remove(hMatchingCandidate);
-
-                    hVerticesToRemoveFromEnvelope.Clear();
-                    foreach (var hNeighbour in hOutsiders)
-                        if (hConnectionExistence[hNeighbour, hMatchingCandidate])
+                        // if the vertex ia a neighbour of the matching vertex
+                        if (gConnectionExistence[gMatchingCandidate, gOutsider])
                         {
-                            hEnvelope.Add(hNeighbour);
-                            hVerticesToRemoveFromEnvelope.Add(hNeighbour);
+                            // the outsider vertex is new to the envelope
+                            gEnvelope.Add(gOutsider);
+                            gVerticesToRemoveFromEnvelope.Add(gOutsider);
+                        }
+                    }
+
+                    // for minor performance improvement removal of the outsiders that are neighbours of gMatchingCandidate looks quite different from the way it is implemented in the TryMatchFromEnvelopeMutateInternalState procedure
+                    foreach (var gNeighbour in gVerticesToRemoveFromEnvelope)
+                    {
+                        gOutsiders.Remove(gNeighbour);
+                    }
+                    #endregion
+
+                    var hVerticesToRemoveFromEnvelope = new List<int>();
+
+
+                    // a necessary in-place copy to an array since hEnvelope is modified during recursion
+                    for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
+                    {
+                        var hMatchingCandidate = isomorphicH[hCandidate];
+                        // verify mutual agreement connections of neighbours
+
+                        var potentialNumberOfNewEdges = newEdges;
+
+                        #region H setup
+                        totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
+
+                        ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
+                        hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+
+                        hEnvelope.Remove(hMatchingCandidate);
+
+                        hVerticesToRemoveFromEnvelope.Clear();
+                        foreach (var hNeighbour in hOutsiders)
+                            if (hConnectionExistence[hNeighbour, hMatchingCandidate])
+                            {
+                                hEnvelope.Add(hNeighbour);
+                                hVerticesToRemoveFromEnvelope.Add(hNeighbour);
+                            }
+
+                        foreach (var hNeighbour in hVerticesToRemoveFromEnvelope)
+                            hOutsiders.Remove(hNeighbour);
+
+                        deepness += 1;
+                        #endregion
+
+
+                        Recurse(ref bestScore);
+                        if (analyzeDisconnected)
+                            DisconnectComponentAndRecurse(ref bestScore);
+
+
+                        #region H cleanup
+                        deepness -= 1;
+                        foreach (var hVertex in hVerticesToRemoveFromEnvelope)
+                        {
+                            hEnvelope.Remove(hVertex);
+                            hOutsiders.Add(hVertex);
                         }
 
-                    foreach (var hNeighbour in hVerticesToRemoveFromEnvelope)
-                        hOutsiders.Remove(hNeighbour);
+                        hEnvelope.Add(hMatchingCandidate);
 
-                    deepness += 1;
-                    #endregion
+                        ghMapping.Remove(gMatchingCandidate);
+                        hgMapping.Remove(hMatchingCandidate);
 
+                        totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
+                        #endregion
 
-                    Recurse(ref bestScore);
-                    if (analyzeDisconnected)
-                        DisconnectComponentAndRecurse(ref bestScore);
-
-
-                    #region H cleanup
-                    deepness -= 1;
-                    foreach (var hVertex in hVerticesToRemoveFromEnvelope)
-                    {
-                        hEnvelope.Remove(hVertex);
-                        hOutsiders.Add(hVertex);
                     }
-
-                    hEnvelope.Add(hMatchingCandidate);
-
-                    ghMapping.Remove(gMatchingCandidate);
-                    hgMapping.Remove(hMatchingCandidate);
-
-                    totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
+                    #region G cleanup
+                    foreach (var gVertex in gVerticesToRemoveFromEnvelope)
+                    {
+                        gEnvelope.Remove(gVertex);
+                        gOutsiders.Add(gVertex);
+                    }
                     #endregion
-
                 }
-                #region G cleanup
-                foreach (var gVertex in gVerticesToRemoveFromEnvelope)
-                {
-                    gEnvelope.Remove(gVertex);
-                    gOutsiders.Add(gVertex);
-                }
-                #endregion
-
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
