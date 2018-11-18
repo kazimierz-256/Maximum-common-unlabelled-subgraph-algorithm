@@ -22,9 +22,9 @@ namespace GraphDataStructure
 
             var connections = new bool[g.Vertices.Count, g.Vertices.Count];
 
-            for (int i = 0; i < g.Vertices.Count; i++)
+            for (int i = 0; i < g.Vertices.Count; i+=1)
             {
-                for (int j = 0; j < i; j++)
+                for (int j = 0; j < i; j+=1)
                 {
                     connections[i, j] = connections[j, i] = g.AreVerticesConnected(ordering[i], ordering[j]);
                 }
@@ -32,7 +32,7 @@ namespace GraphDataStructure
 
             // print the array
             Console.Write(string.Empty.PadLeft(4));
-            for (int i = 0; i < connections.GetLength(0); i++)
+            for (int i = 0; i < connections.GetLength(0); i+=1)
             {
                 var indexIsInSubgraph = i < gSubgraphVertexOrder.Length;
                 Console.ForegroundColor = indexIsInSubgraph ? light : ConsoleColor.Gray;
@@ -40,14 +40,14 @@ namespace GraphDataStructure
                 Console.ResetColor();
             }
             Console.WriteLine();
-            for (int i = 0; i < g.Vertices.Count; i++)
+            for (int i = 0; i < g.Vertices.Count; i+=1)
             {
                 var indexIsInSubgraph = i < gSubgraphVertexOrder.Length;
                 if (indexIsInSubgraph)
                     Console.ForegroundColor = light;
                 Console.Write($"{ordering[i]}:".PadLeft(4));
                 Console.ResetColor();
-                for (int j = 0; j < g.Vertices.Count; j++)
+                for (int j = 0; j < g.Vertices.Count; j+=1)
                 {
                     var isInSubgraph = i < gSubgraphVertexOrder.Length && j < gSubgraphVertexOrder.Length;
                     if (j < i)

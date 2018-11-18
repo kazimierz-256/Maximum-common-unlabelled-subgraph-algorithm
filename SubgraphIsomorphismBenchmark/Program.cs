@@ -53,7 +53,7 @@ namespace SubgraphIsomorphismBenchmark
                 var msTime = 0d;
                 var approximation1QualityString = string.Empty;
                 var approximation2QualityString = string.Empty;
-                for (int i = 1; i <= iterations * 2 + 1; i++)
+                for (int i = 1; i <= iterations * 2 + 1; i+=1)
                 {
 #if (approx1 || approx2)
 

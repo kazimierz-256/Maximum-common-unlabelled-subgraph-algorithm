@@ -23,7 +23,7 @@ namespace GraphDataStructure
         {
             var vertices = new HashSet<int>(Enumerable.Range(0, 16));
             var edges = new Dictionary<int, HashSet<int>>();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i+=1)
             {
                 connect(edges, i, (i + 1) % 5);
                 connect(edges, i, i + 5);
@@ -36,7 +36,7 @@ namespace GraphDataStructure
             connect(edges, 7, 9);
 
 
-            for (int i = 10; i < 15; i++)
+            for (int i = 10; i < 15; i+=1)
             {
                 connect(edges, i, 15);
                 connect(edges, i, 5 + (i - 10));
@@ -53,7 +53,7 @@ namespace GraphDataStructure
 
             var vertices = new HashSet<int>(Enumerable.Range(0, 10));
             var edges = new Dictionary<int, HashSet<int>>();
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i+=1)
             {
                 connect(edges, i, (i + 1) % 5);
                 connect(edges, i, i + 5);
@@ -78,16 +78,16 @@ namespace GraphDataStructure
             foreach (var vertex in vertices)
                 edges.Add(vertex, new HashSet<int>());
 
-            for (int i1 = 0; i1 < i; i1++)
-                for (int i1helper = 0; i1helper < i1; i1helper++)
+            for (int i1 = 0; i1 < i; i1+=1)
+                for (int i1helper = 0; i1helper < i1; i1helper+=1)
                     connect(edges, i1, i1helper);
 
-            for (int j1 = i; j1 < i + j; j1++)
-                for (int j1helper = i; j1helper < j1; j1helper++)
+            for (int j1 = i; j1 < i + j; j1+=1)
+                for (int j1helper = i; j1helper < j1; j1helper+=1)
                     connect(edges, j1, j1helper);
 
             connect(edges, 0, i + j);
-            for (int chain = 0; chain < chainLength - 2; chain++)
+            for (int chain = 0; chain < chainLength - 2; chain+=1)
                 connect(edges, i + j + chain, i + j + chain + 1);
             connect(edges, i + j + chainLength - 2, i);
 
@@ -100,7 +100,7 @@ namespace GraphDataStructure
             {
                 { 0, new HashSet<int>() { 1 } }
             };
-            for (int i = 0; i < n - 1; i++)
+            for (int i = 0; i < n - 1; i+=1)
             {
                 neighbours[i].Add(i + 1);
                 neighbours.Add(i + 1, new HashSet<int>() { i });
@@ -114,9 +114,9 @@ namespace GraphDataStructure
             var random = new Random(generatingSeed);
             var neighbours = new Dictionary<int, HashSet<int>>();
             var edges = 0;
-            for (int i = 0; i < n - 1; i++)
+            for (int i = 0; i < n - 1; i+=1)
             {
-                for (int j = i + 1; j < n; j++)
+                for (int j = i + 1; j < n; j+=1)
                 {
                     if (random.NextDouble() < density)
                     {

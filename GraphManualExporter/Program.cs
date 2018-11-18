@@ -65,7 +65,7 @@ namespace GraphManualExporter
             g = GraphFactory.GenerateRandom(n, 0.5, 0);
             h = g.Permute(1);
             var random = new Random(0);
-            for (int j = 0; j < extra; j++)
+            for (int j = 0; j < extra; j+=1)
             {
                 h.AddVertex(n + j, new HashSet<int>(Enumerable.Range(0, n + j).Where(k => random.NextDouble() < 0.5)));
             }

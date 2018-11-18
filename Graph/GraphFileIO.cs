@@ -45,9 +45,9 @@ namespace Application
                 var vertices = new HashSet<int>(Enumerable.Range(0, v));
                 var neighbours = new Dictionary<int, HashSet<int>>();
 
-                for (int i = 0; i < v; i++)
+                for (int i = 0; i < v; i+=1)
                 {
-                    for (int j = 0; j < v; j++)
+                    for (int j = 0; j < v; j+=1)
                     {
                         if (boolList[i * v + j])
                         {
@@ -82,9 +82,9 @@ namespace Application
             var lines = new string[vertices.Length];
 
             var builder = new StringBuilder();
-            for (int i = 0; i < vertices.Length; i++)
+            for (int i = 0; i < vertices.Length; i+=1)
             {
-                for (int j = 0; j < vertices.Length; j++)
+                for (int j = 0; j < vertices.Length; j+=1)
                 {
                     if (g.AreVerticesConnected(vertices[i], vertices[j]))
                     {

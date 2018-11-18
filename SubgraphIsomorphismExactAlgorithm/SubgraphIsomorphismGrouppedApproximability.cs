@@ -112,7 +112,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (computeInParallel)
                 Parallel.For(0, batches, batch => batchDo(batch));
             else
-                for (int batch = 0; batch < batches; batch++)
+                for (int batch = 0; batch < batches; batch+=1)
                     batchDo(batch);
 
             bestScore = localBestScore;

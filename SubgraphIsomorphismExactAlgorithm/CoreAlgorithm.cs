@@ -282,22 +282,23 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 #region Choosing the next candidate
                 var gMatchingCandidate = -1;
-                var minScore = int.MaxValue;
+                var totalNumberOfCandidates = int.MaxValue;
+                var minScore2 = int.MaxValue;
                 var degree = -1;
                 var isomorphicH = new int[hEnvelope.Count];
                 var isomorphicCandidates = new int[hEnvelope.Count];
                 var potentialNewEdges = new int[hEnvelope.Count];
                 var potentialNewEdgesCandidates = new int[hEnvelope.Count];
-                var i = 0;
                 var newEdges = 0;
                 var gConnection = false;
                 var tmp = potentialNewEdges;
-                var score = 0;
+                var localNumberOfCandidates = 0;
+                var score2 = 0;
                 var locallyIsomorphic = true;
                 foreach (var gCan in gEnvelope)
                 {
-                    score = 0;
-                    i = 0;
+                    localNumberOfCandidates = 0;
+                    score2 = 0;
                     foreach (var hCan in hEnvelope)
                     {
                         locallyIsomorphic = true;
@@ -319,17 +320,19 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                         if (locallyIsomorphic)
                         {
-                            score += 1;
-                            if (score > minScore)
+                            isomorphicCandidates[localNumberOfCandidates] = hCan;
+                            potentialNewEdgesCandidates[localNumberOfCandidates] = newEdges;
+                            localNumberOfCandidates += 1;
+                            score2 += h.VertexDegree(hCan);
+                            if (score2 > minScore2)
                                 break;
-                            isomorphicCandidates[i] = hCan;
-                            potentialNewEdgesCandidates[i] = newEdges;
-                            i += 1;
                         }
                     }
-                    if (score < minScore)
+
+                    if (score2 < minScore2)
                     {
-                        minScore = score;
+                        totalNumberOfCandidates = localNumberOfCandidates;
+                        minScore2 = score2;
                         degree = -1;
                         gMatchingCandidate = gCan;
 
@@ -340,7 +343,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         potentialNewEdgesCandidates = potentialNewEdges;
                         potentialNewEdges = tmp;
                     }
-                    else if (score == minScore)
+                    else if (score2 == minScore2)
                     {
                         var thisDegree = g.VertexDegree(gCan);
                         if (degree == -1)
@@ -348,6 +351,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         if (thisDegree < degree || (thisDegree == degree && ghMapping.Count(map => gConnectionExistence[map.Key, gCan]) < ghMapping.Count(map => gConnectionExistence[map.Key, gMatchingCandidate])))
                         {
+                            totalNumberOfCandidates = localNumberOfCandidates;
                             degree = thisDegree;
                             gMatchingCandidate = gCan;
 
@@ -389,7 +393,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
                 // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                for (int hCandidate = 0; hCandidate < minScore; hCandidate++)
+                for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
                 {
                     var hMatchingCandidate = isomorphicH[hCandidate];
                     // verify mutual agreement connections of neighbours
