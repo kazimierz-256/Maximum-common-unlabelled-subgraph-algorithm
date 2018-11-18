@@ -15,18 +15,18 @@ namespace GraphManualExporter
         static void Main(string[] args)
         {
             Graph g, h;
-            //GenerateCliquesConnectedByChain(1000, 500, out g, out h);
+            GenerateCliquesConnectedByChain(10, 4, out g, out h);
             //GenerateRandomWithCycle(100, 10, out g, out h);
             //GenerateRandom09Petersen(1000, out g, out h);
             //GenerateRandom0908(24, 23, out g, out h);
             //GenerateClebschPetersen(out g, out h);
-            GenerateCopyWithRedundant(21, 3, out g, out h);
+            //GenerateCopyWithRedundant(15, 6, out g, out h);
 
             Func<int, int, double> valuation = (v, e) => v + e;
-            var disconnected = false;
+            var disconnected = true;
             var time = new Stopwatch();
             time.Start();
-#if true
+#if false
             ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                 g,
                 h,
@@ -50,11 +50,11 @@ namespace GraphManualExporter
                     out var hToG,
                     disconnected,
                     false,
-                    100000
+                    1000
                     );
 #endif
             time.Stop();
-            Console.WriteLine($"Score {score}, time {time.ElapsedMilliseconds:F2}");
+            Console.WriteLine($"Score {score}, Time {time.ElapsedMilliseconds:F2}ms");
             var order = gToH.Keys.ToArray();
             g.PrintSubgraph(order, gToH);
             h.PrintSubgraph(order.Select(key => gToH[key]).ToArray(), hToG);

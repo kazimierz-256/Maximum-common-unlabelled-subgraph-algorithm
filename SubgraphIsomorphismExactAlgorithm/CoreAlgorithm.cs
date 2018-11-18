@@ -284,30 +284,48 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gMatchingCandidate = -1;
                 var minScore = int.MaxValue;
                 var degree = int.MaxValue;
+                var isomorphicH = new int[hEnvelope.Count];
+                var isomorphicCandidates = new int[hEnvelope.Count];
+                var potentialNewEdges = new int[hEnvelope.Count];
+                var potentialNewEdgesCandidates = new int[hEnvelope.Count];
+                var i = 0;
+                var newEdges = 0;
+                var gConnection = false;
+                var tmp = potentialNewEdges;
+                var score = 0;
+                var locallyIsomorphic = true;
                 foreach (var gCan in gEnvelope)
                 {
-                    var score = 0;
-                    var locallyIsomorphic = true;
+                    score = 0;
+                    locallyIsomorphic = true;
+                    i = 0;
                     foreach (var hCan in hEnvelope)
                     {
                         locallyIsomorphic = true;
+                        newEdges = 0;
                         foreach (var gMap in ghMapping)
                         {
+                            gConnection = gConnectionExistence[gCan, gMap.Key];
 #if induced
-                            if (gConnectionExistence[gCan, gMap.Key] != hConnectionExistence[hCan, gMap.Value])
-#else
-                            if (gConnectionExistence[gCan, gMap.Key] && !hConnectionExistence[hCan, gMap.Value])
+                            if (gConnection != hConnectionExistence[hCan, gMap.Value])
+#else                           
+                            if (gConnection && !hConnectionExistence[hCan, gMap.Value])
 #endif
                             {
                                 locallyIsomorphic = false;
                                 break;
                             }
+                            if (gConnection)
+                                newEdges += 1;
                         }
                         if (locallyIsomorphic)
                         {
                             score += 1;
                             if (score > minScore)
                                 break;
+                            isomorphicCandidates[i] = hCan;
+                            potentialNewEdgesCandidates[i] = newEdges;
+                            i += 1;
                         }
                     }
                     if (score < minScore)
@@ -315,21 +333,31 @@ namespace SubgraphIsomorphismExactAlgorithm
                         minScore = score;
                         degree = -1;
                         gMatchingCandidate = gCan;
+
+                        tmp = isomorphicCandidates;
+                        isomorphicCandidates = isomorphicH;
+                        isomorphicH = tmp;
+                        tmp = potentialNewEdgesCandidates;
+                        potentialNewEdgesCandidates = potentialNewEdges;
+                        potentialNewEdges = tmp;
                     }
                     else if (score == minScore)
                     {
                         var thisDegree = g.VertexDegree(gCan);
                         if (degree == -1)
-                        {
                             degree = g.VertexDegree(gMatchingCandidate);
-                        }
-                        if (
-                            thisDegree < degree
-                            || (thisDegree == degree && ghMapping.Count(map => gConnectionExistence[map.Key, gCan]) < ghMapping.Count(map => gConnectionExistence[map.Key, gMatchingCandidate]))
-                            )
+
+                        if (thisDegree < degree || (thisDegree == degree && ghMapping.Count(map => gConnectionExistence[map.Key, gCan]) < ghMapping.Count(map => gConnectionExistence[map.Key, gMatchingCandidate])))
                         {
                             degree = thisDegree;
                             gMatchingCandidate = gCan;
+
+                            tmp = isomorphicCandidates;
+                            isomorphicCandidates = isomorphicH;
+                            isomorphicH = tmp;
+                            tmp = potentialNewEdgesCandidates;
+                            potentialNewEdgesCandidates = potentialNewEdges;
+                            potentialNewEdges = tmp;
                         }
                     }
                 }
@@ -362,79 +390,57 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
                 // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                foreach (var hMatchingCandidate in hEnvelope.ToArray())
+                for (int hCandidate = 0; hCandidate < minScore; hCandidate++)
                 {
+                    var hMatchingCandidate = isomorphicH[hCandidate];
                     // verify mutual agreement connections of neighbours
 
-                    bool locallyIsomorphic = true;
-                    var potentialNumberOfNewEdges = 0;
+                    var potentialNumberOfNewEdges = potentialNewEdges[hCandidate];
 
-                    foreach (var ghSingleMapping in ghMapping)
-                    {
-                        var gConnection = gConnectionExistence[gMatchingCandidate, ghSingleMapping.Key];
-                        var hConnection = hConnectionExistence[hMatchingCandidate, ghSingleMapping.Value];
-#if induced
-                        if (gConnection != hConnection)
-#else
-                        if (gConnection && !hConnection)
-#endif
+                    #region H setup
+                    totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
+
+                    ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
+                    hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+
+                    hEnvelope.Remove(hMatchingCandidate);
+
+                    hVerticesToRemoveFromEnvelope.Clear();
+                    foreach (var hNeighbour in hOutsiders)
+                        if (hConnectionExistence[hNeighbour, hMatchingCandidate])
                         {
-                            locallyIsomorphic = false;
-                            break;
+                            hEnvelope.Add(hNeighbour);
+                            hVerticesToRemoveFromEnvelope.Add(hNeighbour);
                         }
-                        else if (gConnection)
-                            potentialNumberOfNewEdges += 1;
+
+                    foreach (var hNeighbour in hVerticesToRemoveFromEnvelope)
+                        hOutsiders.Remove(hNeighbour);
+
+                    deepness += 1;
+                    #endregion
+
+
+                    Recurse(ref bestScore);
+                    if (analyzeDisconnected)
+                        DisconnectComponentAndRecurse(ref bestScore);
+
+
+                    #region H cleanup
+                    deepness -= 1;
+                    foreach (var hVertex in hVerticesToRemoveFromEnvelope)
+                    {
+                        hEnvelope.Remove(hVertex);
+                        hOutsiders.Add(hVertex);
                     }
 
-                    if (locallyIsomorphic)
-                    {
-                        #region H setup
-                        totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
+                    hEnvelope.Add(hMatchingCandidate);
 
-                        ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                        hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+                    ghMapping.Remove(gMatchingCandidate);
+                    hgMapping.Remove(hMatchingCandidate);
 
-                        hEnvelope.Remove(hMatchingCandidate);
+                    totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
+                    #endregion
 
-                        hVerticesToRemoveFromEnvelope.Clear();
-
-                        foreach (var hNeighbour in hOutsiders)
-                        {
-                            if (hConnectionExistence[hNeighbour, hMatchingCandidate])
-                            {
-                                hEnvelope.Add(hNeighbour);
-                                hVerticesToRemoveFromEnvelope.Add(hNeighbour);
-                            }
-                        }
-                        foreach (var hNeighbour in hVerticesToRemoveFromEnvelope)
-                        {
-                            hOutsiders.Remove(hNeighbour);
-                        }
-                        deepness += 1;
-                        #endregion
-
-
-                        Recurse(ref bestScore);
-                        if (analyzeDisconnected)
-                            DisconnectComponentAndRecurse(ref bestScore);
-
-
-                        #region H cleanup
-                        deepness -= 1;
-                        foreach (var hVertex in hVerticesToRemoveFromEnvelope)
-                        {
-                            hEnvelope.Remove(hVertex);
-                            hOutsiders.Add(hVertex);
-                        }
-
-                        hEnvelope.Add(hMatchingCandidate);
-
-                        ghMapping.Remove(gMatchingCandidate);
-                        hgMapping.Remove(hMatchingCandidate);
-
-                        totalNumberOfEdgesInSubgraph = edgeCountInSubgraphBackup;
-                        #endregion
-                    }
                 }
                 #region G cleanup
                 foreach (var gVertex in gVerticesToRemoveFromEnvelope)
