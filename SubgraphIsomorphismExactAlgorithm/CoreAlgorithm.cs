@@ -283,7 +283,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #region Choosing the next candidate
                 var gMatchingCandidate = -1;
                 var minScore = int.MaxValue;
-                var degree = int.MaxValue;
+                var degree = -1;
                 var isomorphicH = new int[hEnvelope.Count];
                 var isomorphicCandidates = new int[hEnvelope.Count];
                 var potentialNewEdges = new int[hEnvelope.Count];
@@ -297,7 +297,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 foreach (var gCan in gEnvelope)
                 {
                     score = 0;
-                    locallyIsomorphic = true;
                     i = 0;
                     foreach (var hCan in hEnvelope)
                     {
