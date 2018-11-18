@@ -283,32 +283,33 @@ namespace SubgraphIsomorphismExactAlgorithm
                 #region Choosing the next candidate
                 var gMatchingCandidate = -1;
                 var totalNumberOfCandidates = int.MaxValue;
+                var isomorphicH = new int[hEnvelope.Count];
+                var newEdges = 0;
                 var minScore2 = int.MaxValue;
                 var degree = -1;
-                var isomorphicH = new int[hEnvelope.Count];
                 var isomorphicCandidates = new int[hEnvelope.Count];
-                var potentialNewEdges = new int[hEnvelope.Count];
-                var potentialNewEdgesCandidates = new int[hEnvelope.Count];
-                var newEdges = 0;
+                var edges = 0;
                 var gConnection = false;
-                var tmp = potentialNewEdges;
+                var tmp = isomorphicH;
                 var localNumberOfCandidates = 0;
                 var score2 = 0;
                 var locallyIsomorphic = true;
+
                 foreach (var gCan in gEnvelope)
                 {
                     localNumberOfCandidates = 0;
                     score2 = 0;
+                    edges = 0;
                     foreach (var hCan in hEnvelope)
                     {
                         locallyIsomorphic = true;
-                        newEdges = 0;
+                        var localEdges = 0;
                         foreach (var gMap in ghMapping)
                         {
                             gConnection = gConnectionExistence[gCan, gMap.Key];
 #if induced
                             if (gConnection != hConnectionExistence[hCan, gMap.Value])
-#else                           
+#else
                             if (gConnection && !hConnectionExistence[hCan, gMap.Value])
 #endif
                             {
@@ -316,12 +317,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 break;
                             }
                             if (gConnection)
-                                newEdges += 1;
+                                localEdges += 1;
                         }
+
                         if (locallyIsomorphic)
                         {
+                            edges = localEdges;
                             isomorphicCandidates[localNumberOfCandidates] = hCan;
-                            potentialNewEdgesCandidates[localNumberOfCandidates] = newEdges;
                             localNumberOfCandidates += 1;
                             score2 += h.VertexDegree(hCan);
                             if (score2 > minScore2)
@@ -335,13 +337,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         minScore2 = score2;
                         degree = -1;
                         gMatchingCandidate = gCan;
+                        newEdges = edges;
 
                         tmp = isomorphicCandidates;
                         isomorphicCandidates = isomorphicH;
                         isomorphicH = tmp;
-                        tmp = potentialNewEdgesCandidates;
-                        potentialNewEdgesCandidates = potentialNewEdges;
-                        potentialNewEdges = tmp;
                     }
                     else if (score2 == minScore2)
                     {
@@ -354,13 +354,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                             totalNumberOfCandidates = localNumberOfCandidates;
                             degree = thisDegree;
                             gMatchingCandidate = gCan;
+                            newEdges = edges;
 
                             tmp = isomorphicCandidates;
                             isomorphicCandidates = isomorphicH;
                             isomorphicH = tmp;
-                            tmp = potentialNewEdgesCandidates;
-                            potentialNewEdgesCandidates = potentialNewEdges;
-                            potentialNewEdges = tmp;
                         }
                     }
                 }
@@ -398,7 +396,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var hMatchingCandidate = isomorphicH[hCandidate];
                     // verify mutual agreement connections of neighbours
 
-                    var potentialNumberOfNewEdges = potentialNewEdges[hCandidate];
+                    var potentialNumberOfNewEdges = newEdges;
 
                     #region H setup
                     totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
