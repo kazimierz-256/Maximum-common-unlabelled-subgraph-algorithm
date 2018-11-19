@@ -53,11 +53,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             // repeat until the resulting graph is nonempty
             while (g.Vertices.Count > 0)
             {
-                var average = g.Vertices.Average(v => g.VertexDegree(v));
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
                 var gMatchingCandidate = g.Vertices.ArgMax(
-                    //v => new Random(v).NextDouble(),
-                    v => -Math.Abs(average - g.VertexDegree(v)),
+                    v => new Random(v).NextDouble(),
                     v => -g.VertexDegree(v),
                     v => -removedVertices.Count(r => gArgument.AreVerticesConnected(r, v))
                     );
