@@ -34,7 +34,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(23);
+            PrintBenchmark(22);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
