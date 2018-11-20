@@ -287,6 +287,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var newEdges = 0;
                 var minScore2 = int.MaxValue;
                 var degree = -1;
+                //var degree2 = -1;
                 var isomorphicCandidates = new int[hEnvelope.Count];
                 var edges = 0;
                 var gConnection = false;
@@ -336,6 +337,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         totalNumberOfCandidates = localNumberOfCandidates;
                         minScore2 = score2;
                         degree = -1;
+                        //degree2 = -1;
                         gMatchingCandidate = gCan;
                         newEdges = edges;
 
@@ -351,10 +353,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (degree == -1)
                             degree = g.VertexDegree(gMatchingCandidate);
 
-                        if (thisDegree < degree || (thisDegree == degree && ghMapping.Count(map => gConnectionExistence[map.Key, gCan]) < ghMapping.Count(map => gConnectionExistence[map.Key, gMatchingCandidate])))
+                        if (thisDegree < degree)
                         {
                             totalNumberOfCandidates = localNumberOfCandidates;
                             degree = thisDegree;
+                            //degree2 = -1;
                             gMatchingCandidate = gCan;
                             newEdges = edges;
 
@@ -362,6 +365,39 @@ namespace SubgraphIsomorphismExactAlgorithm
                             isomorphicCandidates = isomorphicH;
                             isomorphicH = tmp;
                         }
+                        //else if (thisDegree == degree)
+                        //{
+                        //    if (degree2 == -1)
+                        //    {
+                        //        degree2 = 0;
+                        //        foreach (var map in ghMapping)
+                        //            if (gConnectionExistence[map.Key, gMatchingCandidate])
+                        //                degree2 += 1;
+                        //    }
+
+                        //    var thisDegree2 = 0;
+                        //    foreach (var map in ghMapping)
+                        //        if (gConnectionExistence[map.Key, gCan])
+                        //        {
+                        //            if (thisDegree2 == degree2)
+                        //                break;
+                        //            thisDegree2 += 1;
+                        //        }
+
+
+                        //    if (thisDegree2 < degree2)
+                        //    {
+                        //        totalNumberOfCandidates = localNumberOfCandidates;
+                        //        degree = thisDegree;
+                        //        degree2 = thisDegree2;
+                        //        gMatchingCandidate = gCan;
+                        //        newEdges = edges;
+
+                        //        tmp = isomorphicCandidates;
+                        //        isomorphicCandidates = isomorphicH;
+                        //        isomorphicH = tmp;
+                        //    }
+                        //}
                     }
                 }
                 #endregion
