@@ -61,7 +61,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 else
                     gMatchingCandidate = g.Vertices.ArgMax(
                         v => -g.VertexDegree(v),
-                        v => -removedVertices.Count(r => gArgument.AreVerticesConnected(r, v))
+                        v => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, v) : gArgument.AreVerticesConnected(r, v))
                         );
 
                 gGraphs.Add(g.DeepClone());
