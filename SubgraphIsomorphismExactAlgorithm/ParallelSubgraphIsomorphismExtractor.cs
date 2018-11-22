@@ -1,4 +1,4 @@
-﻿#define debug
+﻿#define debug_
 
 using GraphDataStructure;
 using System;
