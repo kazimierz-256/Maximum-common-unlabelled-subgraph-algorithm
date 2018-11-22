@@ -1,4 +1,4 @@
-﻿#define debug_
+﻿#define debug
 
 using GraphDataStructure;
 using System;
@@ -82,11 +82,50 @@ namespace SubgraphIsomorphismExactAlgorithm
             var threadSynchronizingObject = new object();
             var hVerticesOrdered = h.Vertices.ToArray();
 #if debug
-            var left = gGraphs.Count * hVerticesOrdered.Length; 
+            var left = gGraphs.Count * hVerticesOrdered.Length;
+#endif
+            var automorphismAlgorithm = new CoreAlgorithm();
+            var leftOverVertices = new HashSet<int>(h.Vertices);
+            var classesOfAbstraction = new List<HashSet<int>>();
+            while (leftOverVertices.Count > 0)
+            {
+                var considering = leftOverVertices.First();
+                leftOverVertices.Remove(considering);
+                var isomorphic = new HashSet<int>() { considering };
+                foreach (var consideringVertex in leftOverVertices)
+                {
+                    var found = false;
+                    automorphismAlgorithm.InternalStateSetup(
+                            considering,
+                            consideringVertex,
+                            h,
+                            h,
+                            graphScoringFunction,
+                            (newScore, ghMap, hgMap, edges) =>
+                            {
+                                found = true;
+                            }
+                        );
+                    automorphismAlgorithm.Automorphism(ref found);
+                    if (found)
+                    {
+                        isomorphic.Add(consideringVertex);
+                    }
+                }
+                foreach (var vertex in isomorphic)
+                {
+                    leftOverVertices.Remove(vertex);
+                }
+                classesOfAbstraction.Add(isomorphic);
+            }
+#if debug
+
+            Console.WriteLine($"Total vertices: {h.Vertices.Count}");
+            Console.WriteLine(classesOfAbstraction.Count);
 #endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
-                Parallel.For(0, gGraphs.Count * hVerticesOrdered.Length, i =>
+                Parallel.For(0, gGraphs.Count * classesOfAbstraction.Count, i =>
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
@@ -96,7 +135,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var threadAlgorithm = new CoreAlgorithm();
                         threadAlgorithm.InternalStateSetup(
                             gInitialVertices[gIndex],
-                            hVerticesOrdered[hIndex],
+                            classesOfAbstraction[hIndex].First(),
                             gGraphs[gIndex].DeepClone(),
                             h,
                             graphScoringFunction,
@@ -122,7 +161,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         threadAlgorithm.Recurse(ref localBestScore);
                     }
 #if debug
-                    Console.WriteLine($"Left: {Interlocked.Add(ref left, -1)}"); 
+                    Console.WriteLine($"Left: {Interlocked.Add(ref left, -1)}");
 #endif
                 });
 
