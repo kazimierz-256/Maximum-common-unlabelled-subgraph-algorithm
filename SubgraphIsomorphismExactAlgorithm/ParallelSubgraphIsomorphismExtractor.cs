@@ -56,7 +56,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
                 var gMatchingCandidate = -1;
-                gMatchingCandidate = ClassesOfAbstraction(g).ArgMax(classOfAbstraction => classOfAbstraction.Count).First();
+                gMatchingCandidate = ClassesOfAbstraction(g).ArgMax(
+                    classOfAbstraction => classOfAbstraction.Count,
+                    classOfAbstraction => g.VertexDegree(classOfAbstraction[0])
+                    )[0];
                 //if (heuristicStepsAvailable == -1)
                 //    gMatchingCandidate = g.Vertices.Skip(random.Next(g.Vertices.Count)).First();
                 //else
@@ -82,16 +85,16 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localSubgraphEdges = 0;
             var threadSynchronizingObject = new object();
             var hVerticesOrdered = h.Vertices.ToArray();
-            List<HashSet<int>> ClassesOfAbstraction(Graph graph)
+            List<List<int>> ClassesOfAbstraction(Graph graph)
             {
                 var automorphismAlgorithm = new CoreAlgorithm();
                 var leftOverVertices = new HashSet<int>(graph.Vertices);
-                var localClassesOfAbstraction = new List<HashSet<int>>();
+                var localClassesOfAbstraction = new List<List<int>>();
                 while (leftOverVertices.Count > 0)
                 {
                     var considering = leftOverVertices.First();
                     leftOverVertices.Remove(considering);
-                    var isomorphic = new HashSet<int>() { considering };
+                    var isomorphic = new List<int>() { considering };
                     foreach (var consideringVertex in leftOverVertices)
                     {
                         var found = false;
@@ -125,7 +128,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             var left = gGraphs.Count * classesOfAbstraction.Count;
 
             Console.WriteLine($"Total vertices: {h.Vertices.Count}");
-            Console.WriteLine($"Classes of abstraction: {classesOfAbstraction.Count}");
+            Console.WriteLine($"g classes of abstraction: {ClassesOfAbstraction(swappedGraphs ? hArgument : gArgument).Count}");
+            Console.WriteLine($"h classes of abstraction: {classesOfAbstraction.Count}");
 #endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
