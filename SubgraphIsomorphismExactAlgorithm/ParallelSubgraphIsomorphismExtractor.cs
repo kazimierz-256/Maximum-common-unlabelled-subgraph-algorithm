@@ -1,4 +1,4 @@
-﻿#define debug
+﻿#define debug_
 
 using GraphDataStructure;
 using System;
@@ -56,13 +56,15 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
                 var gMatchingCandidate = -1;
+                //var gClasses = ClassesOfAbstraction(g);
+                //gMatchingCandidate = gClasses.ArgMax(classOfAbstraction => classOfAbstraction.Count).First();
                 if (heuristicStepsAvailable == -1)
                     gMatchingCandidate = g.Vertices.Skip(random.Next(g.Vertices.Count)).First();
                 else
                     gMatchingCandidate = g.Vertices.ArgMax(
                         v => -g.VertexDegree(v),
                         v => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, v) : gArgument.AreVerticesConnected(r, v))
-                        );
+                );
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingCandidate);
@@ -81,47 +83,50 @@ namespace SubgraphIsomorphismExactAlgorithm
             var localSubgraphEdges = 0;
             var threadSynchronizingObject = new object();
             var hVerticesOrdered = h.Vertices.ToArray();
-#if debug
-            var left = gGraphs.Count * hVerticesOrdered.Length;
-#endif
-            var automorphismAlgorithm = new CoreAlgorithm();
-            var leftOverVertices = new HashSet<int>(h.Vertices);
-            var classesOfAbstraction = new List<HashSet<int>>();
-            while (leftOverVertices.Count > 0)
+            List<HashSet<int>> ClassesOfAbstraction(Graph graph)
             {
-                var considering = leftOverVertices.First();
-                leftOverVertices.Remove(considering);
-                var isomorphic = new HashSet<int>() { considering };
-                foreach (var consideringVertex in leftOverVertices)
+                var automorphismAlgorithm = new CoreAlgorithm();
+                var leftOverVertices = new HashSet<int>(graph.Vertices);
+                var localClassesOfAbstraction = new List<HashSet<int>>();
+                while (leftOverVertices.Count > 0)
                 {
-                    var found = false;
-                    automorphismAlgorithm.InternalStateSetup(
-                            considering,
-                            consideringVertex,
-                            h,
-                            h,
-                            graphScoringFunction,
-                            (newScore, ghMap, hgMap, edges) =>
-                            {
-                                found = true;
-                            }
-                        );
-                    automorphismAlgorithm.Automorphism(ref found);
-                    if (found)
+                    var considering = leftOverVertices.First();
+                    leftOverVertices.Remove(considering);
+                    var isomorphic = new HashSet<int>() { considering };
+                    foreach (var consideringVertex in leftOverVertices)
                     {
-                        isomorphic.Add(consideringVertex);
+                        var found = false;
+                        automorphismAlgorithm.InternalStateSetup(
+                                considering,
+                                consideringVertex,
+                                graph,
+                                graph,
+                                graphScoringFunction,
+                                (newScore, ghMap, hgMap, edges) =>
+                                {
+                                    found = true;
+                                }
+                            );
+                        automorphismAlgorithm.Automorphism(ref found);
+                        if (found)
+                        {
+                            isomorphic.Add(consideringVertex);
+                        }
                     }
+                    foreach (var vertex in isomorphic)
+                    {
+                        leftOverVertices.Remove(vertex);
+                    }
+                    localClassesOfAbstraction.Add(isomorphic);
                 }
-                foreach (var vertex in isomorphic)
-                {
-                    leftOverVertices.Remove(vertex);
-                }
-                classesOfAbstraction.Add(isomorphic);
+                return localClassesOfAbstraction;
             }
+            var classesOfAbstraction = ClassesOfAbstraction(h);
 #if debug
+            var left = gGraphs.Count * classesOfAbstraction.Count;
 
             Console.WriteLine($"Total vertices: {h.Vertices.Count}");
-            Console.WriteLine(classesOfAbstraction.Count);
+            Console.WriteLine($"Classes of abstraction: {classesOfAbstraction.Count}");
 #endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
