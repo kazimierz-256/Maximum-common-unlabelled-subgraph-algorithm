@@ -165,14 +165,19 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 gOutsiders = new HashSet<int>(g.Vertices);
                 hOutsiders = new HashSet<int>(h.Vertices);
+                if (checkForAutomorphism)
+                    hVerticesAutomorphic = new HashSet<int>(h.Vertices);
             }
             else
             {
                 gOutsiders = new HashSet<int>(automorphismVerticesOverride);
                 hOutsiders = new HashSet<int>(automorphismVerticesOverride);
+                if (checkForAutomorphism)
+                    hVerticesAutomorphic = new HashSet<int>(automorphismVerticesOverride);
             }
             gOutsiders.Remove(gInitialMatchingVertex);
             hOutsiders.Remove(hInitialMatchingVertex);
+
             totalNumberOfEdgesInSubgraph = 0;
 
             // determine the edge-existence matrix
@@ -281,6 +286,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         }
 
         private Random random = new Random(0);
+        private HashSet<int> hVerticesAutomorphic = new HashSet<int>();
         // main recursive discovery procedure
         // the parameter allows multiple threads to read the value directly in parallel (writing is more complicated)
         public void Recurse(ref double bestScore)
@@ -430,7 +436,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var hVerticesToRemoveFromEnvelope = new int[hOutsiders.Count];
                     var hVerticesToRemoveFromEnvelopeLimit = 0;
 
-
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
                     {
@@ -438,7 +443,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             for (int j = 0; j < hCandidate; j++)
                             {
-                                if (isomorphicH[j] != -1 && AreAutomorphicH(isomorphicH[j], isomorphicH[hCandidate]))
+                                if (isomorphicH[j] != -1 && AreAutomorphicH(isomorphicH[j], isomorphicH[hCandidate], hVerticesAutomorphic))
                                 {
                                     isomorphicH[hCandidate] = -1;
                                     break;
@@ -458,6 +463,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
 
                         hEnvelope.Remove(hMatchingCandidate);
+                        if (checkForAutomorphism)
+                            hVerticesAutomorphic.Remove(hMatchingCandidate);
 
                         hVerticesToRemoveFromEnvelopeLimit = 0;
                         foreach (var hNeighbour in hOutsiders)
@@ -489,6 +496,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
 
                         hEnvelope.Add(hMatchingCandidate);
+                        if (checkForAutomorphism)
+                            hVerticesAutomorphic.Add(hMatchingCandidate);
 
                         ghMapping.Remove(gMatchingCandidate);
                         hgMapping.Remove(hMatchingCandidate);
@@ -523,11 +532,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        private bool AreAutomorphicH(int a, int b)
+        private bool AreAutomorphicH(int a, int b, HashSet<int> hVerticesAutomorphic)
         {
-            var allGood = new HashSet<int>(hEnvelope);
-            allGood.UnionWith(hOutsiders);
-
             var found = false;
             new CoreAlgorithm()
                 .InternalStateSetup(
@@ -539,7 +545,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     null,
                     gConnectionExistence: hConnectionExistence,
                     hConnectionExistence: hConnectionExistence,
-                    automorphismVerticesOverride: allGood
+                    automorphismVerticesOverride: hVerticesAutomorphic
                 )
                 .RecurseAutomorphism(ref found);
             return found;

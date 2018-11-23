@@ -195,7 +195,7 @@ namespace SubgraphIsomorphismTests
                     for (int removed = 0; removed < i; removed+=1)
                     {
                         // run the algorithm
-                        SubgraphIsomorphismExactAlgorithm.SerialSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                        SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
                             g,
                             h,
                             (vertices, edges) => vertices,

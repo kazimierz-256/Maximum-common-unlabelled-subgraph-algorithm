@@ -58,7 +58,6 @@ namespace Application
                 Console.WriteLine("5. `compute exactly or not (if not please provide the index of approximating algorithm)?` e.g. `yes` `true` `t` `1` `2`");
                 Console.WriteLine("6*. `analyze disconnected?` (defaults to false)");
                 Console.WriteLine("7*. `find exact matching of G in H?` (defaults to false, analyze disconnected must be also true if this is set to true)");
-                Console.WriteLine("8*. `launch in parallel? (if computing exactly)` (defaults to true)");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
                 Console.ResetColor();
@@ -99,13 +98,6 @@ namespace Application
                     if (input.Length > 6)
                         analyzeDisconnected = stringToBool(input[6]);
 
-                    bool launchInParallel = true;
-
-                    if (input.Length > 7 && computeExactly)
-                    {
-                        launchInParallel = stringToBool(input[7]);
-                    }
-
                     // order of polynomial
 
                     double bestScore;
@@ -115,34 +107,17 @@ namespace Application
 
                     if (computeExactly)
                     {
-                        if (launchInParallel)
-                        {
-                            ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
-                                g,
-                                h,
-                                valuation,
-                                out bestScore,
-                                out subgraphEdges,
-                                out ghOptimalMapping,
-                                out hgOptimalMapping,
-                                analyzeDisconnected,
-                                findExactMatch
-                                );
-                        }
-                        else
-                        {
-                            SerialSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
-                                g,
-                                h,
-                                valuation,
-                                out bestScore,
-                                out subgraphEdges,
-                                out ghOptimalMapping,
-                                out hgOptimalMapping,
-                                analyzeDisconnected,
-                                findExactMatch
-                                );
-                        }
+                        ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                            g,
+                            h,
+                            valuation,
+                            out bestScore,
+                            out subgraphEdges,
+                            out ghOptimalMapping,
+                            out hgOptimalMapping,
+                            analyzeDisconnected,
+                            findExactMatch
+                            );
                     }
                     else
                     {
