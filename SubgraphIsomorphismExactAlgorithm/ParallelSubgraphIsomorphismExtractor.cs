@@ -80,7 +80,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             var hVerticesOrdered = h.Vertices.ToArray();
             List<List<int>> ClassesOfAbstraction(Graph graph)
             {
-                var automorphismAlgorithm = new CoreAlgorithm();
                 var leftOverVertices = new HashSet<int>(graph.Vertices);
                 var localClassesOfAbstraction = new List<List<int>>();
                 while (leftOverVertices.Count > 0)
@@ -91,24 +90,22 @@ namespace SubgraphIsomorphismExactAlgorithm
                     foreach (var consideringVertex in leftOverVertices)
                     {
                         var found = false;
-                        automorphismAlgorithm.InternalStateSetup(
-                                considering,
-                                consideringVertex,
-                                graph,
-                                graph,
-                                null,
-                                null
-                            );
-                        automorphismAlgorithm.Automorphism(ref found);
+                        new CoreAlgorithm()
+                        .InternalStateSetup(
+                            considering,
+                            consideringVertex,
+                            graph,
+                            graph,
+                            null,
+                            null
+                        ).RecurseAutomorphism(ref found);
+
                         if (found)
-                        {
                             isomorphic.Add(consideringVertex);
-                        }
                     }
                     foreach (var vertex in isomorphic)
-                    {
                         leftOverVertices.Remove(vertex);
-                    }
+
                     localClassesOfAbstraction.Add(isomorphic);
                 }
                 return localClassesOfAbstraction;
@@ -131,8 +128,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) > localBestScore)
                     {
-                        var threadAlgorithm = new CoreAlgorithm();
-                        threadAlgorithm.InternalStateSetup(
+                        new CoreAlgorithm()
+                        .InternalStateSetup(
                             gInitialVertices[gIndex],
                             hClassesOfAbstraction[hIndex][0],
                             gGraphs[gIndex].DeepClone(),
@@ -156,9 +153,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count
-                        );
-                        threadAlgorithm.Recurse(ref localBestScore);
+                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents
+                        )
+                        .Recurse(ref localBestScore);
                     }
 #if debug
                     lock (leftSync)

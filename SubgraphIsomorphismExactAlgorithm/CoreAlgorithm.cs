@@ -128,7 +128,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         }
 
 
-        public void InternalStateSetup(
+        public CoreAlgorithm InternalStateSetup(
             int gInitialMatchingVertex,
             int hInitialMatchingVertex,
             Graph g,
@@ -201,6 +201,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 this.hConnectionExistence = hConnectionExistence;
             }
+
+            return this;
         }
 
         // returns boolean value whether two vertices are locally isomorphic
@@ -527,8 +529,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             allGood.UnionWith(hOutsiders);
 
             var found = false;
-            var automorphismAlgorithm = new CoreAlgorithm();
-            automorphismAlgorithm.InternalStateSetup(
+            new CoreAlgorithm()
+                .InternalStateSetup(
                     a,
                     b,
                     h,
@@ -538,11 +540,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                     gConnectionExistence: hConnectionExistence,
                     hConnectionExistence: hConnectionExistence,
                     automorphismVerticesOverride: allGood
-                );
-            automorphismAlgorithm.Automorphism(ref found);
+                )
+                .RecurseAutomorphism(ref found);
             return found;
         }
-        public void Automorphism(ref bool found)
+        public void RecurseAutomorphism(ref bool found)
         {
             if (gEnvelope.Count == hEnvelope.Count && !found)
             {
@@ -699,7 +701,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                             #endregion
 
-                            Automorphism(ref found);
+                            RecurseAutomorphism(ref found);
 
                             #region H cleanup
                             for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
