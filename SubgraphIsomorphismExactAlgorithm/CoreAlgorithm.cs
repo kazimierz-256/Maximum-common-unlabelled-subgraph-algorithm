@@ -525,26 +525,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             var allGood = new HashSet<int>(hEnvelope);
             allGood.UnionWith(hOutsiders);
-            var hClone = h.DeepCloneHavingVerticesIntersectedWith(allGood);
-            if (hClone.VertexDegree(a) != hClone.VertexDegree(b))
-            {
-                return false;
-            }
-            var aNeighbours = hClone.VertexNeighbours(a).ToArray();
-            var bNeighbours = hClone.VertexNeighbours(b).ToArray();
-            for (int i = 0; i < aNeighbours.Length; i++)
-            {
-                aNeighbours[i] = hClone.VertexDegree(aNeighbours[i]);
-                bNeighbours[i] = hClone.VertexDegree(bNeighbours[i]);
-            }
-
-            Array.Sort(aNeighbours);
-            Array.Sort(bNeighbours);
-            for (int i = 0; i < aNeighbours.Length; i++)
-            {
-                if (aNeighbours[i] != bNeighbours[i])
-                    return false;
-            }
 
             var found = false;
             var automorphismAlgorithm = new CoreAlgorithm();
@@ -556,7 +536,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     null,
                     null,
                     gConnectionExistence: hConnectionExistence,
-                    hConnectionExistence: hConnectionExistence
+                    hConnectionExistence: hConnectionExistence,
+                    automorphismVerticesOverride: allGood
                 );
             automorphismAlgorithm.Automorphism(ref found);
             return found;

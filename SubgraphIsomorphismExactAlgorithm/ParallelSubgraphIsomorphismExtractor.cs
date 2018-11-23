@@ -113,7 +113,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 return localClassesOfAbstraction;
             }
-            var classesOfAbstraction = ClassesOfAbstraction(h);
+            var hClassesOfAbstraction = ClassesOfAbstraction(h);
 #if debug
             var left = new HashSet<int>(Enumerable.Range(0, gGraphs.Count * classesOfAbstraction.Count));
             var leftSync = new object();
@@ -124,7 +124,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 #endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
-                Parallel.For(0, gGraphs.Count * classesOfAbstraction.Count, i =>
+                Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
@@ -134,7 +134,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var threadAlgorithm = new CoreAlgorithm();
                         threadAlgorithm.InternalStateSetup(
                             gInitialVertices[gIndex],
-                            classesOfAbstraction[hIndex][0],
+                            hClassesOfAbstraction[hIndex][0],
                             gGraphs[gIndex].DeepClone(),
                             h,
                             graphScoringFunction,
@@ -156,7 +156,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            checkForAutomorphism: true
+                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count
                         );
                         threadAlgorithm.Recurse(ref localBestScore);
                     }
