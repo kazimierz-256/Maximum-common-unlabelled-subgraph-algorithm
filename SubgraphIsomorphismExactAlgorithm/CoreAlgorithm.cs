@@ -510,8 +510,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         localNumberOfCandidates = 0;
                         score2 = 0;
                         edges = 0;
+                        var gDegree = g.VertexDegree(gCan);
                         foreach (var hCan in hEnvelope)
                         {
+                            if (h.VertexDegree(hCan) != gDegree)
+                                continue;
                             locallyIsomorphic = true;
                             var localEdges = 0;
                             foreach (var gMap in ghMapping)
