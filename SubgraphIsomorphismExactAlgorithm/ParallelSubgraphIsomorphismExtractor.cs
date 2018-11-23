@@ -112,12 +112,12 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             var hClassesOfAbstraction = ClassesOfAbstraction(h);
 #if debug
-            var left = new HashSet<int>(Enumerable.Range(0, gGraphs.Count * classesOfAbstraction.Count));
+            var left = new HashSet<int>(Enumerable.Range(0, gGraphs.Count * hClassesOfAbstraction.Count));
             var leftSync = new object();
 
             Console.WriteLine($"Total vertices: {h.Vertices.Count}");
             Console.WriteLine($"g classes of abstraction: {ClassesOfAbstraction(swappedGraphs ? hArgument : gArgument).Count}");
-            Console.WriteLine($"h classes of abstraction: {classesOfAbstraction.Count}");
+            Console.WriteLine($"h classes of abstraction: {hClassesOfAbstraction.Count}");
 #endif
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
@@ -166,7 +166,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             foreach (var item in left)
                             {
-                                Console.WriteLine($"item left: g: {gInitialVertices[item % gGraphs.Count]} h: {classesOfAbstraction[item / gGraphs.Count][0]}");
+                                Console.WriteLine($"item left: g: {gInitialVertices[item % gGraphs.Count]} h: {hClassesOfAbstraction[item / gGraphs.Count][0]}");
                             }
                         }
                     }

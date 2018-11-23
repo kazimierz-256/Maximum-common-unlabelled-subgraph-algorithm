@@ -46,7 +46,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.01d; density < 0.999d; density += .02d)
+            for (double density = 0.5; density < 0.599d; density += 0.1d)
             //var density = 0.5d;
             {
                 var print = false;
