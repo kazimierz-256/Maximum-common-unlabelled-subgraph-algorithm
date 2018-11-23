@@ -30,6 +30,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int leftoverSteps;
         public int deepnessTakeawaySteps;
         public int originalLeftoverSteps;
+        public bool checkForAutomorphism;
 
         public CoreInternalState Clone(bool gClone = false, bool hClone = false)
         => new CoreInternalState()
@@ -51,7 +52,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
             leftoverSteps = leftoverSteps,
             deepnessTakeawaySteps = deepnessTakeawaySteps,
-            originalLeftoverSteps = originalLeftoverSteps
+            originalLeftoverSteps = originalLeftoverSteps,
+            checkForAutomorphism = checkForAutomorphism
         };
     }
     public class CoreAlgorithm
@@ -77,6 +79,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private int deepness = 0;
         private int deepnessTakeawaySteps;
         private int originalLeftoverSteps;
+        private bool checkForAutomorphism;
 
         public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
         {
@@ -98,6 +101,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             leftoverSteps = leftoverSteps,
             deepnessTakeawaySteps = deepnessTakeawaySteps,
             originalLeftoverSteps = originalLeftoverSteps,
+            checkForAutomorphism = checkForAutomorphism,
         };
 
         public void ImportShallowInternalState(CoreInternalState state)
@@ -120,6 +124,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             leftoverSteps = state.leftoverSteps;
             deepnessTakeawaySteps = state.deepnessTakeawaySteps;
             originalLeftoverSteps = state.originalLeftoverSteps;
+            checkForAutomorphism = state.checkForAutomorphism;
         }
 
 
@@ -133,7 +138,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool analyzeDisconnected = false,
             bool findGraphGinH = false,
             int leftoverSteps = -1,
-            int deepnessTakeawaySteps = 0
+            int deepnessTakeawaySteps = 0,
+            bool[,] gConnectionExistence = null,
+            bool[,] hConnectionExistence = null,
+            bool checkForAutomorphism = false,
+            HashSet<int> automorphismVerticesOverride = null
             )
         {
             this.g = g;
@@ -145,30 +154,53 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.leftoverSteps = leftoverSteps;
             originalLeftoverSteps = leftoverSteps;
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
+            this.checkForAutomorphism = checkForAutomorphism;
 
             ghMapping = new Dictionary<int, int>();
             hgMapping = new Dictionary<int, int>();
             // for simplicity insert initial isomorphic vertices into the envelope
             gEnvelope = new HashSet<int>() { gInitialMatchingVertex };
             hEnvelope = new HashSet<int>() { hInitialMatchingVertex };
-            gOutsiders = new HashSet<int>(g.Vertices);
-            hOutsiders = new HashSet<int>(h.Vertices);
+            if (automorphismVerticesOverride == null)
+            {
+                gOutsiders = new HashSet<int>(g.Vertices);
+                hOutsiders = new HashSet<int>(h.Vertices);
+            }
+            else
+            {
+                gOutsiders = new HashSet<int>(automorphismVerticesOverride);
+                hOutsiders = new HashSet<int>(automorphismVerticesOverride);
+            }
             gOutsiders.Remove(gInitialMatchingVertex);
             hOutsiders.Remove(hInitialMatchingVertex);
             totalNumberOfEdgesInSubgraph = 0;
 
             // determine the edge-existence matrix
-            var gMax = g.Vertices.Max();
-            gConnectionExistence = new bool[gMax + 1, gMax + 1];
-            foreach (var kvp in g.Neighbours)
-                foreach (var vertexTo in kvp.Value)
-                    gConnectionExistence[kvp.Key, vertexTo] = true;
+            if (gConnectionExistence == null)
+            {
+                var gMax = g.Vertices.Max();
+                this.gConnectionExistence = new bool[gMax + 1, gMax + 1];
+                foreach (var kvp in g.Neighbours)
+                    foreach (var vertexTo in kvp.Value)
+                        this.gConnectionExistence[kvp.Key, vertexTo] = true;
+            }
+            else
+            {
+                this.gConnectionExistence = gConnectionExistence;
+            }
 
-            var hMax = h.Vertices.Max();
-            hConnectionExistence = new bool[hMax + 1, hMax + 1];
-            foreach (var kvp in h.Neighbours)
-                foreach (var vertexTo in kvp.Value)
-                    hConnectionExistence[kvp.Key, vertexTo] = true;
+            if (hConnectionExistence == null)
+            {
+                var hMax = h.Vertices.Max();
+                this.hConnectionExistence = new bool[hMax + 1, hMax + 1];
+                foreach (var kvp in h.Neighbours)
+                    foreach (var vertexTo in kvp.Value)
+                        this.hConnectionExistence[kvp.Key, vertexTo] = true;
+            }
+            else
+            {
+                this.hConnectionExistence = hConnectionExistence;
+            }
         }
 
         // returns boolean value whether two vertices are locally isomorphic
@@ -400,6 +432,20 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
                     {
+                        if (checkForAutomorphism)
+                        {
+                            for (int j = 0; j < hCandidate; j++)
+                            {
+                                if (isomorphicH[j] != -1 && AreAutomorphicH(isomorphicH[j], isomorphicH[hCandidate]))
+                                {
+                                    isomorphicH[hCandidate] = -1;
+                                    break;
+                                }
+                            }
+                            if (isomorphicH[hCandidate] == -1)
+                                continue;
+                        }
+
                         var hMatchingCandidate = isomorphicH[hCandidate];
                         // verify mutual agreement connections of neighbours
 
@@ -475,18 +521,53 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
+        private bool AreAutomorphicH(int a, int b)
+        {
+            var allGood = new HashSet<int>(hEnvelope);
+            allGood.UnionWith(hOutsiders);
+            var hClone = h.DeepCloneHavingVerticesIntersectedWith(allGood);
+            if (hClone.VertexDegree(a) != hClone.VertexDegree(b))
+            {
+                return false;
+            }
+            var aNeighbours = hClone.VertexNeighbours(a).ToArray();
+            var bNeighbours = hClone.VertexNeighbours(b).ToArray();
+            for (int i = 0; i < aNeighbours.Length; i++)
+            {
+                aNeighbours[i] = hClone.VertexDegree(aNeighbours[i]);
+                bNeighbours[i] = hClone.VertexDegree(bNeighbours[i]);
+            }
+
+            Array.Sort(aNeighbours);
+            Array.Sort(bNeighbours);
+            for (int i = 0; i < aNeighbours.Length; i++)
+            {
+                if (aNeighbours[i] != bNeighbours[i])
+                    return false;
+            }
+
+            var found = false;
+            var automorphismAlgorithm = new CoreAlgorithm();
+            automorphismAlgorithm.InternalStateSetup(
+                    a,
+                    b,
+                    h,
+                    h,
+                    null,
+                    null,
+                    gConnectionExistence: hConnectionExistence,
+                    hConnectionExistence: hConnectionExistence
+                );
+            automorphismAlgorithm.Automorphism(ref found);
+            return found;
+        }
         public void Automorphism(ref bool found)
         {
             if (gEnvelope.Count == hEnvelope.Count && !found)
             {
                 if (gEnvelope.Count == 0)
                 {
-                    newSolutionFoundNotificationAction?.Invoke(
-                        double.MinValue,
-                        () => new Dictionary<int, int>(ghMapping),
-                        () => new Dictionary<int, int>(hgMapping),
-                        totalNumberOfEdgesInSubgraph
-                        );
+                    found = true;
                 }
                 else
                 {

@@ -55,18 +55,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             while (g.Vertices.Count > 0)
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
-                var gMatchingCandidate = -1;
-                gMatchingCandidate = ClassesOfAbstraction(g).ArgMax(
-                    classOfAbstraction => classOfAbstraction.Count,
-                    classOfAbstraction => g.VertexDegree(classOfAbstraction[0])
-                    )[0];
-                //if (heuristicStepsAvailable == -1)
-                //    gMatchingCandidate = g.Vertices.Skip(random.Next(g.Vertices.Count)).First();
-                //else
-                //    gMatchingCandidate = g.Vertices.ArgMax(
-                //        v => -g.VertexDegree(v),
-                //        v => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, v) : gArgument.AreVerticesConnected(r, v))
-                //);
+                var gMatchingCandidate = ClassesOfAbstraction(g).ArgMax(
+                        classOfAbstraction => classOfAbstraction.Count,
+                        classOfAbstraction => -g.VertexDegree(classOfAbstraction[0]),
+                        classOfAbstraction => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, classOfAbstraction[0]) : gArgument.AreVerticesConnected(r, classOfAbstraction[0]))
+                        )[0];
 
                 gGraphs.Add(g.DeepClone());
                 gInitialVertices.Add(gMatchingCandidate);
@@ -103,11 +96,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 consideringVertex,
                                 graph,
                                 graph,
-                                graphScoringFunction,
-                                (newScore, ghMap, hgMap, edges) =>
-                                {
-                                    found = true;
-                                }
+                                null,
+                                null
                             );
                         automorphismAlgorithm.Automorphism(ref found);
                         if (found)
@@ -125,7 +115,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             var classesOfAbstraction = ClassesOfAbstraction(h);
 #if debug
-            var left = gGraphs.Count * classesOfAbstraction.Count;
+            var left = new HashSet<int>(Enumerable.Range(0, gGraphs.Count * classesOfAbstraction.Count));
+            var leftSync = new object();
 
             Console.WriteLine($"Total vertices: {h.Vertices.Count}");
             Console.WriteLine($"g classes of abstraction: {ClassesOfAbstraction(swappedGraphs ? hArgument : gArgument).Count}");
@@ -143,7 +134,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         var threadAlgorithm = new CoreAlgorithm();
                         threadAlgorithm.InternalStateSetup(
                             gInitialVertices[gIndex],
-                            classesOfAbstraction[hIndex].First(),
+                            classesOfAbstraction[hIndex][0],
                             gGraphs[gIndex].DeepClone(),
                             h,
                             graphScoringFunction,
@@ -164,12 +155,24 @@ namespace SubgraphIsomorphismExactAlgorithm
                             analyzeDisconnectedComponents,
                             findGraphGinH,
                             heuristicStepsAvailable,
-                            heuristicDeepnessToStartCountdown
+                            heuristicDeepnessToStartCountdown,
+                            checkForAutomorphism: true
                         );
                         threadAlgorithm.Recurse(ref localBestScore);
                     }
 #if debug
-                    Console.WriteLine($"Left: {Interlocked.Add(ref left, -1)}");
+                    lock (leftSync)
+                    {
+                        left.Remove(i);
+                        Console.WriteLine($"Left: {left.Count}");
+                        if (left.Count < 6)
+                        {
+                            foreach (var item in left)
+                            {
+                                Console.WriteLine($"item left: g: {gInitialVertices[item % gGraphs.Count]} h: {classesOfAbstraction[item / gGraphs.Count][0]}");
+                            }
+                        }
+                    }
 #endif
                 });
 
