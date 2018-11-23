@@ -1,5 +1,5 @@
-﻿#define approx1
-#define approx2
+﻿#define approx1_
+#define approx2_
 #define exact
 using GraphDataStructure;
 using MathParser;
@@ -34,7 +34,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(22);
+            PrintBenchmark(1);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -46,14 +46,14 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = .95d; density < 0.99d; density += .1d)
+            for (double density = 0.01d; density < 0.999d; density += .02d)
             //var density = 0.5d;
             {
                 var print = false;
                 var msTime = 0d;
                 var approximation1QualityString = string.Empty;
                 var approximation2QualityString = string.Empty;
-                for (int i = 1; i <= iterations * 2 + 1; i+=1)
+                for (int i = 1; i <= iterations * 2 + 1; i += 1)
                 {
 #if (approx1 || approx2)
 
@@ -166,8 +166,9 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0d)
         {
             var sw = new Stopwatch();
-            var g = GraphFactory.GenerateRandom(n, density, (int)(123456789 * density) + seed * n - seed * seed).Permute(seed * (seed * seed - 1));
-            var h = GraphFactory.GenerateRandom(n, density, (int)(987654321 * density) - seed * n - seed * seed).Permute(seed * seed);
+            var initialSeed = new Random(seed).Next() ^ new Random(n).Next();
+            var g = GraphFactory.GenerateRandom(n, density, new Random(0).Next() ^ initialSeed).Permute(2);
+            var h = GraphFactory.GenerateRandom(n, density, new Random(1).Next() ^ initialSeed).Permute(3);
             var gToH = new Dictionary<int, int>();
             var hToG = new Dictionary<int, int>();
 
@@ -226,7 +227,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    Math.Min(g.EdgeCount, h.EdgeCount) *  10,
+                    Math.Min(g.EdgeCount, h.EdgeCount) * 10,
                     0
                     );
                 sw.Stop();

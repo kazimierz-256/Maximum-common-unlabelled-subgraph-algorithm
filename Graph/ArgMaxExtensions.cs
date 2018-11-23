@@ -33,15 +33,6 @@ namespace GraphDataStructure
             return bestObjects;
         }
 
-        public static IEnumerable<T> ArgMaxMultiple<T, V>(this IEnumerable<T> enumerable, params Func<T, V>[] valuations)
-            where V : IComparable
-        {
-            var survivors = enumerable.ArgMaxMultiple(valuations[0]);
-            for (int i = 1; i < valuations.Length; i += 1)
-                survivors = survivors.ArgMaxMultiple(valuations[i]);
-            return survivors;
-        }
-
         public static T ArgMax<T, V>(this IEnumerable<T> enumerable, params Func<T, V>[] valuations)
             where V : IComparable
         {
@@ -52,8 +43,15 @@ namespace GraphDataStructure
             else
             {
                 var survivors = enumerable.ArgMaxMultiple(valuations[0]);
+                if (survivors.Count == 1)
+                    return survivors[0];
+
                 for (int i = 1; i < valuations.Length - 1; i += 1)
+                {
                     survivors = survivors.ArgMaxMultiple(valuations[i]);
+                    if (survivors.Count == 1)
+                        return survivors[0];
+                }
                 return survivors.ArgMax(valuations[valuations.Length - 1]);
             }
         }

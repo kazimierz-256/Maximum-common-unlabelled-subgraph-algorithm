@@ -141,7 +141,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             int deepnessTakeawaySteps = 0,
             bool[,] gConnectionExistence = null,
             bool[,] hConnectionExistence = null,
-            bool checkForAutomorphism = false,
+            bool checkForAutomorphism = true,
             HashSet<int> automorphismVerticesOverride = null
             )
         {
@@ -439,14 +439,31 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
                     {
-                        if (checkForAutomorphism)
+                        if (checkForAutomorphism && hCandidate > 0)
                         {
                             for (int j = 0; j < hCandidate; j++)
                             {
-                                if (isomorphicH[j] != -1 && AreAutomorphicH(isomorphicH[j], isomorphicH[hCandidate], hVerticesAutomorphic))
+                                if (isomorphicH[j] != -1)
                                 {
-                                    isomorphicH[hCandidate] = -1;
-                                    break;
+                                    var found = false;
+                                    new CoreAlgorithm()
+                                        .InternalStateSetup(
+                                            isomorphicH[j],
+                                            isomorphicH[hCandidate],
+                                            h,
+                                            h,
+                                            null,
+                                            null,
+                                            gConnectionExistence: hConnectionExistence,
+                                            hConnectionExistence: hConnectionExistence,
+                                            automorphismVerticesOverride: hVerticesAutomorphic
+                                        )
+                                        .RecurseAutomorphism(ref found);
+                                    if (found)
+                                    {
+                                        isomorphicH[hCandidate] = -1;
+                                        break;
+                                    }
                                 }
                             }
                             if (isomorphicH[hCandidate] == -1)
@@ -532,24 +549,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        private bool AreAutomorphicH(int a, int b, HashSet<int> hVerticesAutomorphic)
-        {
-            var found = false;
-            new CoreAlgorithm()
-                .InternalStateSetup(
-                    a,
-                    b,
-                    h,
-                    h,
-                    null,
-                    null,
-                    gConnectionExistence: hConnectionExistence,
-                    hConnectionExistence: hConnectionExistence,
-                    automorphismVerticesOverride: hVerticesAutomorphic
-                )
-                .RecurseAutomorphism(ref found);
-            return found;
-        }
         public void RecurseAutomorphism(ref bool found)
         {
             if (gEnvelope.Count == hEnvelope.Count && !found)
@@ -590,11 +589,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             foreach (var gMap in ghMapping)
                             {
                                 gConnection = gConnectionExistence[gCan, gMap.Key];
-#if induced
                                 if (gConnection != hConnectionExistence[hCan, gMap.Value])
-#else
-                            if (gConnection && !hConnectionExistence[hCan, gMap.Value])
-#endif
                                 {
                                     locallyIsomorphic = false;
                                     break;
