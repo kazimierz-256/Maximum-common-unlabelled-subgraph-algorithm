@@ -120,6 +120,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Console.WriteLine($"g classes of abstraction: {ClassesOfAbstraction(swappedGraphs ? hArgument : gArgument).Count}");
             Console.WriteLine($"h classes of abstraction: {hClassesOfAbstraction.Count}");
 #endif
+            var checkForAutomorphism = hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents;
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) * approximationRatio > localBestScore)
                 Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
@@ -154,7 +155,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents,
+                            checkForAutomorphism: checkForAutomorphism,
                             approximationRatio: approximationRatio
                         )
                         .Recurse(ref localBestScore);
