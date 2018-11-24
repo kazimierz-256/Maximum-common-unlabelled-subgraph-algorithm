@@ -1,5 +1,5 @@
-﻿#define approx1_
-#define approx2_
+﻿#define approx1
+#define approx2
 #define exact
 using GraphDataStructure;
 using MathParser;
@@ -46,8 +46,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            for (double density = 0.5; density < 0.599d; density += 0.1d)
-            //var density = 0.5d;
+            foreach (var density in new double[] { 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95 })
             {
                 var print = false;
                 var msTime = 0d;
@@ -166,7 +165,7 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0d)
         {
             var sw = new Stopwatch();
-            var initialSeed = new Random(seed).Next() ^ new Random(n).Next();
+            var initialSeed = new Random(seed).Next() ^ new Random(n).Next() ^ new Random((int)(density * int.MaxValue)).Next();
             var g = GraphFactory.GenerateRandom(n, density, new Random(0).Next() ^ initialSeed).Permute(2);
             var h = GraphFactory.GenerateRandom(n, density, new Random(1).Next() ^ initialSeed).Permute(3);
             var gToH = new Dictionary<int, int>();
@@ -227,7 +226,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    Math.Min(g.EdgeCount, h.EdgeCount) * 10,
+                    Math.Min(g.EdgeCount, h.EdgeCount) * 20,
                     0
                     );
                 sw.Stop();
