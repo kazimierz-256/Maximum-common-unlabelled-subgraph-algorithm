@@ -34,7 +34,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(1);
+            PrintBenchmark(20);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -46,7 +46,7 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            foreach (var density in new double[] { 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95 })
+            foreach (var density in new double[] { 0.05, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 0.95 })
             {
                 var print = false;
                 var msTime = 0d;
@@ -165,7 +165,7 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0d)
         {
             var sw = new Stopwatch();
-            var initialSeed = new Random(seed).Next() ^ new Random(n).Next() ^ new Random((int)(density * int.MaxValue)).Next();
+            var initialSeed = new Random(seed).Next() ^ new Random(n).Next();// ^ new Random((int)(density * int.MaxValue)).Next();
             var g = GraphFactory.GenerateRandom(n, density, new Random(0).Next() ^ initialSeed).Permute(2);
             var h = GraphFactory.GenerateRandom(n, density, new Random(1).Next() ^ initialSeed).Permute(3);
             var gToH = new Dictionary<int, int>();
@@ -187,7 +187,8 @@ namespace SubgraphIsomorphismBenchmark
                     out gToH,
                     out hToG,
                     disconnected,
-                    false
+                    false,
+                    approximationRatio: 1d
                     );
                 sw.Stop();
 
