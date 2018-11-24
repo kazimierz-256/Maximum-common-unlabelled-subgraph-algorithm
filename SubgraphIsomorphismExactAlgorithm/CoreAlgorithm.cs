@@ -8,10 +8,8 @@ using System.Text;
 
 namespace SubgraphIsomorphismExactAlgorithm
 {
-    public struct CoreInternalState
+    public class CoreAlgorithm
     {
-        // A class used to manipulate/clone algorithm's internal state
-
         public Func<int, int, double> subgraphScoringFunction;
         public Graph g;
         public Graph h;
@@ -24,109 +22,17 @@ namespace SubgraphIsomorphismExactAlgorithm
         public HashSet<int> gOutsiders;
         public HashSet<int> hOutsiders;
         public int totalNumberOfEdgesInSubgraph;
-        public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFound;
+        public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFoundNotificationAction;
         public bool analyzeDisconnected;
         public bool findGraphGinH;
         public int leftoverSteps;
+        public int deepness = 0;
         public int deepnessTakeawaySteps;
         public int originalLeftoverSteps;
         public bool checkForAutomorphism;
-
-        public CoreInternalState Clone(bool gClone = false, bool hClone = false)
-        => new CoreInternalState()
-        {
-            analyzeDisconnected = analyzeDisconnected,
-            findGraphGinH = findGraphGinH,
-            g = gClone ? g.DeepClone() : g,
-            h = hClone ? h.DeepClone() : h,
-            gConnectionExistence = gConnectionExistence.Clone() as bool[,],
-            hConnectionExistence = hConnectionExistence.Clone() as bool[,],
-            gEnvelope = new HashSet<int>(gEnvelope),
-            hEnvelope = new HashSet<int>(hEnvelope),
-            ghMapping = new Dictionary<int, int>(ghMapping),
-            hgMapping = new Dictionary<int, int>(hgMapping),
-            gOutsiders = new HashSet<int>(gOutsiders),
-            hOutsiders = new HashSet<int>(hOutsiders),
-            subgraphScoringFunction = subgraphScoringFunction,
-            newSolutionFound = newSolutionFound,
-            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
-            leftoverSteps = leftoverSteps,
-            deepnessTakeawaySteps = deepnessTakeawaySteps,
-            originalLeftoverSteps = originalLeftoverSteps,
-            checkForAutomorphism = checkForAutomorphism
-        };
-    }
-    public class CoreAlgorithm
-    {
-        private Func<int, int, double> subgraphScoringFunction;
-        private Graph g;
-        private Graph h;
-        private bool[,] gConnectionExistence;
-        private bool[,] hConnectionExistence;
-        private Dictionary<int, int> ghMapping;
-        private Dictionary<int, int> hgMapping;
-        private HashSet<int> gEnvelope;
-        private HashSet<int> hEnvelope;
-        public int[] gExportEnvelope { get => gEnvelope.ToArray(); }
-        public int[] hExportEnvelope { get => hEnvelope.ToArray(); }
-        private HashSet<int> gOutsiders;
-        private HashSet<int> hOutsiders;
-        private int totalNumberOfEdgesInSubgraph;
-        private Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFoundNotificationAction;
-        private bool analyzeDisconnected;
-        private bool findGraphGinH;
-        private int leftoverSteps;
-        private int deepness = 0;
-        private int deepnessTakeawaySteps;
-        private int originalLeftoverSteps;
-        private bool checkForAutomorphism;
-
-        public CoreInternalState ExportShallowInternalState() => new CoreInternalState()
-        {
-            analyzeDisconnected = analyzeDisconnected,
-            findGraphGinH = findGraphGinH,
-            g = g,
-            h = h,
-            gConnectionExistence = gConnectionExistence,
-            hConnectionExistence = hConnectionExistence,
-            gEnvelope = gEnvelope,
-            hEnvelope = hEnvelope,
-            ghMapping = ghMapping,
-            hgMapping = hgMapping,
-            gOutsiders = gOutsiders,
-            hOutsiders = hOutsiders,
-            subgraphScoringFunction = subgraphScoringFunction,
-            newSolutionFound = newSolutionFoundNotificationAction,
-            totalNumberOfEdgesInSubgraph = totalNumberOfEdgesInSubgraph,
-            leftoverSteps = leftoverSteps,
-            deepnessTakeawaySteps = deepnessTakeawaySteps,
-            originalLeftoverSteps = originalLeftoverSteps,
-            checkForAutomorphism = checkForAutomorphism,
-        };
-
-        public void ImportShallowInternalState(CoreInternalState state)
-        {
-            analyzeDisconnected = state.analyzeDisconnected;
-            findGraphGinH = state.findGraphGinH;
-            g = state.g;
-            h = state.h;
-            gConnectionExistence = state.gConnectionExistence;
-            hConnectionExistence = state.hConnectionExistence;
-            gEnvelope = state.gEnvelope;
-            hEnvelope = state.hEnvelope;
-            ghMapping = state.ghMapping;
-            hgMapping = state.hgMapping;
-            gOutsiders = state.gOutsiders;
-            hOutsiders = state.hOutsiders;
-            subgraphScoringFunction = state.subgraphScoringFunction;
-            newSolutionFoundNotificationAction = state.newSolutionFound;
-            totalNumberOfEdgesInSubgraph = state.totalNumberOfEdgesInSubgraph;
-            leftoverSteps = state.leftoverSteps;
-            deepnessTakeawaySteps = state.deepnessTakeawaySteps;
-            originalLeftoverSteps = state.originalLeftoverSteps;
-            checkForAutomorphism = state.checkForAutomorphism;
-        }
-
+        public double approximationRatio;
+        private Random random = new Random(0);
+        public HashSet<int> hVerticesAutomorphic = new HashSet<int>();
 
         public CoreAlgorithm InternalStateSetup(
             int gInitialMatchingVertex,
@@ -142,8 +48,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool[,] gConnectionExistence = null,
             bool[,] hConnectionExistence = null,
             bool checkForAutomorphism = true,
-            HashSet<int> automorphismVerticesOverride = null
-            )
+            HashSet<int> automorphismVerticesOverride = null,
+            double approximationRatio = 1d)
         {
             this.g = g;
             this.h = h;
@@ -155,6 +61,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             originalLeftoverSteps = leftoverSteps;
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
             this.checkForAutomorphism = checkForAutomorphism;
+            this.approximationRatio = approximationRatio;
 
             ghMapping = new Dictionary<int, int>();
             hgMapping = new Dictionary<int, int>();
@@ -285,8 +192,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             return false;
         }
 
-        private Random random = new Random(0);
-        private HashSet<int> hVerticesAutomorphic = new HashSet<int>();
         // main recursive discovery procedure
         // the parameter allows multiple threads to read the value directly in parallel (writing is more complicated)
         public void Recurse(ref double bestScore)
@@ -310,7 +215,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) > bestScore)
+            else if (subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore)
             {
                 // if there is hope for a larger score then recurse further
 
@@ -437,7 +342,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var hVerticesToRemoveFromEnvelopeLimit = 0;
 
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                    for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
+                    for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore; hCandidate += 1)
                     {
                         if (checkForAutomorphism && hCandidate > 0)
                         {
@@ -534,7 +439,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)) > bestScore)
+                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)) * approximationRatio > bestScore)
                 {
                     var gRestoreOperation = g.RemoveVertex(gMatchingCandidate);
                     deepness += 1;
@@ -743,8 +648,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 gOutsiders.Count > 0
                 && hOutsiders.Count > 0
                 && (!findGraphGinH || gEnvelope.Count == 0)
-                && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) > bestScore)
-                && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) > bestScore)
+                && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
+                && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
                 )
             {
                 var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
@@ -758,13 +663,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                     hOutsiderGraph = tmp;
                 }
 
-                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) > bestScore)
+                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
                 {
                     // if there is hope to improve the score then recurse
                     var removedVertices = new HashSet<int>();
                     while (
                         gOutsiderGraph.Vertices.Count > 0
-                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) > bestScore
+                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
                         )
                     {
                         // choose the candidate with largest degree within the graph of outsiders
@@ -814,7 +719,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 analyzeDisconnected = true,
                                 findGraphGinH = findGraphGinH,
                                 leftoverSteps = leftoverSteps,
-                                deepness = deepness
+                                deepness = deepness,
+                                approximationRatio = approximationRatio,
+                                checkForAutomorphism = checkForAutomorphism
                             };
                             subSolver.gOutsiders.Remove(gMatchingCandidate);
                             subSolver.hOutsiders.Remove(hMatchingCandidate);

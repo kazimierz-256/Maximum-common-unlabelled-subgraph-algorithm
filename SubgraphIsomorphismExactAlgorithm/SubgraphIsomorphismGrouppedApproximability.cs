@@ -112,7 +112,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             if (computeInParallel)
                 Parallel.For(0, batches, batch => batchDo(batch));
             else
-                for (int batch = 0; batch < batches; batch+=1)
+                for (int batch = 0; batch < batches; batch += 1)
                     batchDo(batch);
 
             bestScore = localBestScore;
@@ -142,7 +142,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 throw new Exception("Feature not yet supported.");
 
             // make the best local choice
-            var currentAlgorithmHoldingState = new CoreAlgorithm();
+            CoreAlgorithm currentAlgorithmHoldingState = null;
             // while there is an increase in result continue to approximate
 
             var step = 0;
@@ -156,7 +156,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var hSkip = random.Next(hVertices.Count);
                     var gCandidate = gVertices.Skip(gSkip).First();
                     var hCandidate = hVertices.Skip(hSkip).First();
-                    var stateToImport = new CoreInternalState()
+                    currentAlgorithmHoldingState = new CoreAlgorithm()
                     {
                         g = null,
                         h = null,
@@ -175,15 +175,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                         hConnectionExistence = hConnectionExistence,
                     };
 
-                    stateToImport.gOutsiders.Remove(gCandidate);
-                    stateToImport.hOutsiders.Remove(hCandidate);
-                    currentAlgorithmHoldingState.ImportShallowInternalState(stateToImport);
+                    currentAlgorithmHoldingState.gOutsiders.Remove(gCandidate);
+                    currentAlgorithmHoldingState.hOutsiders.Remove(hCandidate);
                     currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate);
                 }
                 else
                 {
-                    var gRandomizedOrder = currentAlgorithmHoldingState.gExportEnvelope;
-                    var hRandomizedOrder = currentAlgorithmHoldingState.hExportEnvelope;
+                    var gRandomizedOrder = currentAlgorithmHoldingState.gEnvelope.ToArray();
+                    var hRandomizedOrder = currentAlgorithmHoldingState.hEnvelope.ToArray();
 
                     var randomizingArray = Enumerable.Range(0, gRandomizedOrder.Length).Select(i => random.Next()).ToArray();
                     Array.Sort(randomizingArray, gRandomizedOrder);
@@ -213,8 +212,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 step += 1;
             }
 
-            var finalState = currentAlgorithmHoldingState.ExportShallowInternalState();
-            if (findExactMatch && finalState.ghMapping.Count < gVertices.Count)
+            if (findExactMatch && currentAlgorithmHoldingState.ghMapping.Count < gVertices.Count)
             {
                 // did not find an exact match, simply return initial values
                 bestScore = double.MinValue;
@@ -224,10 +222,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                bestScore = graphScoringFunction(finalState.ghMapping.Keys.Count, finalState.totalNumberOfEdgesInSubgraph);
-                subgraphEdges = finalState.totalNumberOfEdgesInSubgraph;
-                ghOptimalMapping = finalState.ghMapping;
-                hgOptimalMapping = finalState.hgMapping;
+                bestScore = graphScoringFunction(currentAlgorithmHoldingState.ghMapping.Keys.Count, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
+                subgraphEdges = currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph;
+                ghOptimalMapping = currentAlgorithmHoldingState.ghMapping;
+                hgOptimalMapping = currentAlgorithmHoldingState.hgMapping;
             }
         }
     }

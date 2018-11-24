@@ -23,7 +23,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool analyzeDisconnectedComponents,
             bool findGraphGinH,
             int heuristicStepsAvailable = -1,
-            int heuristicDeepnessToStartCountdown = 0
+            int heuristicDeepnessToStartCountdown = 0,
+            double approximationRatio = 1d
             )
         {
             if (!analyzeDisconnectedComponents && findGraphGinH)
@@ -120,13 +121,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             Console.WriteLine($"h classes of abstraction: {hClassesOfAbstraction.Count}");
 #endif
 
-            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) > localBestScore)
+            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) * approximationRatio > localBestScore)
                 Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
 
-                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) > localBestScore)
+                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) * approximationRatio > localBestScore)
                     {
                         new CoreAlgorithm()
                         .InternalStateSetup(
@@ -137,10 +138,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graphScoringFunction,
                             (newScore, ghMap, hgMap, edges) =>
                               {
-                                  if (newScore > localBestScore)
+                                  if (newScore * approximationRatio > localBestScore)
                                       // to increase the performance lock is performed only if there is a chance to improve the local result
                                       lock (threadSynchronizingObject)
-                                          if (newScore > localBestScore)
+                                          if (newScore * approximationRatio > localBestScore)
                                           {
                                               localBestScore = newScore;
                                               // lazy evaluation for best performance
@@ -153,7 +154,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents
+                            checkForAutomorphism: hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents,
+                            approximationRatio: approximationRatio
                         )
                         .Recurse(ref localBestScore);
                     }
