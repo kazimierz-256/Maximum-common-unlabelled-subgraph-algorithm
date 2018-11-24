@@ -326,20 +326,20 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var totalNumberOfCandidates = int.MaxValue;
                 var isomorphicH = new int[hEnvelope.Count];
                 var newEdges = 0;
-                var minScore2 = int.MaxValue;
+                var minScore = int.MaxValue;
                 var degree = -1;
                 var isomorphicCandidates = new int[hEnvelope.Count];
                 var edges = 0;
                 var gConnection = false;
                 var tmp = isomorphicH;
                 var localNumberOfCandidates = 0;
-                var score2 = 0;
+                var score = 0;
                 var locallyIsomorphic = true;
 
                 foreach (var gCan in gEnvelope)
                 {
                     localNumberOfCandidates = 0;
-                    score2 = 0;
+                    score = 0;
                     edges = 0;
                     foreach (var hCan in hEnvelope)
                     {
@@ -366,16 +366,16 @@ namespace SubgraphIsomorphismExactAlgorithm
                             edges = localEdges;
                             isomorphicCandidates[localNumberOfCandidates] = hCan;
                             localNumberOfCandidates += 1;
-                            score2 += h.VertexDegree(hCan);
-                            if (score2 > minScore2)
+                            score += h.VertexDegree(hCan);
+                            if (score > minScore)
                                 break;
                         }
                     }
 
-                    if (score2 < minScore2)
+                    if (score < minScore)
                     {
                         totalNumberOfCandidates = localNumberOfCandidates;
-                        minScore2 = score2;
+                        minScore = score;
                         degree = -1;
                         gMatchingCandidate = gCan;
                         newEdges = edges;
@@ -386,7 +386,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (totalNumberOfCandidates == 0)
                             break;
                     }
-                    else if (score2 == minScore2)
+                    else if (score == minScore)
                     {
                         var thisDegree = g.VertexDegree(gCan);
                         if (degree == -1)
