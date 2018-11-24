@@ -165,7 +165,7 @@ namespace SubgraphIsomorphismBenchmark
         private static TimeSpan BenchmarkIsomorphism(int algorithm, int n, double density, int seed, out int subgraphVertices, out int subgraphEdges, out double score, bool printGraphs = false, double timeout = 0d)
         {
             var sw = new Stopwatch();
-            var initialSeed = new Random(seed).Next() ^ new Random(n).Next();// ^ new Random((int)(density * int.MaxValue)).Next();
+            var initialSeed = new Random(seed).Next() ^ new Random(n).Next() ^ new Random((int)(density * int.MaxValue)).Next();
             var g = GraphFactory.GenerateRandom(n, density, new Random(0).Next() ^ initialSeed).Permute(2);
             var h = GraphFactory.GenerateRandom(n, density, new Random(1).Next() ^ initialSeed).Permute(3);
             var gToH = new Dictionary<int, int>();
@@ -227,7 +227,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    Math.Min(g.EdgeCount, h.EdgeCount) * 20,
+                    Math.Min(g.Vertices.Count, h.Vertices.Count) * 100,
                     0
                     );
                 sw.Stop();
