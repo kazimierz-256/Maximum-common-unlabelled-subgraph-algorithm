@@ -34,7 +34,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Random random = new Random(0);
         public long[] gEnvelopeHashes;
         public long[] hEnvelopeHashes;
-        public long[] hashes;
         public HashSet<int> hVerticesAutomorphic = new HashSet<int>();
 
         public CoreAlgorithm InternalStateSetup(
@@ -123,13 +122,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                 hMax = this.hConnectionExistence.GetLength(0);
             }
 
+
             if (gConnectionExistence == null && hConnectionExistence == null)
             {
                 gEnvelopeHashes = new long[gMax + 1];
                 hEnvelopeHashes = new long[hMax + 1];
-                hashes = new long[Math.Min(gMax, hMax) + 1];
-                for (int i = 0; i < hashes.Length; i++)
-                    hashes[i] = (random.Next() << 32) | random.Next();
             }
 
             return this;
@@ -266,7 +263,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     edges = 0;
                     foreach (var hCan in hEnvelope)
                     {
-                        if (gEnvelopeHashes != null && hEnvelopeHashes != null && gEnvelopeHashes[gCan] != hEnvelopeHashes[hCan])
+                        if (gEnvelopeHashes != null && gEnvelopeHashes[gCan] != hEnvelopeHashes[hCan])
                             continue;
 
                         locallyIsomorphic = true;
@@ -346,8 +343,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (gConnectionExistence[gMatchingCandidate, gOutsider])
                         {
                             // the outsider vertex is new to the envelope
-                            if (hashes != null)
-                                gEnvelopeHashes[gOutsider] ^= hashes[ghMapping.Count];
+                            if (gEnvelopeHashes != null)
+                                gEnvelopeHashes[gOutsider] = ghMapping.Count;
                             gEnvelope.Add(gOutsider);
                             gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
                             gVerticesToRemoveFromEnvelopeLimit += 1;
@@ -404,9 +401,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         #region H setup
                         totalNumberOfEdgesInSubgraph += newEdges;
 
-                        ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                        hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
-
                         hEnvelope.Remove(hMatchingCandidate);
                         if (checkForAutomorphism)
                             hVerticesAutomorphic.Remove(hMatchingCandidate);
@@ -415,8 +409,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         foreach (var hNeighbour in hOutsiders)
                             if (hConnectionExistence[hNeighbour, hMatchingCandidate])
                             {
-                                if (hashes != null)
-                                    hEnvelopeHashes[hNeighbour] ^= hashes[ghMapping.Count - 1];
+                                if (hEnvelopeHashes != null)
+                                    hEnvelopeHashes[hNeighbour] = ghMapping.Count;
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
                                 hVerticesToRemoveFromEnvelopeLimit += 1;
@@ -424,6 +418,9 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
                             hOutsiders.Remove(hVerticesToRemoveFromEnvelope[i]);
+
+                        ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
+                        hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
 
                         deepness += 1;
                         #endregion
@@ -438,8 +435,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         deepness -= 1;
                         for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
                         {
-                            if (hashes != null)
-                                hEnvelopeHashes[hVerticesToRemoveFromEnvelope[i]] ^= hashes[ghMapping.Count - 1];
                             hEnvelope.Remove(hVerticesToRemoveFromEnvelope[i]);
                             hOutsiders.Add(hVerticesToRemoveFromEnvelope[i]);
                         }
@@ -458,8 +453,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                     #region G cleanup
                     for (int i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
                     {
-                        if (hashes != null)
-                            gEnvelopeHashes[gVerticesToRemoveFromEnvelope[i]] ^= hashes[ghMapping.Count];
                         gEnvelope.Remove(gVerticesToRemoveFromEnvelope[i]);
                         gOutsiders.Add(gVerticesToRemoveFromEnvelope[i]);
                     }
