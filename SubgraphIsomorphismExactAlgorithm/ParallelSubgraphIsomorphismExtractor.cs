@@ -120,10 +120,13 @@ namespace SubgraphIsomorphismExactAlgorithm
             Console.WriteLine($"g classes of abstraction: {ClassesOfAbstraction(swappedGraphs ? hArgument : gArgument).Count}");
             Console.WriteLine($"h classes of abstraction: {hClassesOfAbstraction.Count}");
 #endif
+            // don't check for automorphism when there might be disconnected components!
             var checkForAutomorphism = hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents;
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) * approximationRatio > localBestScore)
+            {
                 Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
+                //for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i++)
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
@@ -175,6 +178,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
 #endif
                 });
+                //}
+            }
 
             // if requested to find G within H and could not find such then quit with dummy results
             if (findGraphGinH && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)

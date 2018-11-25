@@ -32,8 +32,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         public bool checkForAutomorphism;
         public double approximationRatio;
         private Random random = new Random(0);
-        public long[] gEnvelopeHashes;
-        public long[] hEnvelopeHashes;
+        public int[] gEnvelopeHashes;
+        public int[] hEnvelopeHashes;
         public HashSet<int> hVerticesAutomorphic = new HashSet<int>();
 
         public CoreAlgorithm InternalStateSetup(
@@ -125,8 +125,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             if (gConnectionExistence == null && hConnectionExistence == null)
             {
-                gEnvelopeHashes = new long[gMax + 1];
-                hEnvelopeHashes = new long[hMax + 1];
+                gEnvelopeHashes = new int[gMax + 1];
+                hEnvelopeHashes = new int[hMax + 1];
             }
 
             return this;
@@ -743,7 +743,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 leftoverSteps = leftoverSteps,
                                 deepness = deepness,
                                 approximationRatio = approximationRatio,
-                                checkForAutomorphism = checkForAutomorphism
+                                checkForAutomorphism = checkForAutomorphism,
+                                gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
+                                hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
                             };
                             subSolver.gOutsiders.Remove(gMatchingCandidate);
                             subSolver.hOutsiders.Remove(hMatchingCandidate);

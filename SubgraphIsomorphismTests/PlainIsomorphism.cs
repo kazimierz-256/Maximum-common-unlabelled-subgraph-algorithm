@@ -12,9 +12,9 @@ namespace SubgraphIsomorphismTests
         [InlineData(9)]
         public void TwoCliquesConnectedByChain(int max)
         {
-            for (int i = 4; i < max; i+=1)
+            for (int i = 4; i < max; i += 1)
             {
-                for (int j = 3; j <= i; j+=1)
+                for (int j = 3; j <= i; j += 1)
                 {
                     var g = GraphFactory.GenerateCliquesConnectedByChain(i, j, 5).Permute(0);
                     var h = GraphFactory.GenerateCliquesConnectedByChain(i, j, 4).Permute(1);
@@ -51,9 +51,9 @@ namespace SubgraphIsomorphismTests
         [InlineData(10)]
         public void TwoCliquesConnectedByChainWithTriangle(int max)
         {
-            for (int i = 4; i < max; i+=1)
+            for (int i = 4; i < max; i += 1)
             {
-                for (int j = 3; j <= i; j+=1)
+                for (int j = 3; j <= i; j += 1)
                 {
                     var vertices1 = new HashSet<int>(Enumerable.Range(0, i + j + 4));
                     var vertices2 = new HashSet<int>(Enumerable.Range(0, i + j + 3));
@@ -73,15 +73,15 @@ namespace SubgraphIsomorphismTests
                     }
 
                     // construct clique 1 and 2
-                    for (int i1 = 0; i1 < i; i1+=1)
-                        for (int i1helper = 0; i1helper < i1; i1helper+=1)
+                    for (int i1 = 0; i1 < i; i1 += 1)
+                        for (int i1helper = 0; i1helper < i1; i1helper += 1)
                         {
                             connect(edges1, i1, i1helper);
                             connect(edges2, i1, i1helper);
                         }
 
-                    for (int j1 = i; j1 < i + j; j1+=1)
-                        for (int j1helper = i; j1helper < j1; j1helper+=1)
+                    for (int j1 = i; j1 < i + j; j1 += 1)
+                        for (int j1helper = i; j1helper < j1; j1helper += 1)
                         {
                             connect(edges1, j1, j1helper);
                             connect(edges2, j1, j1helper);
@@ -136,14 +136,14 @@ namespace SubgraphIsomorphismTests
         [InlineData(5, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 1; i < n; i += 1)
             {
                 var max = repetitions;
                 if (i == 2)
                 {
                     max = 1;
                 }
-                for (int j = 0; j < max; j+=1)
+                for (int j = 0; j < max; j += 1)
                 {
                     // randomize a graph of given n and density
                     var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
@@ -174,25 +174,25 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(7, 10000, 0.5, 24, 41)]
+        [InlineData(7, 1000, 0.5, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 6; i < n; i += 1)
             {
                 var max = repetitions;
                 if (i == 2)
                 {
                     max = 1;
                 }
-                for (int j = 0; j < max; j+=1)
+                for (int j = 132; j < max; j += 1)
                 {
                     var random = new Random(j);
 
                     // randomize a graph of given n and density
                     var g = GraphFactory.GenerateRandom(i, density, generatingSeed + j * j);
-                    var h = GraphFactory.GeneratePermuted(g, permutingSeed - j);
+                    var h = g.Permute(permutingSeed - j);
 
-                    for (int removed = 0; removed < i; removed+=1)
+                    for (int removed = 0; removed < i; removed += 1)
                     {
                         // run the algorithm
                         SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
@@ -204,7 +204,7 @@ namespace SubgraphIsomorphismTests
                             out var gToH,
                             out var hToG,
                             true,
-                            true
+                            false
                             );
                         Assert.NotEmpty(gToH);
                         Assert.NotEmpty(hToG);
@@ -222,17 +222,17 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 10000, 0.5, 24)]
+        [InlineData(5, 1000, 0.5, 24)]
         public void GraphOfQuadrupleSize(int n, int repetitions, double density, int generatingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 1; i < n; i += 1)
             {
                 var max = repetitions;
                 if (i == 2)
                 {
                     max = 1;
                 }
-                for (int j = 0; j < max; j+=1)
+                for (int j = 0; j < max; j += 1)
                 {
 
                     // randomize a graph of given n and density
@@ -264,14 +264,14 @@ namespace SubgraphIsomorphismTests
         [InlineData(5, 100, 0.5, 24)]
         public void Approximating1GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 1; i < n; i += 1)
             {
                 var max = repetitions;
                 if (i == 2)
                 {
                     max = 1;
                 }
-                for (int j = 0; j < max; j+=1)
+                for (int j = 0; j < max; j += 1)
                 {
 
                     // randomize a graph of given n and density
@@ -304,9 +304,9 @@ namespace SubgraphIsomorphismTests
         [InlineData(6, 24)]
         public void ApproximatingAlgorithmIsNotBetterThanActual(int n, int generatingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 1; i < n; i += 1)
             {
-                for (int j = 1; j < i; j+=1)
+                for (int j = 1; j < i; j += 1)
                 {
                     for (double density = 0.1; density < 1d; density += 0.1)
                     {
@@ -351,14 +351,14 @@ namespace SubgraphIsomorphismTests
         [InlineData(5, 100, 0.5, 24)]
         public void Approximating2GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
-            for (int i = 1; i < n; i+=1)
+            for (int i = 1; i < n; i += 1)
             {
                 var max = repetitions;
                 if (i == 2)
                 {
                     max = 1;
                 }
-                for (int j = 0; j < max; j+=1)
+                for (int j = 0; j < max; j += 1)
                 {
 
                     // randomize a graph of given n and density
