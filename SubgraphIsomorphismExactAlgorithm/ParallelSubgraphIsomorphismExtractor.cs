@@ -1,4 +1,5 @@
 ﻿#define debug_
+#define parallel
 
 using GraphDataStructure;
 using System;
@@ -39,11 +40,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 swappedGraphs = true;
                 h = gArgument;
-                g = hArgument.DeepClone();
+                g = hArgument;
             }
             else
             {
-                g = gArgument.DeepClone();
+                g = gArgument;
                 h = hArgument;
             }
 
@@ -53,23 +54,24 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             // repeat until the resulting graph is nonempty
             var random = new Random(0);
-            while (g.Vertices.Count > 0)
+            var gToDeconstruct = g.DeepClone();
+            while (gToDeconstruct.Vertices.Count > 0)
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
-                var gMatchingCandidate = ClassesOfAbstraction(g).ArgMax(
+                var gMatchingCandidate = ClassesOfAbstraction(gToDeconstruct).ArgMax(
                         classOfAbstraction => classOfAbstraction.Count,
-                        classOfAbstraction => -g.VertexDegree(classOfAbstraction[0]),
+                        classOfAbstraction => -gToDeconstruct.VertexDegree(classOfAbstraction[0]),
                         classOfAbstraction => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, classOfAbstraction[0]) : gArgument.AreVerticesConnected(r, classOfAbstraction[0]))
                         )[0];
 
-                gGraphs.Add(g.DeepClone());
+                gGraphs.Add(gToDeconstruct.DeepClone());
                 gInitialVertices.Add(gMatchingCandidate);
 
                 // do not remove vertices from G if requested to find G within H
                 if (findGraphGinH)
                     break;
 
-                g.RemoveVertex(gMatchingCandidate);
+                gToDeconstruct.RemoveVertex(gMatchingCandidate);
                 removedVertices.Add(gMatchingCandidate);
             }
 
@@ -121,12 +123,14 @@ namespace SubgraphIsomorphismExactAlgorithm
             Console.WriteLine($"h classes of abstraction: {hClassesOfAbstraction.Count}");
 #endif
             // don't check for automorphism when there might be disconnected components!
-            var checkForAutomorphism = hClassesOfAbstraction.Count < h.Vertices.Count && !analyzeDisconnectedComponents;
 
             if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) * approximationRatio > localBestScore)
             {
+#if parallel
                 Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
-                //for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i++)
+#else
+                for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i++)
+#endif
                 {
                     var gIndex = i % gGraphs.Count;
                     var hIndex = i / gGraphs.Count;
@@ -158,7 +162,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            checkForAutomorphism: checkForAutomorphism,
                             approximationRatio: approximationRatio
                         )
                         .Recurse(ref localBestScore);
@@ -177,8 +180,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                     }
 #endif
+#if parallel
                 });
-                //}
+#else
+                }
+#endif
             }
 
             // if requested to find G within H and could not find such then quit with dummy results

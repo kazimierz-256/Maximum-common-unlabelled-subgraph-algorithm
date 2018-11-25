@@ -133,7 +133,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 10000, 0.5, 24, 41)]
+        [InlineData(10, 1000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i += 1)

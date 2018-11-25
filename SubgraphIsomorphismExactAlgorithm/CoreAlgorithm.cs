@@ -29,7 +29,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int deepness = 0;
         public int deepnessTakeawaySteps;
         public int originalLeftoverSteps;
-        public bool checkForAutomorphism;
         public double approximationRatio;
         private Random random = new Random(0);
         public int[] gEnvelopeHashes;
@@ -49,7 +48,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             int deepnessTakeawaySteps = 0,
             bool[,] gConnectionExistence = null,
             bool[,] hConnectionExistence = null,
-            bool checkForAutomorphism = true,
             HashSet<int> automorphismVerticesOverride = null,
             double approximationRatio = 1d)
         {
@@ -62,7 +60,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.leftoverSteps = leftoverSteps;
             originalLeftoverSteps = leftoverSteps;
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
-            this.checkForAutomorphism = checkForAutomorphism;
             this.approximationRatio = approximationRatio;
 
             ghMapping = new Dictionary<int, int>();
@@ -74,15 +71,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             {
                 gOutsiders = new HashSet<int>(g.Vertices);
                 hOutsiders = new HashSet<int>(h.Vertices);
-                if (checkForAutomorphism)
-                    hVerticesAutomorphic = new HashSet<int>(h.Vertices);
             }
             else
             {
                 gOutsiders = new HashSet<int>(automorphismVerticesOverride);
                 hOutsiders = new HashSet<int>(automorphismVerticesOverride);
-                if (checkForAutomorphism)
-                    hVerticesAutomorphic = new HashSet<int>(automorphismVerticesOverride);
             }
             gOutsiders.Remove(gInitialMatchingVertex);
             hOutsiders.Remove(hInitialMatchingVertex);
@@ -344,7 +337,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             // the outsider vertex is new to the envelope
                             if (gEnvelopeHashes != null)
-                                gEnvelopeHashes[gOutsider] = ghMapping.Count;
+                                gEnvelopeHashes[gOutsider] = ghMapping.Count + 1;
                             gEnvelope.Add(gOutsider);
                             gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
                             gVerticesToRemoveFromEnvelopeLimit += 1;
@@ -364,37 +357,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore; hCandidate += 1)
                     {
-                        if (checkForAutomorphism && hCandidate > 0)
-                        {
-                            for (int j = 0; j < hCandidate; j++)
-                            {
-                                if (isomorphicH[j] != -1)
-                                {
-                                    var found = false;
-                                    new CoreAlgorithm()
-                                        .InternalStateSetup(
-                                            isomorphicH[j],
-                                            isomorphicH[hCandidate],
-                                            h,
-                                            h,
-                                            null,
-                                            null,
-                                            gConnectionExistence: hConnectionExistence,
-                                            hConnectionExistence: hConnectionExistence,
-                                            automorphismVerticesOverride: hVerticesAutomorphic
-                                        )
-                                        .RecurseAutomorphism(ref found);
-                                    if (found)
-                                    {
-                                        isomorphicH[hCandidate] = -1;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (isomorphicH[hCandidate] == -1)
-                                continue;
-                        }
-
                         var hMatchingCandidate = isomorphicH[hCandidate];
                         // verify mutual agreement connections of neighbours
 
@@ -402,15 +364,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                         totalNumberOfEdgesInSubgraph += newEdges;
 
                         hEnvelope.Remove(hMatchingCandidate);
-                        if (checkForAutomorphism)
-                            hVerticesAutomorphic.Remove(hMatchingCandidate);
 
                         hVerticesToRemoveFromEnvelopeLimit = 0;
                         foreach (var hNeighbour in hOutsiders)
                             if (hConnectionExistence[hNeighbour, hMatchingCandidate])
                             {
                                 if (hEnvelopeHashes != null)
-                                    hEnvelopeHashes[hNeighbour] = ghMapping.Count;
+                                    hEnvelopeHashes[hNeighbour] = ghMapping.Count + 1;
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
                                 hVerticesToRemoveFromEnvelopeLimit += 1;
@@ -440,8 +400,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
 
                         hEnvelope.Add(hMatchingCandidate);
-                        if (checkForAutomorphism)
-                            hVerticesAutomorphic.Add(hMatchingCandidate);
 
                         ghMapping.Remove(gMatchingCandidate);
                         hgMapping.Remove(hMatchingCandidate);
@@ -743,7 +701,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 leftoverSteps = leftoverSteps,
                                 deepness = deepness,
                                 approximationRatio = approximationRatio,
-                                checkForAutomorphism = checkForAutomorphism,
                                 gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
                                 hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
                             };
