@@ -259,7 +259,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var minScore = int.MaxValue;
                 var degree = -1;
                 var isomorphicCandidates = new int[hEnvelope.Count];
-                var edges = 0;
                 var tmp = isomorphicH;
                 var localNumberOfCandidates = 0;
                 var score = 0;
@@ -269,13 +268,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     localNumberOfCandidates = 0;
                     score = 0;
-                    edges = 0;
                     var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
-                    for (i = 0; i < mappingCount; i += 1)
-                    {
-                        if (gConnectionExistence[gCan, gMapping[i]])
-                            edges += 1;
-                    }
                     foreach (var hCan in hEnvelope)
                     {
                         if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
@@ -312,7 +305,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         minScore = score;
                         degree = -1;
                         gMatchingCandidate = gCan;
-                        newEdges = edges;
 
                         tmp = isomorphicCandidates;
                         isomorphicCandidates = isomorphicH;
@@ -326,18 +318,22 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (degree == -1)
                             degree = g.VertexDegree(gMatchingCandidate);
 
-                        if (thisDegree < degree || (thisDegree == degree && edges < newEdges))
+                        if (thisDegree < degree)
                         {
                             totalNumberOfCandidates = localNumberOfCandidates;
                             degree = thisDegree;
                             gMatchingCandidate = gCan;
-                            newEdges = edges;
 
                             tmp = isomorphicCandidates;
                             isomorphicCandidates = isomorphicH;
                             isomorphicH = tmp;
                         }
                     }
+                }
+                for (i = 0; i < mappingCount; i += 1)
+                {
+                    if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
+                        newEdges += 1;
                 }
                 #endregion
 
