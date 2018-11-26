@@ -1,5 +1,6 @@
-﻿#define approx1
-#define approx2
+﻿#define approx1_
+#define approx2_
+#define approx3_
 #define exact
 using GraphDataStructure;
 using MathParser;
@@ -34,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(23);
+            PrintBenchmark(22);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -46,11 +47,11 @@ namespace SubgraphIsomorphismBenchmark
             using (var texWriter = File.AppendText(texApprox2Path))
                 texWriter.Write($"{n}&{n}");
 
-            foreach (var density in new double[] { 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.45, 0.55, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.98, 0.99 })
+            foreach (var density in new double[] { 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.45, 0.5, 0.55, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.98, 0.99 })
             {
                 var print = false;
                 var msTime = 0d;
-                var approximation1QualityString = string.Empty;
+                var approximationQualityString = string.Empty;
                 var approximation2QualityString = string.Empty;
                 for (int i = 1; i <= iterations * 2 + 1; i += 1)
                 {
@@ -79,6 +80,14 @@ namespace SubgraphIsomorphismBenchmark
                     Console.WriteLine($"score: {approximate1Score}");
                     Console.WriteLine();
 #endif
+#if (approx3)
+                    Console.WriteLine("Alpha approximation algorithm");
+                    var aMsTime3 = BenchmarkIsomorphism(3, n, density, i, out var approximate3SubgraphVertices, out var approximate3SubgraphEdges, out var approximate3Score, print, timeout: aMsTime2).TotalMilliseconds;
+                    Console.Write($"{aMsTime3:F2}ms,   ".PadLeft(20));
+                    Console.WriteLine($"vertices: {n}, density: { density}");
+                    Console.WriteLine($"score: {approximate3Score}");
+                    Console.WriteLine();
+#endif
 #if (exact)
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
@@ -103,10 +112,19 @@ namespace SubgraphIsomorphismBenchmark
 
                     Console.Write($"Quality of Randomized approximation algorithm: ");
                     Console.ForegroundColor = approximate1Score == score ? ConsoleColor.DarkGreen : ConsoleColor.DarkYellow;
-                    approximation1QualityString = string.Format($"{ 100d * approximate1Score / score:F1}");
-                    Console.Write($"{approximation1QualityString}%");
+                    approximationQualityString = string.Format($"{ 100d * approximate1Score / score:F1}");
+                    Console.Write($"{approximationQualityString}%");
                     Console.ResetColor();
                     Console.WriteLine($", approximate {approximate1Score}, exact {score}");
+#endif
+#if (approx3 && exact)
+
+                    Console.Write($"Quality of Alpha approximation algorithm: ");
+                    Console.ForegroundColor = approximate3Score == score ? ConsoleColor.DarkGreen : ConsoleColor.DarkYellow;
+                    approximationQualityString = string.Format($"{ 100d * approximate3Score / score:F1}");
+                    Console.Write($"{approximationQualityString}%");
+                    Console.ResetColor();
+                    Console.WriteLine($", approximate {approximate3Score}, exact {score}");
 #endif
 #if (approx1 && approx2)
                     switch (Math.Sign(approximate1Score - approximate2Score))
@@ -140,9 +158,9 @@ namespace SubgraphIsomorphismBenchmark
                     texWriter.Write($"&{msTime:F1}ms");
 
                 using (var csvWriter = File.AppendText(csvApprox1Path))
-                    csvWriter.WriteLine($"{n},{density},{approximation1QualityString}");
+                    csvWriter.WriteLine($"{n},{density},{approximationQualityString}");
                 using (var texWriter = File.AppendText(texApprox1Path))
-                    texWriter.Write($"&{approximation1QualityString}\\% ");
+                    texWriter.Write($"&{approximationQualityString}\\% ");
 
                 using (var csvWriter = File.AppendText(csvApprox2Path))
                     csvWriter.WriteLine($"{n},{density},{approximation2QualityString}");
@@ -229,6 +247,25 @@ namespace SubgraphIsomorphismBenchmark
                     false,
                     Math.Min(g.Vertices.Count, h.Vertices.Count) * 100,
                     0
+                    );
+                sw.Stop();
+
+                subgraphVertices = gToH.Keys.Count;
+            }
+            else if (algorithm == 3)
+            {
+                sw.Start();
+                SubgraphIsomorphismExactAlgorithm.ParallelSubgraphIsomorphismExtractor.ExtractOptimalSubgraph(
+                    g,
+                    h,
+                    valuation,
+                    out score,
+                    out subgraphEdges,
+                    out gToH,
+                    out hToG,
+                    disconnected,
+                    false,
+                    approximationRatio: 0.9d
                     );
                 sw.Stop();
 

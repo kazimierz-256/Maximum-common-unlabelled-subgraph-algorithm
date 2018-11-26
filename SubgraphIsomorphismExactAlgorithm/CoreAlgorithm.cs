@@ -248,24 +248,39 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var localNumberOfCandidates = 0;
                 var score = 0;
                 var locallyIsomorphic = true;
-
+                var GghArrayMapping = new int[ghMapping.Count];
+                var HghArrayMapping = new int[ghMapping.Count];
+                var iter = 0;
+                foreach (var kvp in ghMapping)
+                {
+                    GghArrayMapping[iter] = kvp.Key;
+                    HghArrayMapping[iter] = kvp.Value;
+                    iter += 1;
+                }
                 foreach (var gCan in gEnvelope)
                 {
                     localNumberOfCandidates = 0;
                     score = 0;
                     edges = 0;
+                    var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
                     foreach (var hCan in hEnvelope)
                     {
-                        if (gEnvelopeHashes != null && gEnvelopeHashes[gCan] != hEnvelopeHashes[hCan])
+                        if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                             continue;
 
                         locallyIsomorphic = true;
                         var localEdges = 0;
-                        foreach (var gMap in ghMapping)
+                        for (int i = gHash == 0 ? 0 : gHash - 1; i < GghArrayMapping.Length; i++)
                         {
-                            gConnection = gConnectionExistence[gCan, gMap.Key];
+                            if (i == gHash - 1)
+                            {
+                                localEdges += 1;
+                                continue;
+                            }
+
+                            gConnection = gConnectionExistence[gCan, GghArrayMapping[i]];
 #if induced
-                            if (gConnection != hConnectionExistence[hCan, gMap.Value])
+                            if (gConnection != hConnectionExistence[hCan, HghArrayMapping[i]])
 #else
                             if (gConnection && !hConnectionExistence[hCan, gMap.Value])
 #endif
