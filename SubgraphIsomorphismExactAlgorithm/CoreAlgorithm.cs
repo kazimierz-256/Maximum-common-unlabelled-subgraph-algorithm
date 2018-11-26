@@ -363,6 +363,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         gOutsiders.Remove(gVerticesToRemoveFromEnvelope[i]);
                     }
+                    totalNumberOfEdgesInSubgraph += newEdges;
                     #endregion
 
                     var hVerticesToRemoveFromEnvelope = new int[hOutsiders.Count];
@@ -375,7 +376,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         // verify mutual agreement connections of neighbours
 
                         #region H setup
-                        totalNumberOfEdgesInSubgraph += newEdges;
 
                         hEnvelope.Remove(hMatchingCandidate);
 
@@ -418,11 +418,11 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         mappingCount -= 1;
 
-                        totalNumberOfEdgesInSubgraph -= newEdges;
                         #endregion
 
                     }
                     #region G cleanup
+                    totalNumberOfEdgesInSubgraph -= newEdges;
                     for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
                     {
                         gEnvelope.Remove(gVerticesToRemoveFromEnvelope[i]);
