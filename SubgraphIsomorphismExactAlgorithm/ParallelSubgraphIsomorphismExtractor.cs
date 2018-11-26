@@ -151,6 +151,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                       lock (threadSynchronizingObject)
                                           if (newScore * approximationRatio > localBestScore)
                                           {
+#if debug
+                                              Console.WriteLine($"New score: {newScore} ({localBestScore})");
+#endif
                                               localBestScore = newScore;
                                               // lazy evaluation for best performance
                                               ghLocalOptimalMapping = ghMap();
