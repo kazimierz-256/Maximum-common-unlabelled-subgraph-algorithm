@@ -163,8 +163,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                         findGraphGinH = findExactMatch,
                         analyzeDisconnected = analyzeDisconnected,
                         subgraphScoringFunction = graphScoringFunction,
-                        ghMapping = new Dictionary<int, int>(),
-                        hgMapping = new Dictionary<int, int>(),
+                        gMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
+                        hMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
                         gEnvelope = new HashSet<int>() { gCandidate },
                         hEnvelope = new HashSet<int>() { hCandidate },
                         gOutsiders = new HashSet<int>(gVertices),
@@ -212,7 +212,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 step += 1;
             }
 
-            if (findExactMatch && currentAlgorithmHoldingState.ghMapping.Count < gVertices.Count)
+            if (findExactMatch && currentAlgorithmHoldingState.mappingCount < gVertices.Count)
             {
                 // did not find an exact match, simply return initial values
                 bestScore = double.MinValue;
@@ -222,10 +222,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
             else
             {
-                bestScore = graphScoringFunction(currentAlgorithmHoldingState.ghMapping.Keys.Count, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
+                bestScore = graphScoringFunction(currentAlgorithmHoldingState.mappingCount, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
                 subgraphEdges = currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph;
-                ghOptimalMapping = currentAlgorithmHoldingState.ghMapping;
-                hgOptimalMapping = currentAlgorithmHoldingState.hgMapping;
+                ghOptimalMapping = currentAlgorithmHoldingState.gGetDictionaryOutOfMapping();
+                hgOptimalMapping = currentAlgorithmHoldingState.hGetDictionaryOutOfMapping();
             }
         }
     }

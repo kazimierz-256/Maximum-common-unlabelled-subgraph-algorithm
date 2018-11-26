@@ -15,8 +15,9 @@ namespace SubgraphIsomorphismExactAlgorithm
         public Graph h;
         public bool[,] gConnectionExistence;
         public bool[,] hConnectionExistence;
-        public Dictionary<int, int> ghMapping;
-        public Dictionary<int, int> hgMapping;
+        public int[] gMapping;
+        public int[] hMapping;
+        public int mappingCount;
         public HashSet<int> gEnvelope;
         public HashSet<int> hEnvelope;
         public HashSet<int> gOutsiders;
@@ -62,8 +63,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
             this.approximationRatio = approximationRatio;
 
-            ghMapping = new Dictionary<int, int>();
-            hgMapping = new Dictionary<int, int>();
+            gMapping = new int[Math.Min(g.Vertices.Count, h.Vertices.Count)];
+            hMapping = new int[gMapping.Length];
+            mappingCount = 0;
             // for simplicity insert initial isomorphic vertices into the envelope
             gEnvelope = new HashSet<int>() { gInitialMatchingVertex };
             hEnvelope = new HashSet<int>() { hInitialMatchingVertex };
@@ -134,10 +136,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var candidatesTrulyIsomorphic = true;
                 var potentialNumberOfNewEdges = 0;
 
-                foreach (var ghSingleMapping in ghMapping)
+                for (int i = 0; i < mappingCount; i++)
                 {
-                    var gVertexInSubgraph = ghSingleMapping.Key;
-                    var hVertexInSubgraph = ghSingleMapping.Value;
+                    var gVertexInSubgraph = gMapping[i];
+                    var hVertexInSubgraph = hMapping[i];
                     var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
                     var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
 #if induced
@@ -159,8 +161,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
                     // by definition add the transition functions (which means adding them to the subgraph)
-                    ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                    hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+                    gMapping[mappingCount] = gMatchingCandidate;
+                    hMapping[mappingCount] = hMatchingCandidate;
+                    mappingCount += 1;
 
                     // if the matching vertex was in the envelope set then remove it
                     gEnvelope.Remove(gMatchingCandidate);
@@ -200,6 +203,21 @@ namespace SubgraphIsomorphismExactAlgorithm
             return false;
         }
 
+        public Dictionary<int, int> gGetDictionaryOutOfMapping()
+        {
+            var dictionary = new Dictionary<int, int>();
+            for (int i = 0; i < mappingCount; i++)
+                dictionary.Add(gMapping[i], hMapping[i]);
+            return dictionary;
+        }
+        public Dictionary<int, int> hGetDictionaryOutOfMapping()
+        {
+            var dictionary = new Dictionary<int, int>();
+            for (int i = 0; i < mappingCount; i++)
+                dictionary.Add(hMapping[i], gMapping[i]);
+            return dictionary;
+        }
+
         // main recursive discovery procedure
         // the parameter allows multiple threads to read the value directly in parallel (writing is more complicated)
         public void Recurse(ref double bestScore)
@@ -209,16 +227,15 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // no more connections could be found
                 // is the found subgraph optimal?
 
-                var vertices = ghMapping.Keys.Count;
                 // count the number of edges in subgraph
-                var resultingValuation = subgraphScoringFunction(vertices, totalNumberOfEdgesInSubgraph);
+                var resultingValuation = subgraphScoringFunction(mappingCount, totalNumberOfEdgesInSubgraph);
                 if (resultingValuation > bestScore)
                 {
                     // notify about the found solution (a local maximum) and provide a lazy evaluation method that creates the necessary mapping
                     newSolutionFoundNotificationAction?.Invoke(
                         resultingValuation,
-                        () => new Dictionary<int, int>(ghMapping),
-                        () => new Dictionary<int, int>(hgMapping),
+                        gGetDictionaryOutOfMapping,
+                        hGetDictionaryOutOfMapping,
                         totalNumberOfEdgesInSubgraph
                         );
                 }
@@ -248,15 +265,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var localNumberOfCandidates = 0;
                 var score = 0;
                 var locallyIsomorphic = true;
-                var GghArrayMapping = new int[ghMapping.Count];
-                var HghArrayMapping = new int[ghMapping.Count];
-                var iter = 0;
-                foreach (var kvp in ghMapping)
-                {
-                    GghArrayMapping[iter] = kvp.Key;
-                    HghArrayMapping[iter] = kvp.Value;
-                    iter += 1;
-                }
                 foreach (var gCan in gEnvelope)
                 {
                     localNumberOfCandidates = 0;
@@ -270,7 +278,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         locallyIsomorphic = true;
                         var localEdges = 0;
-                        for (int i = gHash == 0 ? 0 : gHash - 1; i < GghArrayMapping.Length; i++)
+                        for (int i = gHash == 0 ? 0 : gHash - 1; i < mappingCount; i++)
                         {
                             if (i == gHash - 1)
                             {
@@ -278,9 +286,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 continue;
                             }
 
-                            gConnection = gConnectionExistence[gCan, GghArrayMapping[i]];
+                            gConnection = gConnectionExistence[gCan, gMapping[i]];
 #if induced
-                            if (gConnection != hConnectionExistence[hCan, HghArrayMapping[i]])
+                            if (gConnection != hConnectionExistence[hCan, hMapping[i]])
 #else
                             if (gConnection && !hConnectionExistence[hCan, gMap.Value])
 #endif
@@ -352,7 +360,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         {
                             // the outsider vertex is new to the envelope
                             if (gEnvelopeHashes != null)
-                                gEnvelopeHashes[gOutsider] = ghMapping.Count + 1;
+                                gEnvelopeHashes[gOutsider] = mappingCount + 1;
                             gEnvelope.Add(gOutsider);
                             gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
                             gVerticesToRemoveFromEnvelopeLimit += 1;
@@ -385,7 +393,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             if (hConnectionExistence[hNeighbour, hMatchingCandidate])
                             {
                                 if (hEnvelopeHashes != null)
-                                    hEnvelopeHashes[hNeighbour] = ghMapping.Count + 1;
+                                    hEnvelopeHashes[hNeighbour] = mappingCount + 1;
                                 hEnvelope.Add(hNeighbour);
                                 hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
                                 hVerticesToRemoveFromEnvelopeLimit += 1;
@@ -394,8 +402,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                         for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
                             hOutsiders.Remove(hVerticesToRemoveFromEnvelope[i]);
 
-                        ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                        hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+                        gMapping[mappingCount] = gMatchingCandidate;
+                        hMapping[mappingCount] = hMatchingCandidate;
+                        mappingCount += 1;
 
                         deepness += 1;
                         #endregion
@@ -416,8 +425,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         hEnvelope.Add(hMatchingCandidate);
 
-                        ghMapping.Remove(gMatchingCandidate);
-                        hgMapping.Remove(hMatchingCandidate);
+                        mappingCount -= 1;
 
                         totalNumberOfEdgesInSubgraph -= newEdges;
                         #endregion
@@ -486,10 +494,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 continue;
                             locallyIsomorphic = true;
                             var localEdges = 0;
-                            foreach (var gMap in ghMapping)
+                            for (int i = 0; i < mappingCount; i++)
                             {
-                                gConnection = gConnectionExistence[gCan, gMap.Key];
-                                if (gConnection != hConnectionExistence[hCan, gMap.Value])
+                                gConnection = gConnectionExistence[gCan, gMapping[i]];
+                                if (gConnection != hConnectionExistence[hCan, hMapping[i]])
                                 {
                                     locallyIsomorphic = false;
                                     break;
@@ -583,8 +591,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                             #region H setup
                             totalNumberOfEdgesInSubgraph += newEdges;
 
-                            ghMapping.Add(gMatchingCandidate, hMatchingCandidate);
-                            hgMapping.Add(hMatchingCandidate, gMatchingCandidate);
+                            gMapping[mappingCount] = gMatchingCandidate;
+                            hMapping[mappingCount] = hMatchingCandidate;
+                            mappingCount += 1;
 
                             hEnvelope.Remove(hMatchingCandidate);
 
@@ -613,8 +622,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                             hEnvelope.Add(hMatchingCandidate);
 
-                            ghMapping.Remove(gMatchingCandidate);
-                            hgMapping.Remove(hMatchingCandidate);
+                            mappingCount -= 1;
 
                             totalNumberOfEdgesInSubgraph -= newEdges;
                             #endregion
@@ -637,7 +645,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         private void DisconnectComponentAndRecurse(ref double bestScore)
         {
             // if exact match is required then recurse only if the envelope set is empty
-            var currentlyBuiltVertices = ghMapping.Keys.Count;
+            var currentlyBuiltVertices = mappingCount;
             var currentlyBuiltEdges = totalNumberOfEdgesInSubgraph;
             if (
                 gOutsiders.Count > 0
@@ -688,22 +696,23 @@ namespace SubgraphIsomorphismExactAlgorithm
                                     () =>
                                     {
                                         var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                        foreach (var gCurrentMap in ghMapping)
-                                            ghExtended.Add(gCurrentMap.Key, gCurrentMap.Value);
+                                        for (int i = 0; i < mappingCount; i++)
+                                            ghExtended.Add(gMapping[i], hMapping[i]);
                                         return ghExtended;
                                     },
                                     () =>
                                     {
                                         var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                        foreach (var hCurrentMap in hgMapping)
-                                            hgExtended.Add(hCurrentMap.Key, hCurrentMap.Value);
+                                        for (int i = 0; i < mappingCount; i++)
+                                            hgExtended.Add(hMapping[i], gMapping[i]);
                                         return hgExtended;
                                     },
                                     edges + totalNumberOfEdgesInSubgraph
                                     )
                                 ,
-                                ghMapping = new Dictionary<int, int>(),
-                                hgMapping = new Dictionary<int, int>(),
+                                gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+                                hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+                                mappingCount = 0,
                                 gEnvelope = new HashSet<int>() { gMatchingCandidate },
                                 hEnvelope = new HashSet<int>() { hMatchingCandidate },
                                 gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
