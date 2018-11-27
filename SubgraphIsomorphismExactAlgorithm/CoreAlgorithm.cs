@@ -18,10 +18,14 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int[] gMapping;
         public int[] hMapping;
         public int mappingCount;
-        public HashSet<int> gEnvelope;
-        public HashSet<int> hEnvelope;
-        public HashSet<int> gOutsiders;
-        public HashSet<int> hOutsiders;
+        public int[] gEnvelope;
+        public int gEnvelopeLimit;
+        public int[] hEnvelope;
+        public int hEnvelopeLimit;
+        public int[] gOutsiders;
+        public int gOutsidersLimit;
+        public int[] hOutsiders;
+        public int hOutsidersLimit;
         public int totalNumberOfEdgesInSubgraph;
         public Action<double, Func<Dictionary<int, int>>, Func<Dictionary<int, int>>, int> newSolutionFoundNotificationAction;
         public bool analyzeDisconnected;
@@ -34,7 +38,6 @@ namespace SubgraphIsomorphismExactAlgorithm
         private Random random = new Random(0);
         public int[] gEnvelopeHashes;
         public int[] hEnvelopeHashes;
-        public HashSet<int> hVerticesAutomorphic = new HashSet<int>();
 
         public CoreAlgorithm InternalStateSetup(
             int gInitialMatchingVertex,
@@ -49,7 +52,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             int deepnessTakeawaySteps = 0,
             bool[,] gConnectionExistence = null,
             bool[,] hConnectionExistence = null,
-            HashSet<int> automorphismVerticesOverride = null,
             double approximationRatio = 1d)
         {
             this.g = g;
@@ -67,20 +69,35 @@ namespace SubgraphIsomorphismExactAlgorithm
             hMapping = new int[gMapping.Length];
             mappingCount = 0;
             // for simplicity insert initial isomorphic vertices into the envelope
-            gEnvelope = new HashSet<int>() { gInitialMatchingVertex };
-            hEnvelope = new HashSet<int>() { hInitialMatchingVertex };
-            if (automorphismVerticesOverride == null)
+            gEnvelope = new int[g.Vertices.Count];
+            gEnvelope[0] = gInitialMatchingVertex;
+            gEnvelopeLimit = 1;
+
+            hEnvelope = new int[h.Vertices.Count];
+            hEnvelope[0] = hInitialMatchingVertex;
+            hEnvelopeLimit = 1;
+
+            gOutsiders = new int[g.Vertices.Count];
+            gOutsidersLimit = 0;
+            foreach (var vertex in g.Vertices)
             {
-                gOutsiders = new HashSet<int>(g.Vertices);
-                hOutsiders = new HashSet<int>(h.Vertices);
+                if (vertex != gInitialMatchingVertex)
+                {
+                    gOutsiders[gOutsidersLimit] = vertex;
+                    gOutsidersLimit += 1;
+                }
             }
-            else
+
+            hOutsiders = new int[h.Vertices.Count];
+            hOutsidersLimit = 0;
+            foreach (var vertex in h.Vertices)
             {
-                gOutsiders = new HashSet<int>(automorphismVerticesOverride);
-                hOutsiders = new HashSet<int>(automorphismVerticesOverride);
+                if (vertex != hInitialMatchingVertex)
+                {
+                    hOutsiders[hOutsidersLimit] = vertex;
+                    hOutsidersLimit += 1;
+                }
             }
-            gOutsiders.Remove(gInitialMatchingVertex);
-            hOutsiders.Remove(hInitialMatchingVertex);
 
             totalNumberOfEdgesInSubgraph = 0;
 
@@ -129,9 +146,9 @@ namespace SubgraphIsomorphismExactAlgorithm
 
         // returns boolean value whether two vertices are locally isomorphic
         // if they are the method modifies internal state
-        public bool TryMatchFromEnvelopeMutateInternalState(int gMatchingCandidate, int hMatchingCandidate)
+        public bool TryMatchFromEnvelopeMutateInternalState(int gMatchingCandidateIndex, int hMatchingCandidateIndex)
         {
-            if (gEnvelope.Contains(gMatchingCandidate) && hEnvelope.Contains(hMatchingCandidate))
+            if (gMatchingCandidateIndex < gEnvelopeLimit && hMatchingCandidateIndex < hEnvelopeLimit)
             {
                 var candidatesTrulyIsomorphic = true;
                 var potentialNumberOfNewEdges = 0;
@@ -140,12 +157,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     var gVertexInSubgraph = gMapping[i];
                     var hVertexInSubgraph = hMapping[i];
-                    var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
-                    var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+                    var gConnection = gConnectionExistence[gEnvelope[gMatchingCandidateIndex], gVertexInSubgraph];
+                    var hConnection = hConnectionExistence[hEnvelope[hMatchingCandidateIndex], hVertexInSubgraph];
 #if induced
                     if (gConnection != hConnection)
 #else
-                    if (gConnection && gConnection != hConnection)
+                            if (gConnection && gConnection != hConnection)
 #endif
                     {
                         candidatesTrulyIsomorphic = false;
@@ -161,32 +178,50 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
                     // by definition add the transition functions (which means adding them to the subgraph)
-                    gMapping[mappingCount] = gMatchingCandidate;
-                    hMapping[mappingCount] = hMatchingCandidate;
+                    gMapping[mappingCount] = gEnvelope[gMatchingCandidateIndex];
+                    hMapping[mappingCount] = hEnvelope[hMatchingCandidateIndex];
                     mappingCount += 1;
 
                     // if the matching vertex was in the envelope set then remove it
-                    gEnvelope.Remove(gMatchingCandidate);
-                    hEnvelope.Remove(hMatchingCandidate);
+                    gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
+                    gEnvelopeLimit -= 1;
+                    hEnvelope[hMatchingCandidateIndex] = hEnvelope[hEnvelopeLimit - 1];
+                    hEnvelopeLimit -= 1;
 
                     // spread the id to all neighbours in the envelope set and discover new neighbours
-                    foreach (var gOutsider in gOutsiders.ToArray())
+                    for (int go = 0; go < gOutsidersLimit;)
                     {
+                        var gOutsider = gOutsiders[go];
                         // if the vertex ia a neighbour of the matching vertex
-                        if (gConnectionExistence[gMatchingCandidate, gOutsider])
+                        if (gConnectionExistence[gMatchingCandidateIndex, gOutsider])
                         {
                             // the outsider vertex is new to the envelope
-                            gEnvelope.Add(gOutsider);
-                            gOutsiders.Remove(gOutsider);
+                            gEnvelope[gEnvelopeLimit] = gOutsider;
+                            gEnvelopeLimit += 1;
+                            gOutsiders[go]= gOutsiders[gOutsidersLimit-1];
+                            gOutsidersLimit -= 1;
+                        }
+                        else
+                        {
+                            go += 1;
                         }
                     }
                     // similarly do the same with H graph
-                    foreach (var hNeighbour in hOutsiders.ToArray())
+                    for (int ho = 0; ho < hOutsidersLimit;)
                     {
-                        if (hConnectionExistence[hNeighbour, hMatchingCandidate])
+                        var hOutsider = hOutsiders[ho];
+                        // if the vertex ia a neighbour of the matching vertex
+                        if (hConnectionExistence[hMatchingCandidateIndex, hOutsider])
                         {
-                            hEnvelope.Add(hNeighbour);
-                            hOutsiders.Remove(hNeighbour);
+                            // the outsider vertex is new to the envelope
+                            hEnvelope[hEnvelopeLimit] = hOutsider;
+                            hEnvelopeLimit += 1;
+                            hOutsiders[ho] = hOutsiders[hOutsidersLimit - 1];
+                            hOutsidersLimit -= 1;
+                        }
+                        else
+                        {
+                            ho += 1;
                         }
                     }
 
@@ -222,7 +257,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         // the parameter allows multiple threads to read the value directly in parallel (writing is more complicated)
         public void Recurse(ref double bestScore)
         {
-            if (leftoverSteps == 0 || gEnvelope.Count == 0 || hEnvelope.Count == 0)
+            if (leftoverSteps == 0 || gEnvelopeLimit == 0 || hEnvelopeLimit == 0)
             {
                 // no more connections could be found
                 // is the found subgraph optimal?
@@ -253,24 +288,29 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 #region Choosing the next candidate
                 var gMatchingCandidate = -1;
+                var gMatchingCandidateIndex = -1;
                 var totalNumberOfCandidates = int.MaxValue;
-                var isomorphicH = new int[hEnvelope.Count];
+                var isomorphicH = new int[hEnvelopeLimit];
+                var isomorphicHIndices = new int[hEnvelopeLimit];
                 var newEdges = 0;
                 var minScore = int.MaxValue;
                 var degree = -1;
-                var isomorphicCandidates = new int[hEnvelope.Count];
+                var isomorphicCandidates = new int[hEnvelopeLimit];
+                var isomorphicCandidatesIndices = new int[hEnvelopeLimit];
                 var tmp = isomorphicH;
                 var localNumberOfCandidates = 0;
                 var score = 0;
                 var locallyIsomorphic = true;
                 var i = 0;
-                foreach (var gCan in gEnvelope)
+                for (int ge = 0; ge < gEnvelopeLimit; ge += 1)
                 {
+                    var gCan = gEnvelope[ge];
                     localNumberOfCandidates = 0;
                     score = 0;
                     var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
-                    foreach (var hCan in hEnvelope)
+                    for (int he = 0; he < hEnvelopeLimit; he++)
                     {
+                        var hCan = hEnvelope[he];
                         if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                             continue;
 
@@ -292,6 +332,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         if (locallyIsomorphic)
                         {
                             isomorphicCandidates[localNumberOfCandidates] = hCan;
+                            isomorphicCandidatesIndices[localNumberOfCandidates] = he;
                             localNumberOfCandidates += 1;
                             score += h.VertexDegree(hCan);
                             if (score > minScore)
@@ -305,10 +346,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                         minScore = score;
                         degree = -1;
                         gMatchingCandidate = gCan;
+                        gMatchingCandidateIndex = ge;
 
                         tmp = isomorphicCandidates;
                         isomorphicCandidates = isomorphicH;
                         isomorphicH = tmp;
+                        tmp = isomorphicCandidatesIndices;
+                        isomorphicCandidatesIndices = isomorphicHIndices;
+                        isomorphicHIndices = tmp;
                         if (totalNumberOfCandidates == 0)
                             break;
                     }
@@ -323,10 +368,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                             totalNumberOfCandidates = localNumberOfCandidates;
                             degree = thisDegree;
                             gMatchingCandidate = gCan;
+                            gMatchingCandidateIndex = ge;
 
                             tmp = isomorphicCandidates;
                             isomorphicCandidates = isomorphicH;
                             isomorphicH = tmp;
+                            tmp = isomorphicCandidatesIndices;
+                            isomorphicCandidatesIndices = isomorphicHIndices;
+                            isomorphicHIndices = tmp;
                         }
                     }
                 }
@@ -337,36 +386,42 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 #endregion
 
-                gEnvelope.Remove(gMatchingCandidate);
+                gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
+                gEnvelopeLimit -= 1;
                 if (totalNumberOfCandidates > 0)
                 {
                     #region G setup
-                    var gVerticesToRemoveFromEnvelope = new int[gOutsiders.Count];
+                    var gVerticesToRemoveFromEnvelope = new int[gOutsidersLimit];
                     var gVerticesToRemoveFromEnvelopeLimit = 0;
 
-                    foreach (var gOutsider in gOutsiders)
+                    var gEnvelopeOriginalSize = gEnvelopeLimit;
+                    for (int go = 0; go < gOutsidersLimit;)
                     {
+                        var gOutsider = gOutsiders[go];
                         // if the vertex ia a neighbour of the matching vertex
                         if (gConnectionExistence[gMatchingCandidate, gOutsider])
                         {
                             // the outsider vertex is new to the envelope
                             if (gEnvelopeHashes != null)
                                 gEnvelopeHashes[gOutsider] = mappingCount + 1;
-                            gEnvelope.Add(gOutsider);
+
+                            gEnvelope[gEnvelopeLimit] = gOutsider;
+                            gEnvelopeLimit += 1;
                             gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
                             gVerticesToRemoveFromEnvelopeLimit += 1;
+                            gOutsiders[go] = gOutsiders[gOutsidersLimit - 1];
+                            gOutsidersLimit -= 1;
+                        }
+                        else
+                        {
+                            go += 1;
                         }
                     }
 
-                    // for minor performance improvement removal of the outsiders that are neighbours of gMatchingCandidate looks quite different from the way it is implemented in the TryMatchFromEnvelopeMutateInternalState procedure
-                    for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
-                    {
-                        gOutsiders.Remove(gVerticesToRemoveFromEnvelope[i]);
-                    }
                     totalNumberOfEdgesInSubgraph += newEdges;
                     #endregion
 
-                    var hVerticesToRemoveFromEnvelope = new int[hOutsiders.Count];
+                    var hVerticesToRemoveFromEnvelope = new int[hOutsidersLimit];
                     var hVerticesToRemoveFromEnvelopeLimit = 0;
 
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
@@ -377,21 +432,30 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         #region H setup
 
-                        hEnvelope.Remove(hMatchingCandidate);
+                        hEnvelope[isomorphicHIndices[hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
+                        hEnvelopeLimit -= 1;
 
+                        var hOriginalSize = hEnvelopeLimit;
                         hVerticesToRemoveFromEnvelopeLimit = 0;
-                        foreach (var hNeighbour in hOutsiders)
+                        for (int ho = 0; ho < hOutsidersLimit;)
+                        {
+                            var hNeighbour = hOutsiders[ho];
                             if (hConnectionExistence[hNeighbour, hMatchingCandidate])
                             {
                                 if (hEnvelopeHashes != null)
                                     hEnvelopeHashes[hNeighbour] = mappingCount + 1;
-                                hEnvelope.Add(hNeighbour);
+                                hEnvelope[hEnvelopeLimit] = hNeighbour;
+                                hEnvelopeLimit += 1;
                                 hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
                                 hVerticesToRemoveFromEnvelopeLimit += 1;
+                                hOutsiders[ho] = hOutsiders[hOutsidersLimit - 1];
+                                hOutsidersLimit -= 1;
                             }
-
-                        for (i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
-                            hOutsiders.Remove(hVerticesToRemoveFromEnvelope[i]);
+                            else
+                            {
+                                ho += 1;
+                            }
+                        }
 
                         gMapping[mappingCount] = gMatchingCandidate;
                         hMapping[mappingCount] = hMatchingCandidate;
@@ -402,19 +466,24 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
                         Recurse(ref bestScore);
-                        if (analyzeDisconnected)
-                            DisconnectComponentAndRecurse(ref bestScore);
+                        //if (analyzeDisconnected)
+                        //    DisconnectComponentAndRecurse(ref bestScore);
 
 
                         #region H cleanup
                         deepness -= 1;
                         for (i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
                         {
-                            hEnvelope.Remove(hVerticesToRemoveFromEnvelope[i]);
-                            hOutsiders.Add(hVerticesToRemoveFromEnvelope[i]);
+                            hOutsiders[hOutsidersLimit] = hVerticesToRemoveFromEnvelope[i];
+                            hOutsidersLimit += 1;
                         }
 
-                        hEnvelope.Add(hMatchingCandidate);
+                        // restore hEnvelope to original state
+                        hEnvelopeLimit = hOriginalSize;
+                        hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[hCandidate]];
+                        hEnvelope[isomorphicHIndices[hCandidate]] = hMatchingCandidate;
+                        hEnvelopeLimit += 1;
+
 
                         mappingCount -= 1;
 
@@ -423,10 +492,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                     #region G cleanup
                     totalNumberOfEdgesInSubgraph -= newEdges;
+                    // restore gEnvelope to original state
+                    gEnvelopeLimit = gEnvelopeOriginalSize;
                     for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
                     {
-                        gEnvelope.Remove(gVerticesToRemoveFromEnvelope[i]);
-                        gOutsiders.Add(gVerticesToRemoveFromEnvelope[i]);
+                        gOutsiders[gOutsidersLimit] = gVerticesToRemoveFromEnvelope[i];
+                        gOutsidersLimit += 1;
                     }
                     #endregion
                 }
@@ -443,295 +514,359 @@ namespace SubgraphIsomorphismExactAlgorithm
                     deepness -= 1;
                     g.AddVertex(gMatchingCandidate, gRestoreOperation);
                 }
-                gEnvelope.Add(gMatchingCandidate);
+                gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
+                gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
+                gEnvelopeLimit += 1;
                 // the procedure has left the recursion step having the internal state unchanged
             }
         }
 
         public void RecurseAutomorphism(ref bool found)
         {
-            if (gEnvelope.Count == hEnvelope.Count && !found)
+            if (gEnvelopeLimit == hEnvelopeLimit && !found)
             {
-                if (gEnvelope.Count == 0)
+                if (gEnvelopeLimit == 0)
                 {
                     found = true;
                 }
                 else
                 {
-                    #region Choosing the next candidate
-                    var gMatchingCandidate = -1;
-                    var totalNumberOfCandidates = int.MaxValue;
-                    var isomorphicH = new int[hEnvelope.Count];
-                    var newEdges = 0;
-                    var minScore2 = int.MaxValue;
-                    var degree = -1;
-                    var isomorphicCandidates = new int[hEnvelope.Count];
-                    var edges = 0;
-                    var gConnection = false;
-                    var tmp = isomorphicH;
-                    var localNumberOfCandidates = 0;
-                    var score2 = 0;
-                    var locallyIsomorphic = true;
-
-                    foreach (var gCan in gEnvelope)
+                    //var gDegree = g.VertexDegree(gCan);
+                    //foreach (var hCan in hEnvelope)
+                    //{
+                    //    if (h.VertexDegree(hCan) != gDegree)
+                    //        continue;
                     {
-                        localNumberOfCandidates = 0;
-                        score2 = 0;
-                        edges = 0;
-                        var gDegree = g.VertexDegree(gCan);
-                        foreach (var hCan in hEnvelope)
+                        // if there is hope for a larger score then recurse further
+
+                        // the following is for the approximation algorithm part
+                        // reset leftoverSteps if necessary
+                        if (deepness <= deepnessTakeawaySteps)
+                            leftoverSteps = originalLeftoverSteps;
+                        else if (leftoverSteps > 0)
+                            leftoverSteps -= 1;
+
+                        #region Choosing the next candidate
+                        var gMatchingCandidate = -1;
+                        var gMatchingCandidateIndex = -1;
+                        var totalNumberOfCandidates = int.MaxValue;
+                        var isomorphicH = new int[hEnvelopeLimit];
+                        var isomorphicHIndices = new int[hEnvelopeLimit];
+                        var newEdges = 0;
+                        var minScore = int.MaxValue;
+                        var degree = -1;
+                        var isomorphicCandidates = new int[hEnvelopeLimit];
+                        var isomorphicCandidatesIndices = new int[hEnvelopeLimit];
+                        var tmp = isomorphicH;
+                        var localNumberOfCandidates = 0;
+                        var score = 0;
+                        var locallyIsomorphic = true;
+                        var i = 0;
+                        for (int ge = 0; ge < gEnvelopeLimit; ge += 1)
                         {
-                            if (h.VertexDegree(hCan) != gDegree)
-                                continue;
-                            locallyIsomorphic = true;
-                            var localEdges = 0;
-                            for (int i = 0; i < mappingCount; i += 1)
+                            var gCan = gEnvelope[ge];
+                            localNumberOfCandidates = 0;
+                            score = 0;
+                            var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
+                            for (int he = 0; he < hEnvelopeLimit; he++)
                             {
-                                gConnection = gConnectionExistence[gCan, gMapping[i]];
-                                if (gConnection != hConnectionExistence[hCan, hMapping[i]])
+                                var hCan = hEnvelope[he];
+                                if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
+                                    continue;
+
+                                locallyIsomorphic = true;
+                                var localEdges = gHash > 0 ? 1 : 0;
+                                for (i = gHash; i < mappingCount; i += 1)
                                 {
-                                    locallyIsomorphic = false;
-                                    break;
+#if induced
+                                    if (gConnectionExistence[gCan, gMapping[i]] != hConnectionExistence[hCan, hMapping[i]])
+#else
+                            if (gConnectionExistence[gCan, gMapping[i]] && !hConnectionExistence[hCan, hMapping[i]])
+#endif
+                                    {
+                                        locallyIsomorphic = false;
+                                        break;
+                                    }
                                 }
-                                if (gConnection)
-                                    localEdges += 1;
+
+                                if (locallyIsomorphic)
+                                {
+                                    isomorphicCandidates[localNumberOfCandidates] = hCan;
+                                    isomorphicCandidatesIndices[localNumberOfCandidates] = he;
+                                    localNumberOfCandidates += 1;
+                                    score += h.VertexDegree(hCan);
+                                    if (score > minScore)
+                                        break;
+                                }
                             }
 
-                            if (locallyIsomorphic)
-                            {
-                                edges = localEdges;
-                                isomorphicCandidates[localNumberOfCandidates] = hCan;
-                                localNumberOfCandidates += 1;
-                                score2 += h.VertexDegree(hCan);
-                                if (score2 > minScore2)
-                                    break;
-                            }
-                        }
-
-                        if (score2 < minScore2)
-                        {
-                            totalNumberOfCandidates = localNumberOfCandidates;
-                            minScore2 = score2;
-                            degree = -1;
-                            gMatchingCandidate = gCan;
-                            newEdges = edges;
-
-                            tmp = isomorphicCandidates;
-                            isomorphicCandidates = isomorphicH;
-                            isomorphicH = tmp;
-                            if (totalNumberOfCandidates == 0)
-                                break;
-                        }
-                        else if (score2 == minScore2)
-                        {
-                            var thisDegree = g.VertexDegree(gCan);
-                            if (degree == -1)
-                                degree = g.VertexDegree(gMatchingCandidate);
-
-                            if (thisDegree < degree || (thisDegree == degree && edges < newEdges))
+                            if (score < minScore)
                             {
                                 totalNumberOfCandidates = localNumberOfCandidates;
-                                degree = thisDegree;
+                                minScore = score;
+                                degree = -1;
                                 gMatchingCandidate = gCan;
-                                newEdges = edges;
+                                gMatchingCandidateIndex = ge;
 
                                 tmp = isomorphicCandidates;
                                 isomorphicCandidates = isomorphicH;
                                 isomorphicH = tmp;
+                                tmp = isomorphicCandidatesIndices;
+                                isomorphicCandidatesIndices = isomorphicHIndices;
+                                isomorphicHIndices = tmp;
+                                if (totalNumberOfCandidates == 0)
+                                    break;
                             }
-                        }
-                    }
-                    #endregion
-
-                    if (totalNumberOfCandidates > 0)
-                    {
-                        gEnvelope.Remove(gMatchingCandidate);
-                        #region G setup
-                        var gVerticesToRemoveFromEnvelope = new int[gOutsiders.Count];
-                        var gVerticesToRemoveFromEnvelopeLimit = 0;
-
-                        foreach (var gOutsider in gOutsiders)
-                        {
-                            // if the vertex ia a neighbour of the matching vertex
-                            if (gConnectionExistence[gMatchingCandidate, gOutsider])
+                            else if (score == minScore)
                             {
-                                // the outsider vertex is new to the envelope
-                                gEnvelope.Add(gOutsider);
-                                gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
-                                gVerticesToRemoveFromEnvelopeLimit += 1;
+                                var thisDegree = g.VertexDegree(gCan);
+                                if (degree == -1)
+                                    degree = g.VertexDegree(gMatchingCandidate);
+
+                                if (thisDegree < degree)
+                                {
+                                    totalNumberOfCandidates = localNumberOfCandidates;
+                                    degree = thisDegree;
+                                    gMatchingCandidate = gCan;
+                                    gMatchingCandidateIndex = ge;
+
+                                    tmp = isomorphicCandidates;
+                                    isomorphicCandidates = isomorphicH;
+                                    isomorphicH = tmp;
+                                    tmp = isomorphicCandidatesIndices;
+                                    isomorphicCandidatesIndices = isomorphicHIndices;
+                                    isomorphicHIndices = tmp;
+                                }
                             }
                         }
-
-                        // for minor performance improvement removal of the outsiders that are neighbours of gMatchingCandidate looks quite different from the way it is implemented in the TryMatchFromEnvelopeMutateInternalState procedure
-                        for (int i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
+                        for (i = 0; i < mappingCount; i += 1)
                         {
-                            gOutsiders.Remove(gVerticesToRemoveFromEnvelope[i]);
+                            if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
+                                newEdges += 1;
                         }
                         #endregion
 
-                        var hVerticesToRemoveFromEnvelope = new int[hOutsiders.Count];
-                        var hVerticesToRemoveFromEnvelopeLimit = 0;
-
-
-                        // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                        for (int hCandidate = 0; hCandidate < totalNumberOfCandidates; hCandidate += 1)
+                        gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
+                        gEnvelopeLimit -= 1;
+                        if (totalNumberOfCandidates > 0)
                         {
-                            var hMatchingCandidate = isomorphicH[hCandidate];
-                            // verify mutual agreement connections of neighbours
+                            #region G setup
+                            var gVerticesToRemoveFromEnvelope = new int[gOutsidersLimit];
+                            var gVerticesToRemoveFromEnvelopeLimit = 0;
 
-                            #region H setup
-                            totalNumberOfEdgesInSubgraph += newEdges;
-
-                            gMapping[mappingCount] = gMatchingCandidate;
-                            hMapping[mappingCount] = hMatchingCandidate;
-                            mappingCount += 1;
-
-                            hEnvelope.Remove(hMatchingCandidate);
-
-                            hVerticesToRemoveFromEnvelopeLimit = 0;
-                            foreach (var hNeighbour in hOutsiders)
-                                if (hConnectionExistence[hNeighbour, hMatchingCandidate])
+                            var gEnvelopeOriginalSize = gEnvelopeLimit;
+                            for (int go = 0; go < gOutsidersLimit;)
+                            {
+                                var gOutsider = gOutsiders[go];
+                                // if the vertex ia a neighbour of the matching vertex
+                                if (gConnectionExistence[gMatchingCandidate, gOutsider])
                                 {
-                                    hEnvelope.Add(hNeighbour);
-                                    hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
-                                    hVerticesToRemoveFromEnvelopeLimit += 1;
+                                    // the outsider vertex is new to the envelope
+                                    if (gEnvelopeHashes != null)
+                                        gEnvelopeHashes[gOutsider] = mappingCount + 1;
+
+                                    gEnvelope[gEnvelopeLimit] = gOutsider;
+                                    gEnvelopeLimit += 1;
+                                    gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
+                                    gVerticesToRemoveFromEnvelopeLimit += 1;
+                                    gOutsiders[go] = gOutsiders[gOutsidersLimit - 1];
+                                    gOutsidersLimit -= 1;
+                                }
+                                else
+                                {
+                                    go += 1;
+                                }
+                            }
+
+                            totalNumberOfEdgesInSubgraph += newEdges;
+                            #endregion
+
+                            var hVerticesToRemoveFromEnvelope = new int[hOutsidersLimit];
+                            var hVerticesToRemoveFromEnvelopeLimit = 0;
+
+                            // a necessary in-place copy to an array since hEnvelope is modified during recursion
+                            for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && !found; hCandidate += 1)
+                            {
+                                var hMatchingCandidate = isomorphicH[hCandidate];
+                                // verify mutual agreement connections of neighbours
+
+                                #region H setup
+
+                                hEnvelope[isomorphicHIndices[hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
+                                hEnvelopeLimit -= 1;
+
+                                var hOriginalSize = hEnvelopeLimit;
+                                hVerticesToRemoveFromEnvelopeLimit = 0;
+                                for (int ho = 0; ho < hOutsidersLimit;)
+                                {
+                                    var hNeighbour = hOutsiders[ho];
+                                    if (hConnectionExistence[hNeighbour, hMatchingCandidate])
+                                    {
+                                        if (hEnvelopeHashes != null)
+                                            hEnvelopeHashes[hNeighbour] = mappingCount + 1;
+                                        hEnvelope[hEnvelopeLimit] = hNeighbour;
+                                        hEnvelopeLimit += 1;
+                                        hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
+                                        hVerticesToRemoveFromEnvelopeLimit += 1;
+                                        hOutsiders[ho] = hOutsiders[hOutsidersLimit - 1];
+                                        hOutsidersLimit -= 1;
+                                    }
+                                    else
+                                    {
+                                        ho += 1;
+                                    }
                                 }
 
-                            for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
-                                hOutsiders.Remove(hVerticesToRemoveFromEnvelope[i]);
+                                gMapping[mappingCount] = gMatchingCandidate;
+                                hMapping[mappingCount] = hMatchingCandidate;
+                                mappingCount += 1;
 
-                            #endregion
+                                deepness += 1;
+                                #endregion
 
-                            RecurseAutomorphism(ref found);
 
-                            #region H cleanup
-                            for (int i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
-                            {
-                                hEnvelope.Remove(hVerticesToRemoveFromEnvelope[i]);
-                                hOutsiders.Add(hVerticesToRemoveFromEnvelope[i]);
+                                RecurseAutomorphism(ref found);
+
+
+                                #region H cleanup
+                                deepness -= 1;
+                                for (i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
+                                {
+                                    hOutsiders[hOutsidersLimit] = hVerticesToRemoveFromEnvelope[i];
+                                    hOutsidersLimit += 1;
+                                }
+
+                                // restore hEnvelope to original state
+                                hEnvelopeLimit = hOriginalSize;
+                                hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[hCandidate]];
+                                hEnvelope[isomorphicHIndices[hCandidate]] = hMatchingCandidate;
+                                hEnvelopeLimit += 1;
+
+
+                                mappingCount -= 1;
+
+                                #endregion
+
                             }
-
-                            hEnvelope.Add(hMatchingCandidate);
-
-                            mappingCount -= 1;
-
+                            #region G cleanup
                             totalNumberOfEdgesInSubgraph -= newEdges;
-                            #endregion
-
-                        }
-                        #region G cleanup
-                        for (int i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
-                        {
-                            gEnvelope.Remove(gVerticesToRemoveFromEnvelope[i]);
-                            gOutsiders.Add(gVerticesToRemoveFromEnvelope[i]);
-                        }
-                        #endregion
-                        gEnvelope.Add(gMatchingCandidate);
-                    }
-
-                }
-            }
-        }
-
-        private void DisconnectComponentAndRecurse(ref double bestScore)
-        {
-            // if exact match is required then recurse only if the envelope set is empty
-            var currentlyBuiltVertices = mappingCount;
-            var currentlyBuiltEdges = totalNumberOfEdgesInSubgraph;
-            if (
-                gOutsiders.Count > 0
-                && hOutsiders.Count > 0
-                && (!findGraphGinH || gEnvelope.Count == 0)
-                && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
-                && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
-                )
-            {
-                var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
-                var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(hOutsiders);
-                var subgraphsSwapped = false;
-                if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
-                {
-                    subgraphsSwapped = true;
-                    var tmp = gOutsiderGraph;
-                    gOutsiderGraph = hOutsiderGraph;
-                    hOutsiderGraph = tmp;
-                }
-
-                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
-                {
-                    // if there is hope to improve the score then recurse
-                    var removedVertices = new HashSet<int>();
-                    while (
-                        gOutsiderGraph.Vertices.Count > 0
-                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
-                        )
-                    {
-                        // choose the candidate with largest degree within the graph of outsiders
-                        // if there is an ambiguity then choose the vertex with the largest degree in the original graph
-                        var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
-                            v => gOutsiderGraph.VertexDegree(v),
-                            v => removedVertices.Count(r => gConnectionExistence[r, v])
-                            );
-
-                        foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
-                        {
-                            var subSolver = new CoreAlgorithm()
+                            // restore gEnvelope to original state
+                            gEnvelopeLimit = gEnvelopeOriginalSize;
+                            for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
                             {
-                                g = gOutsiderGraph,
-                                h = hOutsiderGraph,
-                                // there might exist an ambiguity in evaluating the scoring function for disconnected components
-                                // the simplest valuation has been chosen - the sum of all vertices of all disconnected components
-                                subgraphScoringFunction = (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
-                                newSolutionFoundNotificationAction = (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
-                                    newScore,
-                                    () =>
-                                    {
-                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                        for (int i = 0; i < mappingCount; i += 1)
-                                            ghExtended.Add(gMapping[i], hMapping[i]);
-                                        return ghExtended;
-                                    },
-                                    () =>
-                                    {
-                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                        for (int i = 0; i < mappingCount; i += 1)
-                                            hgExtended.Add(hMapping[i], gMapping[i]);
-                                        return hgExtended;
-                                    },
-                                    edges + totalNumberOfEdgesInSubgraph
-                                    )
-                                ,
-                                gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-                                hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-                                mappingCount = 0,
-                                gEnvelope = new HashSet<int>() { gMatchingCandidate },
-                                hEnvelope = new HashSet<int>() { hMatchingCandidate },
-                                gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
-                                hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
-                                totalNumberOfEdgesInSubgraph = 0,
-                                gConnectionExistence = subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
-                                hConnectionExistence = subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
-                                analyzeDisconnected = true,
-                                findGraphGinH = findGraphGinH,
-                                leftoverSteps = leftoverSteps,
-                                deepness = deepness,
-                                approximationRatio = approximationRatio,
-                                gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
-                                hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
-                            };
-                            subSolver.gOutsiders.Remove(gMatchingCandidate);
-                            subSolver.hOutsiders.Remove(hMatchingCandidate);
-                            subSolver.Recurse(ref bestScore);
+                                gOutsiders[gOutsidersLimit] = gVerticesToRemoveFromEnvelope[i];
+                                gOutsidersLimit += 1;
+                            }
+                            #endregion
                         }
-
-                        if (findGraphGinH)
-                            break;
-
-                        gOutsiderGraph.RemoveVertex(gMatchingCandidate);
-                        removedVertices.Add(gMatchingCandidate);
+                        gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
+                        gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
+                        gEnvelopeLimit += 1;
+                        // the procedure has left the recursion step having the internal state unchanged
                     }
                 }
             }
         }
+
+        //private void DisconnectComponentAndRecurse(ref double bestScore)
+        //{
+        //    // if exact match is required then recurse only if the envelope set is empty
+        //    var currentlyBuiltVertices = mappingCount;
+        //    var currentlyBuiltEdges = totalNumberOfEdgesInSubgraph;
+        //    if (
+        //        gOutsiders.Count > 0
+        //        && hOutsiders.Count > 0
+        //        && (!findGraphGinH || gEnvelope.Count == 0)
+        //        && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
+        //        && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
+        //        )
+        //    {
+        //        var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
+        //        var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(hOutsiders);
+        //        var subgraphsSwapped = false;
+        //        if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
+        //        {
+        //            subgraphsSwapped = true;
+        //            var tmp = gOutsiderGraph;
+        //            gOutsiderGraph = hOutsiderGraph;
+        //            hOutsiderGraph = tmp;
+        //        }
+
+        //        if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
+        //        {
+        //            // if there is hope to improve the score then recurse
+        //            var removedVertices = new HashSet<int>();
+        //            while (
+        //                gOutsiderGraph.Vertices.Count > 0
+        //                && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
+        //                )
+        //            {
+        //                // choose the candidate with largest degree within the graph of outsiders
+        //                // if there is an ambiguity then choose the vertex with the largest degree in the original graph
+        //                var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
+        //                    v => gOutsiderGraph.VertexDegree(v),
+        //                    v => removedVertices.Count(r => gConnectionExistence[r, v])
+        //                    );
+
+        //                foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
+        //                {
+        //                    var subSolver = new CoreAlgorithm()
+        //                    {
+        //                        g = gOutsiderGraph,
+        //                        h = hOutsiderGraph,
+        //                        // there might exist an ambiguity in evaluating the scoring function for disconnected components
+        //                        // the simplest valuation has been chosen - the sum of all vertices of all disconnected components
+        //                        subgraphScoringFunction = (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
+        //                        newSolutionFoundNotificationAction = (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
+        //                            newScore,
+        //                            () =>
+        //                            {
+        //                                var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+        //                                for (int i = 0; i < mappingCount; i += 1)
+        //                                    ghExtended.Add(gMapping[i], hMapping[i]);
+        //                                return ghExtended;
+        //                            },
+        //                            () =>
+        //                            {
+        //                                var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+        //                                for (int i = 0; i < mappingCount; i += 1)
+        //                                    hgExtended.Add(hMapping[i], gMapping[i]);
+        //                                return hgExtended;
+        //                            },
+        //                            edges + totalNumberOfEdgesInSubgraph
+        //                            )
+        //                        ,
+        //                        gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+        //                        hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+        //                        mappingCount = 0,
+        //                        gEnvelope = new HashSet<int>() { gMatchingCandidate },
+        //                        hEnvelope = new HashSet<int>() { hMatchingCandidate },
+        //                        gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
+        //                        hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
+        //                        totalNumberOfEdgesInSubgraph = 0,
+        //                        gConnectionExistence = subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
+        //                        hConnectionExistence = subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
+        //                        analyzeDisconnected = true,
+        //                        findGraphGinH = findGraphGinH,
+        //                        leftoverSteps = leftoverSteps,
+        //                        deepness = deepness,
+        //                        approximationRatio = approximationRatio,
+        //                        gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
+        //                        hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
+        //                    };
+        //                    subSolver.gOutsiders.Remove(gMatchingCandidate);
+        //                    subSolver.hOutsiders.Remove(hMatchingCandidate);
+        //                    subSolver.Recurse(ref bestScore);
+        //                }
+
+        //                if (findGraphGinH)
+        //                    break;
+
+        //                gOutsiderGraph.RemoveVertex(gMatchingCandidate);
+        //                removedVertices.Add(gMatchingCandidate);
+        //            }
+        //        }
+        //    }
+        //}
     }
 }

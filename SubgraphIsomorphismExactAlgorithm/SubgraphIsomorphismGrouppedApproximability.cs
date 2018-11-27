@@ -146,7 +146,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             // while there is an increase in result continue to approximate
 
             var step = 0;
-
+#if true
             // quit the loop once a local maximum (scoring function) is reached
             while (true)
             {
@@ -165,36 +165,37 @@ namespace SubgraphIsomorphismExactAlgorithm
                         subgraphScoringFunction = graphScoringFunction,
                         gMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
                         hMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
-                        gEnvelope = new HashSet<int>() { gCandidate },
-                        hEnvelope = new HashSet<int>() { hCandidate },
-                        gOutsiders = new HashSet<int>(gVertices),
-                        hOutsiders = new HashSet<int>(hVertices),
+                        gEnvelope = new int[gVertices.Count],
+                        gEnvelopeLimit = 1,
+                        hEnvelope = new int[hVertices.Count],
+                        hEnvelopeLimit = 1,
+                        gOutsiders = gVertices.Where(v => v != gCandidate).ToArray(),
+                        hOutsiders = hVertices.Where(v => v != hCandidate).ToArray(),
                         totalNumberOfEdgesInSubgraph = 0,
 
                         gConnectionExistence = gConnectionExistence,
                         hConnectionExistence = hConnectionExistence,
                     };
-
-                    currentAlgorithmHoldingState.gOutsiders.Remove(gCandidate);
-                    currentAlgorithmHoldingState.hOutsiders.Remove(hCandidate);
-                    currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate);
+                    currentAlgorithmHoldingState.gEnvelope[0] = gCandidate;
+                    currentAlgorithmHoldingState.hEnvelope[0] = hCandidate;
+                    currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(0, 0);
                 }
                 else
                 {
-                    var gRandomizedOrder = currentAlgorithmHoldingState.gEnvelope.ToArray();
-                    var hRandomizedOrder = currentAlgorithmHoldingState.hEnvelope.ToArray();
+                    var gRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.gEnvelopeLimit).ToArray();
+                    var hRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.hEnvelopeLimit).ToArray();
 
-                    var randomizingArray = Enumerable.Range(0, gRandomizedOrder.Length).Select(i => random.Next()).ToArray();
-                    Array.Sort(randomizingArray, gRandomizedOrder);
-                    randomizingArray = Enumerable.Range(0, hRandomizedOrder.Length).Select(i => random.Next()).ToArray();
-                    Array.Sort(randomizingArray, hRandomizedOrder);
+                    var randomizingArray = Enumerable.Range(0, gRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
+                    Array.Sort(randomizingArray, gRandomizedIndexOrder);
+                    randomizingArray = Enumerable.Range(0, hRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
+                    Array.Sort(randomizingArray, hRandomizedIndexOrder);
 
                     var stopIteration = false;
                     // the greedy step
-                    foreach (var gCandidate in gRandomizedOrder)
+                    foreach (var gCandidateIndex in gRandomizedIndexOrder)
                     {
-                        foreach (var hCandidate in hRandomizedOrder)
-                            if (currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidate, hCandidate))
+                        foreach (var hCandidateIndex in hRandomizedIndexOrder)
+                            if (currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidateIndex, hCandidateIndex))
                             {
                                 // once the prediction turns out successful only then will the internal state be modified
                                 stopIteration = true;
@@ -211,14 +212,15 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                 step += 1;
             }
-
             if (findExactMatch && currentAlgorithmHoldingState.mappingCount < gVertices.Count)
             {
+#endif
                 // did not find an exact match, simply return initial values
                 bestScore = double.MinValue;
                 subgraphEdges = 0;
                 ghOptimalMapping = new Dictionary<int, int>();
                 hgOptimalMapping = new Dictionary<int, int>();
+#if true
             }
             else
             {
@@ -227,6 +229,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 ghOptimalMapping = currentAlgorithmHoldingState.gGetDictionaryOutOfMapping();
                 hgOptimalMapping = currentAlgorithmHoldingState.hGetDictionaryOutOfMapping();
             }
+#endif
         }
     }
 }

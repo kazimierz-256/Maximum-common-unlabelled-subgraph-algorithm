@@ -146,10 +146,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graphScoringFunction,
                             (newScore, ghMap, hgMap, edges) =>
                               {
-                                  if (newScore * approximationRatio > localBestScore)
+                                  if (newScore > localBestScore)
                                       // to increase the performance lock is performed only if there is a chance to improve the local result
                                       lock (threadSynchronizingObject)
-                                          if (newScore * approximationRatio > localBestScore)
+                                          if (newScore > localBestScore)
                                           {
 #if debug
                                               Console.WriteLine($"New score: {newScore} ({localBestScore})");
