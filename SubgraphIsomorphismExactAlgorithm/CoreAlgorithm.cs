@@ -393,10 +393,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (totalNumberOfCandidates > 0)
                 {
                     #region G setup
-                    var gVerticesToRemoveFromEnvelope = new int[gOutsidersLimit];
-                    var gVerticesToRemoveFromEnvelopeLimit = 0;
 
                     var gEnvelopeOriginalSize = gEnvelopeLimit;
+                    var gOutsidersOriginalLimit = gOutsidersLimit;
                     for (int go = 0; go < gOutsidersLimit;)
                     {
                         var gOutsider = gOutsiders[go];
@@ -409,9 +408,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                             gEnvelope[gEnvelopeLimit] = gOutsider;
                             gEnvelopeLimit += 1;
-                            gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
-                            gVerticesToRemoveFromEnvelopeLimit += 1;
                             gOutsiders[go] = gOutsiders[gOutsidersLimit - 1];
+                            gOutsiders[gOutsidersLimit - 1] = gOutsider;
                             gOutsidersLimit -= 1;
                         }
                         else
@@ -422,10 +420,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                     totalNumberOfEdgesInSubgraph += newEdges;
                     #endregion
-
-                    var hVerticesToRemoveFromEnvelope = new int[hOutsidersLimit];
-                    var hVerticesToRemoveFromEnvelopeLimit = 0;
-
+                    var hOutsidersOriginalLimit = hOutsidersLimit;
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore; hCandidate += 1)
                     {
@@ -438,7 +433,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                         hEnvelopeLimit -= 1;
 
                         var hOriginalSize = hEnvelopeLimit;
-                        hVerticesToRemoveFromEnvelopeLimit = 0;
                         for (int ho = 0; ho < hOutsidersLimit;)
                         {
                             var hNeighbour = hOutsiders[ho];
@@ -448,9 +442,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                                     hEnvelopeHashes[hNeighbour] = mappingCount + 1;
                                 hEnvelope[hEnvelopeLimit] = hNeighbour;
                                 hEnvelopeLimit += 1;
-                                hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
-                                hVerticesToRemoveFromEnvelopeLimit += 1;
                                 hOutsiders[ho] = hOutsiders[hOutsidersLimit - 1];
+                                hOutsiders[hOutsidersLimit - 1] = hNeighbour;
                                 hOutsidersLimit -= 1;
                             }
                             else
@@ -474,12 +467,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         #region H cleanup
                         deepness -= 1;
-                        for (i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
-                        {
-                            hOutsiders[hOutsidersLimit] = hVerticesToRemoveFromEnvelope[i];
-                            hOutsidersLimit += 1;
-                        }
-
+                        hOutsidersLimit = hOutsidersOriginalLimit;
                         // restore hEnvelope to original state
                         hEnvelopeLimit = hOriginalSize;
                         hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[hCandidate]];
@@ -496,11 +484,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     totalNumberOfEdgesInSubgraph -= newEdges;
                     // restore gEnvelope to original state
                     gEnvelopeLimit = gEnvelopeOriginalSize;
-                    for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
-                    {
-                        gOutsiders[gOutsidersLimit] = gVerticesToRemoveFromEnvelope[i];
-                        gOutsidersLimit += 1;
-                    }
+                    gOutsidersLimit = gOutsidersOriginalLimit;
                     #endregion
                 }
                 // remove the candidate from the graph and recurse
@@ -795,7 +779,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
                 {
                     // if there is hope to improve the score then recurse
-                    var removedVertices = new HashSet<int>();
                     while (
                         gOutsiderGraph.Vertices.Count > 0
                         && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
@@ -803,10 +786,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         // choose the candidate with largest degree within the graph of outsiders
                         // if there is an ambiguity then choose the vertex with the largest degree in the original graph
-                        var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
-                            v => gOutsiderGraph.VertexDegree(v),
-                            v => removedVertices.Count(r => gConnectionExistence[r, v])
-                            );
+                        var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(v => gOutsiderGraph.VertexDegree(v));
 
                         foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
                         {
@@ -868,7 +848,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                             break;
 
                         gOutsiderGraph.RemoveVertex(gMatchingCandidate);
-                        removedVertices.Add(gMatchingCandidate);
                     }
                 }
             }

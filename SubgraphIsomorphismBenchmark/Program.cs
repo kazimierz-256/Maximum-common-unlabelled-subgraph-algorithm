@@ -1,5 +1,5 @@
-﻿#define approx1
-#define approx2
+﻿#define approx1_
+#define approx2_
 #define approx3_
 #define exact
 using GraphDataStructure;
