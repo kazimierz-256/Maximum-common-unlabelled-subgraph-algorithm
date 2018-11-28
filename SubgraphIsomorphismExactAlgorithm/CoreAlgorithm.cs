@@ -139,13 +139,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                 hMax = this.hConnectionExistence.GetLength(0);
             }
 
-            isomorphicH = new int[h.Vertices.Count + 1][];
+            isomorphicH = new int[h.Vertices.Count][];
             isomorphicHIndices = new int[isomorphicH.GetLength(0)][];
             isomorphicCandidates = new int[isomorphicH.GetLength(0)][];
             isomorphicCandidatesIndices = new int[isomorphicH.GetLength(0)][];
             for (int i = 0; i < isomorphicH.GetLength(0); i++)
             {
-                isomorphicH[i] = new int[h.Vertices.Count + 1];
+                isomorphicH[i] = new int[h.Vertices.Count];
                 isomorphicHIndices[i] = new int[isomorphicH[i].GetLength(0)];
                 isomorphicCandidates[i] = new int[isomorphicH[i].GetLength(0)];
                 isomorphicCandidatesIndices[i] = new int[isomorphicH[i].GetLength(0)];
