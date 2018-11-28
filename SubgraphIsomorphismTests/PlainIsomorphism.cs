@@ -9,7 +9,7 @@ namespace SubgraphIsomorphismTests
     public class PlainIsomorphism
     {
         [Theory]
-        [InlineData(9)]
+        [InlineData(10)]
         public void TwoCliquesConnectedByChain(int max)
         {
             for (int i = 4; i < max; i += 1)
@@ -48,7 +48,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(10)]
+        [InlineData(11)]
         public void TwoCliquesConnectedByChainWithTriangle(int max)
         {
             for (int i = 4; i < max; i += 1)
@@ -133,7 +133,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(10, 1000, 0.5, 24, 41)]
+        [InlineData(10, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismConnnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 1; i < n; i += 1)
@@ -174,7 +174,7 @@ namespace SubgraphIsomorphismTests
             }
         }
         [Theory]
-        [InlineData(7, 1000, 0.5, 24, 41)]
+        [InlineData(7, 10000, 0.5, 24, 41)]
         public void GraphIsomorphismDisconnected(int n, int repetitions, double density, int generatingSeed, int permutingSeed)
         {
             for (int i = 6; i < n; i += 1)
@@ -222,7 +222,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 1000, 0.5, 24)]
+        [InlineData(5, 10000, 0.5, 24)]
         public void GraphOfQuadrupleSize(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i += 1)
@@ -261,7 +261,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 100, 0.5, 24)]
+        [InlineData(5, 1000, 0.5, 24)]
         public void Approximating1GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i += 1)
@@ -301,7 +301,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(6, 24)]
+        [InlineData(7, 24)]
         public void ApproximatingAlgorithmIsNotBetterThanActual(int n, int generatingSeed)
         {
             for (int i = 1; i < n; i += 1)
@@ -348,7 +348,7 @@ namespace SubgraphIsomorphismTests
         }
 
         [Theory]
-        [InlineData(5, 100, 0.5, 24)]
+        [InlineData(5, 1000, 0.5, 24)]
         public void Approximating2GraphOfSizeAtMostDouble(int n, int repetitions, double density, int generatingSeed)
         {
             for (int i = 1; i < n; i += 1)
