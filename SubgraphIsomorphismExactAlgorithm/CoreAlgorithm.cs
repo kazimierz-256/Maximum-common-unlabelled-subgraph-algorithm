@@ -77,7 +77,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             hEnvelope[0] = hInitialMatchingVertex;
             hEnvelopeLimit = 1;
 
-            gOutsiders = new int[g.Vertices.Count];
+            gOutsiders = new int[g.Vertices.Count - 1];
             gOutsidersLimit = 0;
             foreach (var vertex in g.Vertices)
             {
@@ -88,7 +88,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
             }
 
-            hOutsiders = new int[h.Vertices.Count];
+            hOutsiders = new int[h.Vertices.Count - 1];
             hOutsidersLimit = 0;
             foreach (var vertex in h.Vertices)
             {
@@ -198,7 +198,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             // the outsider vertex is new to the envelope
                             gEnvelope[gEnvelopeLimit] = gOutsider;
                             gEnvelopeLimit += 1;
-                            gOutsiders[go]= gOutsiders[gOutsidersLimit-1];
+                            gOutsiders[go] = gOutsiders[gOutsidersLimit - 1];
                             gOutsidersLimit -= 1;
                         }
                         else
@@ -466,8 +466,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
                         Recurse(ref bestScore);
-                        //if (analyzeDisconnected)
-                        //    DisconnectComponentAndRecurse(ref bestScore);
+                        if (analyzeDisconnected)
+                            DisconnectComponentAndRecurse(ref bestScore);
 
 
                         #region H cleanup
@@ -768,105 +768,110 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
-        //private void DisconnectComponentAndRecurse(ref double bestScore)
-        //{
-        //    // if exact match is required then recurse only if the envelope set is empty
-        //    var currentlyBuiltVertices = mappingCount;
-        //    var currentlyBuiltEdges = totalNumberOfEdgesInSubgraph;
-        //    if (
-        //        gOutsiders.Count > 0
-        //        && hOutsiders.Count > 0
-        //        && (!findGraphGinH || gEnvelope.Count == 0)
-        //        && (subgraphScoringFunction(hOutsiders.Count + currentlyBuiltVertices, hOutsiders.Count * (hOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
-        //        && (subgraphScoringFunction(gOutsiders.Count + currentlyBuiltVertices, gOutsiders.Count * (gOutsiders.Count - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
-        //        )
-        //    {
-        //        var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(gOutsiders);
-        //        var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(hOutsiders);
-        //        var subgraphsSwapped = false;
-        //        if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
-        //        {
-        //            subgraphsSwapped = true;
-        //            var tmp = gOutsiderGraph;
-        //            gOutsiderGraph = hOutsiderGraph;
-        //            hOutsiderGraph = tmp;
-        //        }
+        private void DisconnectComponentAndRecurse(ref double bestScore)
+        {
+            // if exact match is required then recurse only if the envelope set is empty
+            var currentlyBuiltVertices = mappingCount;
+            var currentlyBuiltEdges = totalNumberOfEdgesInSubgraph;
+            if (
+                gOutsidersLimit > 0
+                && hOutsidersLimit > 0
+                && (!findGraphGinH || gEnvelopeLimit == 0)
+                && (subgraphScoringFunction(hOutsidersLimit + currentlyBuiltVertices, hOutsidersLimit * (hOutsidersLimit - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
+                && (subgraphScoringFunction(gOutsidersLimit + currentlyBuiltVertices, gOutsidersLimit * (gOutsidersLimit - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
+                )
+            {
+                var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(new HashSet<int>(gOutsiders.Take(gOutsidersLimit)));
+                var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(new HashSet<int>(hOutsiders.Take(hOutsidersLimit)));
+                var subgraphsSwapped = false;
+                if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
+                {
+                    subgraphsSwapped = true;
+                    var tmp = gOutsiderGraph;
+                    gOutsiderGraph = hOutsiderGraph;
+                    hOutsiderGraph = tmp;
+                }
 
-        //        if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
-        //        {
-        //            // if there is hope to improve the score then recurse
-        //            var removedVertices = new HashSet<int>();
-        //            while (
-        //                gOutsiderGraph.Vertices.Count > 0
-        //                && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
-        //                )
-        //            {
-        //                // choose the candidate with largest degree within the graph of outsiders
-        //                // if there is an ambiguity then choose the vertex with the largest degree in the original graph
-        //                var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
-        //                    v => gOutsiderGraph.VertexDegree(v),
-        //                    v => removedVertices.Count(r => gConnectionExistence[r, v])
-        //                    );
+                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
+                {
+                    // if there is hope to improve the score then recurse
+                    var removedVertices = new HashSet<int>();
+                    while (
+                        gOutsiderGraph.Vertices.Count > 0
+                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
+                        )
+                    {
+                        // choose the candidate with largest degree within the graph of outsiders
+                        // if there is an ambiguity then choose the vertex with the largest degree in the original graph
+                        var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(
+                            v => gOutsiderGraph.VertexDegree(v),
+                            v => removedVertices.Count(r => gConnectionExistence[r, v])
+                            );
 
-        //                foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
-        //                {
-        //                    var subSolver = new CoreAlgorithm()
-        //                    {
-        //                        g = gOutsiderGraph,
-        //                        h = hOutsiderGraph,
-        //                        // there might exist an ambiguity in evaluating the scoring function for disconnected components
-        //                        // the simplest valuation has been chosen - the sum of all vertices of all disconnected components
-        //                        subgraphScoringFunction = (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
-        //                        newSolutionFoundNotificationAction = (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
-        //                            newScore,
-        //                            () =>
-        //                            {
-        //                                var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-        //                                for (int i = 0; i < mappingCount; i += 1)
-        //                                    ghExtended.Add(gMapping[i], hMapping[i]);
-        //                                return ghExtended;
-        //                            },
-        //                            () =>
-        //                            {
-        //                                var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-        //                                for (int i = 0; i < mappingCount; i += 1)
-        //                                    hgExtended.Add(hMapping[i], gMapping[i]);
-        //                                return hgExtended;
-        //                            },
-        //                            edges + totalNumberOfEdgesInSubgraph
-        //                            )
-        //                        ,
-        //                        gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-        //                        hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-        //                        mappingCount = 0,
-        //                        gEnvelope = new HashSet<int>() { gMatchingCandidate },
-        //                        hEnvelope = new HashSet<int>() { hMatchingCandidate },
-        //                        gOutsiders = new HashSet<int>(gOutsiderGraph.Vertices),
-        //                        hOutsiders = new HashSet<int>(hOutsiderGraph.Vertices),
-        //                        totalNumberOfEdgesInSubgraph = 0,
-        //                        gConnectionExistence = subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
-        //                        hConnectionExistence = subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
-        //                        analyzeDisconnected = true,
-        //                        findGraphGinH = findGraphGinH,
-        //                        leftoverSteps = leftoverSteps,
-        //                        deepness = deepness,
-        //                        approximationRatio = approximationRatio,
-        //                        gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
-        //                        hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
-        //                    };
-        //                    subSolver.gOutsiders.Remove(gMatchingCandidate);
-        //                    subSolver.hOutsiders.Remove(hMatchingCandidate);
-        //                    subSolver.Recurse(ref bestScore);
-        //                }
+                        foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
+                        {
+                            var subSolver = new CoreAlgorithm()
+                            {
+                                g = gOutsiderGraph,
+                                h = hOutsiderGraph,
+                                // there might exist an ambiguity in evaluating the scoring function for disconnected components
+                                // the simplest valuation has been chosen - the sum of all vertices of all disconnected components
+                                subgraphScoringFunction = (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
+                                newSolutionFoundNotificationAction = (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
+                                    newScore,
+                                    () =>
+                                    {
+                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                        for (int i = 0; i < mappingCount; i += 1)
+                                            ghExtended.Add(gMapping[i], hMapping[i]);
+                                        return ghExtended;
+                                    },
+                                    () =>
+                                    {
+                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                        for (int i = 0; i < mappingCount; i += 1)
+                                            hgExtended.Add(hMapping[i], gMapping[i]);
+                                        return hgExtended;
+                                    },
+                                    edges + totalNumberOfEdgesInSubgraph
+                                    )
+                                ,
+                                gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+                                hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
+                                mappingCount = 0,
 
-        //                if (findGraphGinH)
-        //                    break;
+                                gEnvelope = new int[gOutsiderGraph.Vertices.Count],
+                                gEnvelopeLimit = 1,
+                                hEnvelope = new int[hOutsiderGraph.Vertices.Count],
+                                hEnvelopeLimit = 1,
+                                gOutsiders = gOutsiderGraph.Vertices.Where(v => v != gMatchingCandidate).ToArray(),
+                                gOutsidersLimit = gOutsiderGraph.Vertices.Count - 1,
+                                hOutsiders = hOutsiderGraph.Vertices.Where(v => v != hMatchingCandidate).ToArray(),
+                                hOutsidersLimit = hOutsiderGraph.Vertices.Count - 1,
+                                totalNumberOfEdgesInSubgraph = 0,
+                                gConnectionExistence = subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
+                                hConnectionExistence = subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
+                                analyzeDisconnected = true,
+                                findGraphGinH = findGraphGinH,
+                                leftoverSteps = leftoverSteps,
+                                deepness = deepness,
+                                approximationRatio = approximationRatio,
+                                gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
+                                hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
+                            };
+                            subSolver.gEnvelope[0] = gMatchingCandidate;
+                            subSolver.hEnvelope[0] = hMatchingCandidate;
+                            subSolver.Recurse(ref bestScore);
+                        }
 
-        //                gOutsiderGraph.RemoveVertex(gMatchingCandidate);
-        //                removedVertices.Add(gMatchingCandidate);
-        //            }
-        //        }
-        //    }
-        //}
+                        if (findGraphGinH)
+                            break;
+
+                        gOutsiderGraph.RemoveVertex(gMatchingCandidate);
+                        removedVertices.Add(gMatchingCandidate);
+                    }
+                }
+            }
+        }
     }
 }

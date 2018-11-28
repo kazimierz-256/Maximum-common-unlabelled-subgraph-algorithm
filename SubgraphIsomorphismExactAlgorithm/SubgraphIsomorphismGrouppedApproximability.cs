@@ -170,7 +170,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                         hEnvelope = new int[hVertices.Count],
                         hEnvelopeLimit = 1,
                         gOutsiders = gVertices.Where(v => v != gCandidate).ToArray(),
+                        gOutsidersLimit = gVertices.Count - 1,
                         hOutsiders = hVertices.Where(v => v != hCandidate).ToArray(),
+                        hOutsidersLimit = hVertices.Count - 1,
                         totalNumberOfEdgesInSubgraph = 0,
 
                         gConnectionExistence = gConnectionExistence,
