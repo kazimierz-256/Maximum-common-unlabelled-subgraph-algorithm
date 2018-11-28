@@ -100,7 +100,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             graph,
                             graph,
                             null,
-                            null
+                            null,
+                            optimizeForAutomorphism: true
                         ).RecurseAutomorphism(ref found);
 
                         if (found)

@@ -45,37 +45,37 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int[][] isomorphicCandidatesIndices;
 
         public int[][] neighbours;
-        public int[] neighbourCount;
+        public int[] gNeighbourCount;
+        public int[] hNeighbourCount;
         public int[][] neighbourIndices;
 
         private int gVertexCount;
+        private int hVertexCount;
         private int gEdgeCount;
 
         private int Remove(int vertex)
         {
             int i = 0;
-            for (; i < neighbourCount[vertex]; i++)
+            for (; i < gNeighbourCount[vertex]; i++)
             {
                 var neighbour = neighbours[vertex][i];
                 // exchange vertices
-                var last = neighbours[neighbour][neighbourCount[neighbour] - 1];
-                neighbours[neighbour][neighbourCount[neighbour] - 1] = vertex;
+                var last = neighbours[neighbour][gNeighbourCount[neighbour] - 1];
+                neighbours[neighbour][gNeighbourCount[neighbour] - 1] = vertex;
                 neighbours[neighbour][neighbourIndices[neighbour][vertex]] = last;
                 //update indices
                 neighbourIndices[neighbour][last] = neighbourIndices[neighbour][vertex];
-                neighbourIndices[neighbour][vertex] = neighbourCount[neighbour] - 1;
+                neighbourIndices[neighbour][vertex] = gNeighbourCount[neighbour] - 1;
                 // finalize
-                neighbourCount[neighbour] -= 1;
+                gNeighbourCount[neighbour] -= 1;
             }
 
             return i;
         }
         private void Restore(int vertex)
         {
-            for (int i = 0; i < neighbourCount[vertex]; i++)
-            {
-                neighbourCount[neighbours[vertex][i]] += 1;
-            }
+            for (int i = 0; i < gNeighbourCount[vertex]; i++)
+                gNeighbourCount[neighbours[vertex][i]] += 1;
         }
 
         public CoreAlgorithm InternalStateSetup(
@@ -91,7 +91,15 @@ namespace SubgraphIsomorphismExactAlgorithm
             int deepnessTakeawaySteps = 0,
             bool[,] gConnectionExistence = null,
             bool[,] hConnectionExistence = null,
-            double approximationRatio = 1d)
+            double approximationRatio = 1d,
+            bool optimizeForAutomorphism = false,
+            int[][] neighbours = null,
+            int[] gNeighbourCount = null,
+            int[][] neighbourIndices = null,
+            int gEdgeCount = -1,
+            HashSet<int> gAllowedSubsetVertices = null,
+            HashSet<int> hAllowedSubsetVertices = null
+            )
         {
             this.g = g;
             this.h = h;
@@ -104,42 +112,41 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
             this.approximationRatio = approximationRatio;
 
-            // TODO: make it possible to import via optional parameters & configure with disconnected components...
-            gVertexCount = g.Vertices.Count;
-            gEdgeCount = g.EdgeCount;
+            gVertexCount = gAllowedSubsetVertices == null ? g.Vertices.Count : gAllowedSubsetVertices.Count;
+            hVertexCount = hAllowedSubsetVertices == null ? h.Vertices.Count : hAllowedSubsetVertices.Count;
 
-            gMapping = new int[Math.Min(gVertexCount, h.Vertices.Count)];
+            gMapping = new int[Math.Min(gVertexCount, hVertexCount)];
             hMapping = new int[gMapping.Length];
             mappingCount = 0;
             // for simplicity insert initial isomorphic vertices into the envelope
-            gEnvelope = new int[g.Vertices.Count];
+            gEnvelope = new int[gVertexCount];
             gEnvelope[0] = gInitialMatchingVertex;
             gEnvelopeLimit = 1;
 
-            hEnvelope = new int[h.Vertices.Count];
+            hEnvelope = new int[hVertexCount];
             hEnvelope[0] = hInitialMatchingVertex;
             hEnvelopeLimit = 1;
 
-            gOutsiders = new int[g.Vertices.Count - 1];
+            gOutsiders = new int[gVertexCount - 1];
             gOutsidersLimit = 0;
-            foreach (var vertex in g.Vertices)
+            foreach (var gVertex in g.Vertices)
             {
-                if (vertex != gInitialMatchingVertex)
-                {
-                    gOutsiders[gOutsidersLimit] = vertex;
-                    gOutsidersLimit += 1;
-                }
+                if (gVertex == gInitialMatchingVertex || (gAllowedSubsetVertices != null && !gAllowedSubsetVertices.Contains(gVertex)))
+                    continue;
+
+                gOutsiders[gOutsidersLimit] = gVertex;
+                gOutsidersLimit += 1;
             }
 
-            hOutsiders = new int[h.Vertices.Count - 1];
+            hOutsiders = new int[hVertexCount - 1];
             hOutsidersLimit = 0;
-            foreach (var vertex in h.Vertices)
+            foreach (var hVertex in h.Vertices)
             {
-                if (vertex != hInitialMatchingVertex)
-                {
-                    hOutsiders[hOutsidersLimit] = vertex;
-                    hOutsidersLimit += 1;
-                }
+                if (hVertex == hInitialMatchingVertex || (hAllowedSubsetVertices != null && !hAllowedSubsetVertices.Contains(hVertex)))
+                    continue;
+
+                hOutsiders[hOutsidersLimit] = hVertex;
+                hOutsidersLimit += 1;
             }
 
             totalNumberOfEdgesInSubgraph = 0;
@@ -160,11 +167,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 this.gConnectionExistence = gConnectionExistence;
                 gMax = this.gConnectionExistence.GetLength(0);
             }
-
             if (hConnectionExistence == null)
             {
                 hMax = h.Vertices.Max();
-
 
                 this.hConnectionExistence = new bool[hMax + 1, hMax + 1];
                 foreach (var kvp in h.Neighbours)
@@ -177,44 +182,83 @@ namespace SubgraphIsomorphismExactAlgorithm
                 hMax = this.hConnectionExistence.GetLength(0);
             }
 
-            var hVerticesCount = h.Vertices.Count;
-            isomorphicH = new int[hVerticesCount][];
-            isomorphicHIndices = new int[hVerticesCount][];
-            isomorphicCandidates = new int[hVerticesCount][];
-            isomorphicCandidatesIndices = new int[hVerticesCount][];
-            for (int i = 0; i < hVerticesCount; i++)
+            /// TOCONSIDER: should this be limited at any time?
+            gEnvelopeHashes = new int[gMax + 1];
+            hEnvelopeHashes = new int[hMax + 1];
+
+            isomorphicH = new int[hVertexCount][];
+            isomorphicHIndices = new int[hVertexCount][];
+            isomorphicCandidates = new int[hVertexCount][];
+            isomorphicCandidatesIndices = new int[hVertexCount][];
+            for (int i = 0; i < this.hVertexCount; i += 1)
             {
-                isomorphicH[i] = new int[hVerticesCount - i];
-                isomorphicHIndices[i] = new int[hVerticesCount - i];
-                isomorphicCandidates[i] = new int[hVerticesCount - i];
-                isomorphicCandidatesIndices[i] = new int[hVerticesCount - i];
+                isomorphicH[i] = new int[hVertexCount - i];
+                isomorphicHIndices[i] = new int[hVertexCount - i];
+                isomorphicCandidates[i] = new int[hVertexCount - i];
+                isomorphicCandidatesIndices[i] = new int[hVertexCount - i];
             }
 
-            if (gConnectionExistence == null && hConnectionExistence == null)
+
+            this.hNeighbourCount = new int[hMax + 1];
+            if (hAllowedSubsetVertices == null)
             {
-                gEnvelopeHashes = new int[gMax + 1];
-                hEnvelopeHashes = new int[hMax + 1];
+                foreach (var hVertex in h.Vertices)
+                    hNeighbourCount[hVertex] = h.VertexDegree(hVertex);
             }
-
-            neighbours = new int[gMax + 1][];
-            neighbourIndices = new int[gMax + 1][];
-            neighbourCount = new int[gMax + 1];
-
-
-            // TODO: filter out only wanted vertices in case of disconnected components!
-            foreach (var gVertex in g.Vertices)
+            else
             {
-                var degree = g.VertexDegree(gVertex);
-                neighbourCount[gVertex] = degree;
-                neighbours[gVertex] = new int[degree];
-                neighbourIndices[gVertex] = new int[gMax + 1];
-                int i = 0;
-                foreach (var neighbour in g.VertexNeighbours(gVertex))
+                foreach (var hVertex in h.Vertices)
                 {
-                    neighbours[gVertex][i] = neighbour;
-                    neighbourIndices[gVertex][neighbour] = i;
-                    i += 1;
+                    if (hAllowedSubsetVertices.Contains(hVertex))
+                    {
+                        var degree = 0;
+                        foreach (var hVertex2 in h.Vertices)
+                        {
+                            if (hAllowedSubsetVertices.Contains(hVertex))
+                                degree += 1;
+                        }
+                        hNeighbourCount[hVertex] = degree;
+                    }
                 }
+            }
+
+            if (neighbours == null)
+            {
+                this.gEdgeCount = 0;
+                this.neighbours = new int[gMax + 1][];
+                this.neighbourIndices = new int[gMax + 1][];
+                this.gNeighbourCount = new int[gMax + 1];
+
+                foreach (var gVertex in g.Vertices)
+                {
+                    if (gAllowedSubsetVertices != null && !gAllowedSubsetVertices.Contains(gVertex))
+                        continue;
+                    var degree = g.VertexDegree(gVertex);
+                    if (!optimizeForAutomorphism)
+                    {
+                        this.neighbours[gVertex] = new int[degree];
+                        this.neighbourIndices[gVertex] = new int[gMax + 1];
+                        int i = 0;
+                        foreach (var neighbour in g.VertexNeighbours(gVertex))
+                        {
+                            if (gAllowedSubsetVertices != null && !gAllowedSubsetVertices.Contains(neighbour))
+                                continue;
+                            this.neighbours[gVertex][i] = neighbour;
+                            this.neighbourIndices[gVertex][neighbour] = i;
+                            i += 1;
+                        }
+                        degree = i;
+                    }
+                    this.gNeighbourCount[gVertex] = degree;
+                    this.gEdgeCount += degree;
+                }
+                this.gEdgeCount /= 2;
+            }
+            else
+            {
+                this.neighbours = neighbours;
+                this.neighbourIndices = neighbourIndices;
+                this.gNeighbourCount = gNeighbourCount;
             }
 
             return this;
@@ -408,7 +452,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             isomorphicCandidates[mappingCount][localNumberOfCandidates] = hCan;
                             isomorphicCandidatesIndices[mappingCount][localNumberOfCandidates] = he;
                             localNumberOfCandidates += 1;
-                            score += h.VertexDegree(hCan);
+                            score += hNeighbourCount[hCan];
                             if (score > minScore)
                                 break;
                         }
@@ -433,9 +477,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                     else if (score == minScore)
                     {
-                        var thisDegree = neighbourCount[gCan];
+                        var thisDegree = gNeighbourCount[gCan];
                         if (degree == -1)
-                            degree = neighbourCount[gMatchingCandidate];
+                            degree = gNeighbourCount[gMatchingCandidate];
 
                         if (thisDegree < degree)
                         {
@@ -563,7 +607,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findGraphGinH && subgraphScoringFunction(gVertexCount - 1, gEdgeCount - neighbourCount[gMatchingCandidate]) * approximationRatio > bestScore)
+                if (!findGraphGinH && subgraphScoringFunction(gVertexCount - 1, gEdgeCount - gNeighbourCount[gMatchingCandidate]) * approximationRatio > bestScore)
                 {
                     var takeaway = Remove(gMatchingCandidate);
                     gVertexCount -= 1;
@@ -626,11 +670,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                             localNumberOfCandidates = 0;
                             score = 0;
                             var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
-                            var gDegree = neighbourCount[gCan];
+                            var gDegree = gNeighbourCount[gCan];
                             for (int he = 0; he < hEnvelopeLimit; he++)
                             {
                                 var hCan = hEnvelope[he];
-                                if (h.VertexDegree(hCan) != gDegree)
+                                if (hNeighbourCount[hCan] != gDegree)
                                     continue;
                                 if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                                     continue;
@@ -655,7 +699,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                                     isomorphicCandidates[localNumberOfCandidates] = hCan;
                                     isomorphicCandidatesIndices[localNumberOfCandidates] = he;
                                     localNumberOfCandidates += 1;
-                                    score += h.VertexDegree(hCan);
+                                    score += hNeighbourCount[hCan];
                                     if (score > minScore)
                                         break;
                                 }
@@ -680,9 +724,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                             else if (score == minScore)
                             {
-                                var thisDegree = neighbourCount[gCan];
+                                var thisDegree = gNeighbourCount[gCan];
                                 if (degree == -1)
-                                    degree = neighbourCount[gMatchingCandidate];
+                                    degree = gNeighbourCount[gMatchingCandidate];
 
                                 if (thisDegree < degree)
                                 {
@@ -842,36 +886,30 @@ namespace SubgraphIsomorphismExactAlgorithm
                 && (subgraphScoringFunction(gOutsidersLimit + currentlyBuiltVertices, gOutsidersLimit * (gOutsidersLimit - 1) / 2 + currentlyBuiltEdges) * approximationRatio > bestScore)
                 )
             {
-                var gOutsiderGraph = g.DeepCloneHavingVerticesIntersectedWith(new HashSet<int>(gOutsiders.Take(gOutsidersLimit)));
-                var hOutsiderGraph = h.DeepCloneHavingVerticesIntersectedWith(new HashSet<int>(hOutsiders.Take(hOutsidersLimit)));
                 var subgraphsSwapped = false;
-                if (!findGraphGinH && hOutsiderGraph.EdgeCount < gOutsiderGraph.EdgeCount)
-                {
-                    subgraphsSwapped = true;
-                    var tmp = gOutsiderGraph;
-                    gOutsiderGraph = hOutsiderGraph;
-                    hOutsiderGraph = tmp;
-                }
+                //if (!findGraphGinH && hOutsidersLimit < gOutsidersLimit)
+                //{
+                //    subgraphsSwapped = true;
+                //}
 
-                if (subgraphScoringFunction(hOutsiderGraph.Vertices.Count + currentlyBuiltVertices, hOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore)
+                if (subgraphScoringFunction(hOutsidersLimit + currentlyBuiltVertices, currentlyBuiltEdges) * approximationRatio > bestScore)
                 {
                     // if there is hope to improve the score then recurse
-                    while (
-                        gOutsiderGraph.Vertices.Count > 0
-                        && subgraphScoringFunction(gOutsiderGraph.Vertices.Count + currentlyBuiltVertices, gOutsiderGraph.EdgeCount + currentlyBuiltEdges) * approximationRatio > bestScore
-                        )
+                    var gOutsidersHash = new HashSet<int>(gOutsiders.Take(gOutsidersLimit));
+                    var hOutsidersHash = new HashSet<int>(hOutsiders.Take(hOutsidersLimit));
+                    while (gOutsidersHash.Count > 0)
                     {
                         // choose the candidate with largest degree within the graph of outsiders
                         // if there is an ambiguity then choose the vertex with the largest degree in the original graph
-                        var gMatchingCandidate = gOutsiderGraph.Vertices.ArgMax(v => gOutsiderGraph.VertexDegree(v));
+                        var gMatchingCandidate = gOutsidersHash.ArgMax(v => gNeighbourCount[v]);
 
-                        foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
+                        foreach (var hMatchingCandidate in hOutsidersHash)
                         {
                             new CoreAlgorithm().InternalStateSetup(
                                  gMatchingCandidate,
                                  hMatchingCandidate,
-                                 gOutsiderGraph,
-                                 hOutsiderGraph,
+                                 g,
+                                 h,
                                  (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
                                  (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
                                      newScore,
@@ -896,15 +934,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                                  approximationRatio: approximationRatio,
                                  gConnectionExistence: subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
                                  hConnectionExistence: subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
-                                 deepnessTakeawaySteps: Math.Max(0, deepnessTakeawaySteps - deepness),
-                                 leftoverSteps: leftoverSteps
+                                 //deepnessTakeawaySteps: Math.Max(0, deepnessTakeawaySteps - deepness),
+                                 leftoverSteps: leftoverSteps,
+                                 gAllowedSubsetVertices: gOutsidersHash,
+                                 hAllowedSubsetVertices: hOutsidersHash
                             ).Recurse(ref bestScore);
                         }
 
                         if (findGraphGinH)
                             break;
 
-                        gOutsiderGraph.RemoveVertex(gMatchingCandidate);
+                        gOutsidersHash.Remove(gMatchingCandidate);
                     }
                 }
             }
