@@ -150,6 +150,8 @@ namespace SubgraphIsomorphismExactAlgorithm
         {
             if (gMatchingCandidateIndex < gEnvelopeLimit && hMatchingCandidateIndex < hEnvelopeLimit)
             {
+                var gMatchingCandidate = gEnvelope[gMatchingCandidateIndex];
+                var hMatchingCandidate = hEnvelope[hMatchingCandidateIndex];
                 var candidatesTrulyIsomorphic = true;
                 var potentialNumberOfNewEdges = 0;
 
@@ -157,8 +159,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     var gVertexInSubgraph = gMapping[i];
                     var hVertexInSubgraph = hMapping[i];
-                    var gConnection = gConnectionExistence[gEnvelope[gMatchingCandidateIndex], gVertexInSubgraph];
-                    var hConnection = hConnectionExistence[hEnvelope[hMatchingCandidateIndex], hVertexInSubgraph];
+                    var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
+                    var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
 #if induced
                     if (gConnection != hConnection)
 #else
@@ -178,8 +180,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                 {
                     totalNumberOfEdgesInSubgraph += potentialNumberOfNewEdges;
                     // by definition add the transition functions (which means adding them to the subgraph)
-                    gMapping[mappingCount] = gEnvelope[gMatchingCandidateIndex];
-                    hMapping[mappingCount] = hEnvelope[hMatchingCandidateIndex];
+                    gMapping[mappingCount] = gMatchingCandidate;
+                    hMapping[mappingCount] = hMatchingCandidate;
                     mappingCount += 1;
 
                     // if the matching vertex was in the envelope set then remove it
@@ -193,7 +195,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         var gOutsider = gOutsiders[go];
                         // if the vertex ia a neighbour of the matching vertex
-                        if (gConnectionExistence[gMatchingCandidateIndex, gOutsider])
+                        if (gConnectionExistence[gMatchingCandidate, gOutsider])
                         {
                             // the outsider vertex is new to the envelope
                             gEnvelope[gEnvelopeLimit] = gOutsider;
@@ -211,7 +213,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     {
                         var hOutsider = hOutsiders[ho];
                         // if the vertex ia a neighbour of the matching vertex
-                        if (hConnectionExistence[hMatchingCandidateIndex, hOutsider])
+                        if (hConnectionExistence[hMatchingCandidate, hOutsider])
                         {
                             // the outsider vertex is new to the envelope
                             hEnvelope[hEnvelopeLimit] = hOutsider;
