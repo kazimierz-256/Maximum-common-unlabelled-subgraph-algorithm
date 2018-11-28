@@ -39,6 +39,11 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int[] gEnvelopeHashes;
         public int[] hEnvelopeHashes;
 
+        private int[][] isomorphicH;
+        private int[][] isomorphicHIndices;
+        private int[][] isomorphicCandidates;
+        private int[][] isomorphicCandidatesIndices;
+
         public CoreAlgorithm InternalStateSetup(
             int gInitialMatchingVertex,
             int hInitialMatchingVertex,
@@ -134,6 +139,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                 hMax = this.hConnectionExistence.GetLength(0);
             }
 
+            isomorphicH = new int[h.Vertices.Count + 1][];
+            isomorphicHIndices = new int[isomorphicH.GetLength(0)][];
+            isomorphicCandidates = new int[isomorphicH.GetLength(0)][];
+            isomorphicCandidatesIndices = new int[isomorphicH.GetLength(0)][];
+            for (int i = 0; i < isomorphicH.GetLength(0); i++)
+            {
+                isomorphicH[i] = new int[h.Vertices.Count + 1];
+                isomorphicHIndices[i] = new int[isomorphicH[i].GetLength(0)];
+                isomorphicCandidates[i] = new int[isomorphicH[i].GetLength(0)];
+                isomorphicCandidatesIndices[i] = new int[isomorphicH[i].GetLength(0)];
+            }
 
             if (gConnectionExistence == null && hConnectionExistence == null)
             {
@@ -292,14 +308,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var gMatchingCandidate = -1;
                 var gMatchingCandidateIndex = -1;
                 var totalNumberOfCandidates = int.MaxValue;
-                var isomorphicH = new int[hEnvelopeLimit];
-                var isomorphicHIndices = new int[hEnvelopeLimit];
                 var newEdges = 0;
                 var minScore = int.MaxValue;
                 var degree = -1;
-                var isomorphicCandidates = new int[hEnvelopeLimit];
-                var isomorphicCandidatesIndices = new int[hEnvelopeLimit];
-                var tmp = isomorphicH;
+                var tmp = isomorphicH[mappingCount];
                 var localNumberOfCandidates = 0;
                 var score = 0;
                 var locallyIsomorphic = true;
@@ -333,8 +345,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         if (locallyIsomorphic)
                         {
-                            isomorphicCandidates[localNumberOfCandidates] = hCan;
-                            isomorphicCandidatesIndices[localNumberOfCandidates] = he;
+                            isomorphicCandidates[mappingCount][localNumberOfCandidates] = hCan;
+                            isomorphicCandidatesIndices[mappingCount][localNumberOfCandidates] = he;
                             localNumberOfCandidates += 1;
                             score += h.VertexDegree(hCan);
                             if (score > minScore)
@@ -350,12 +362,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                         gMatchingCandidate = gCan;
                         gMatchingCandidateIndex = ge;
 
-                        tmp = isomorphicCandidates;
-                        isomorphicCandidates = isomorphicH;
-                        isomorphicH = tmp;
-                        tmp = isomorphicCandidatesIndices;
-                        isomorphicCandidatesIndices = isomorphicHIndices;
-                        isomorphicHIndices = tmp;
+                        tmp = isomorphicCandidates[mappingCount];
+                        isomorphicCandidates[mappingCount] = isomorphicH[mappingCount];
+                        isomorphicH[mappingCount] = tmp;
+                        tmp = isomorphicCandidatesIndices[mappingCount];
+                        isomorphicCandidatesIndices[mappingCount] = isomorphicHIndices[mappingCount];
+                        isomorphicHIndices[mappingCount] = tmp;
                         if (totalNumberOfCandidates == 0)
                             break;
                     }
@@ -372,12 +384,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gMatchingCandidate = gCan;
                             gMatchingCandidateIndex = ge;
 
-                            tmp = isomorphicCandidates;
-                            isomorphicCandidates = isomorphicH;
-                            isomorphicH = tmp;
-                            tmp = isomorphicCandidatesIndices;
-                            isomorphicCandidatesIndices = isomorphicHIndices;
-                            isomorphicHIndices = tmp;
+                            tmp = isomorphicCandidates[mappingCount];
+                            isomorphicCandidates[mappingCount] = isomorphicH[mappingCount];
+                            isomorphicH[mappingCount] = tmp;
+                            tmp = isomorphicCandidatesIndices[mappingCount];
+                            isomorphicCandidatesIndices[mappingCount] = isomorphicHIndices[mappingCount];
+                            isomorphicHIndices[mappingCount] = tmp;
                         }
                     }
                 }
@@ -424,12 +436,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
                     for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore; hCandidate += 1)
                     {
-                        var hMatchingCandidate = isomorphicH[hCandidate];
+                        var hMatchingCandidate = isomorphicH[mappingCount][hCandidate];
                         // verify mutual agreement connections of neighbours
 
                         #region H setup
 
-                        hEnvelope[isomorphicHIndices[hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
+                        hEnvelope[isomorphicHIndices[mappingCount][hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
                         hEnvelopeLimit -= 1;
 
                         var hOriginalSize = hEnvelopeLimit;
@@ -467,15 +479,16 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         #region H cleanup
                         deepness -= 1;
+
+                        mappingCount -= 1;
                         hOutsidersLimit = hOutsidersOriginalLimit;
                         // restore hEnvelope to original state
                         hEnvelopeLimit = hOriginalSize;
-                        hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[hCandidate]];
-                        hEnvelope[isomorphicHIndices[hCandidate]] = hMatchingCandidate;
+                        hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[mappingCount][hCandidate]];
+                        hEnvelope[isomorphicHIndices[mappingCount][hCandidate]] = hMatchingCandidate;
                         hEnvelopeLimit += 1;
 
 
-                        mappingCount -= 1;
 
                         #endregion
 
@@ -790,58 +803,38 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         foreach (var hMatchingCandidate in hOutsiderGraph.Vertices)
                         {
-                            var subSolver = new CoreAlgorithm()
-                            {
-                                g = gOutsiderGraph,
-                                h = hOutsiderGraph,
-                                // there might exist an ambiguity in evaluating the scoring function for disconnected components
-                                // the simplest valuation has been chosen - the sum of all vertices of all disconnected components
-                                subgraphScoringFunction = (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
-                                newSolutionFoundNotificationAction = (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
-                                    newScore,
-                                    () =>
-                                    {
-                                        var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                        for (int i = 0; i < mappingCount; i += 1)
-                                            ghExtended.Add(gMapping[i], hMapping[i]);
-                                        return ghExtended;
-                                    },
-                                    () =>
-                                    {
-                                        var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                        for (int i = 0; i < mappingCount; i += 1)
-                                            hgExtended.Add(hMapping[i], gMapping[i]);
-                                        return hgExtended;
-                                    },
-                                    edges + totalNumberOfEdgesInSubgraph
-                                    )
-                                ,
-                                gMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-                                hMapping = new int[Math.Min(gOutsiderGraph.Vertices.Count, hOutsiderGraph.Vertices.Count)],
-                                mappingCount = 0,
-
-                                gEnvelope = new int[gOutsiderGraph.Vertices.Count],
-                                gEnvelopeLimit = 1,
-                                hEnvelope = new int[hOutsiderGraph.Vertices.Count],
-                                hEnvelopeLimit = 1,
-                                gOutsiders = gOutsiderGraph.Vertices.Where(v => v != gMatchingCandidate).ToArray(),
-                                gOutsidersLimit = gOutsiderGraph.Vertices.Count - 1,
-                                hOutsiders = hOutsiderGraph.Vertices.Where(v => v != hMatchingCandidate).ToArray(),
-                                hOutsidersLimit = hOutsiderGraph.Vertices.Count - 1,
-                                totalNumberOfEdgesInSubgraph = 0,
-                                gConnectionExistence = subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
-                                hConnectionExistence = subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
-                                analyzeDisconnected = true,
-                                findGraphGinH = findGraphGinH,
-                                leftoverSteps = leftoverSteps,
-                                deepness = deepness,
-                                approximationRatio = approximationRatio,
-                                gEnvelopeHashes = new int[gOutsiderGraph.Vertices.Max() + 1],
-                                hEnvelopeHashes = new int[hOutsiderGraph.Vertices.Max() + 1]
-                            };
-                            subSolver.gEnvelope[0] = gMatchingCandidate;
-                            subSolver.hEnvelope[0] = hMatchingCandidate;
-                            subSolver.Recurse(ref bestScore);
+                            new CoreAlgorithm().InternalStateSetup(
+                                 gMatchingCandidate,
+                                 hMatchingCandidate,
+                                 gOutsiderGraph,
+                                 hOutsiderGraph,
+                                 (int vertices, int edges) => subgraphScoringFunction(vertices + currentlyBuiltVertices, edges + currentlyBuiltEdges),
+                                 (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
+                                     newScore,
+                                     () =>
+                                     {
+                                         var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                         for (int i = 0; i < mappingCount; i += 1)
+                                             ghExtended.Add(gMapping[i], hMapping[i]);
+                                         return ghExtended;
+                                     },
+                                     () =>
+                                     {
+                                         var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                         for (int i = 0; i < mappingCount; i += 1)
+                                             hgExtended.Add(hMapping[i], gMapping[i]);
+                                         return hgExtended;
+                                     },
+                                     edges + totalNumberOfEdgesInSubgraph
+                                     ),
+                                 analyzeDisconnected: analyzeDisconnected,
+                                 findGraphGinH: findGraphGinH,
+                                 approximationRatio: approximationRatio,
+                                 gConnectionExistence: subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
+                                 hConnectionExistence: subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
+                                 deepnessTakeawaySteps: Math.Max(0, deepnessTakeawaySteps - deepness),
+                                 leftoverSteps: leftoverSteps
+                            ).Recurse(ref bestScore);
                         }
 
                         if (findGraphGinH)
