@@ -893,63 +893,104 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // if there is hope to improve the score then recurse
                 var firstOutsiders = new HashSet<int>(gOutsiders.Take(gOutsidersLimit));
                 var secondOutsiders = new HashSet<int>(hOutsiders.Take(hOutsidersLimit));
+                var firstEdges = 0;
+                var secondEdges = 0;
+                foreach (var gVertex1 in firstOutsiders)
+                {
+                    foreach (var gVertex2 in firstOutsiders)
+                    {
+                        if (gVertex1 == gVertex2)
+                            break;
+
+                        if (gConnectionExistence[gVertex1, gVertex2])
+                            firstEdges += 1;
+                    }
+                }
+                foreach (var hVertex1 in secondOutsiders)
+                {
+                    foreach (var hVertex2 in secondOutsiders)
+                    {
+                        if (hVertex1 == hVertex2)
+                            break;
+
+                        if (hConnectionExistence[hVertex1, hVertex2])
+                            secondEdges += 1;
+                    }
+                }
+
                 if (subgraphsSwapped)
                 {
                     var tmp = firstOutsiders;
                     firstOutsiders = secondOutsiders;
                     secondOutsiders = tmp;
                 }
-                while (
-                    firstOutsiders.Count > 0
-                    && subgraphScoringFunction(firstOutsiders.Count + mappingCount, firstOutsiders.Count * (firstOutsiders.Count - 1) / 2 + totalNumberOfEdgesInSubgraph) * approximationRatio > bestScore
-                    )
+
+                if (subgraphScoringFunction(secondOutsiders.Count + mappingCount, secondEdges + totalNumberOfEdgesInSubgraph) * approximationRatio > bestScore)
                 {
-                    // choose the candidate with largest degree within the graph of outsiders
-                    // if there is an ambiguity then choose the vertex with the largest degree in the original graph
-                    var firstMatchingCandidate = firstOutsiders.ArgMax(v => subgraphsSwapped ? hNeighbourCount[v] : gNeighbourCount[v]);
-
-                    foreach (var secondMatchingCandidate in secondOutsiders)
+                    while (
+                        firstOutsiders.Count > 0
+                        && subgraphScoringFunction(firstOutsiders.Count + mappingCount, firstEdges + totalNumberOfEdgesInSubgraph) * approximationRatio > bestScore
+                        )
                     {
-                        new CoreAlgorithm().InternalStateSetup(
-                             firstMatchingCandidate,
-                             secondMatchingCandidate,
-                             subgraphsSwapped ? h : g,
-                             subgraphsSwapped ? g : h,
-                             (int vertices, int edges) => subgraphScoringFunction(vertices + mappingCount, edges + totalNumberOfEdgesInSubgraph),
-                             (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
-                                 newScore,
-                                 () =>
-                                 {
-                                     var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
-                                     for (int i = 0; i < mappingCount; i += 1)
-                                         ghExtended.Add(gMapping[i], hMapping[i]);
-                                     return ghExtended;
-                                 },
-                                 () =>
-                                 {
-                                     var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
-                                     for (int i = 0; i < mappingCount; i += 1)
-                                         hgExtended.Add(hMapping[i], gMapping[i]);
-                                     return hgExtended;
-                                 },
-                                 edges + totalNumberOfEdgesInSubgraph
-                                 ),
-                             analyzeDisconnected: analyzeDisconnected,
-                             findGraphGinH: findGraphGinH,
-                             approximationRatio: approximationRatio,
-                             gConnectionExistence: subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
-                             hConnectionExistence: subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
-                             deepnessTakeawaySteps: Math.Max(0, deepnessTakeawaySteps - deepness),
-                             leftoverSteps: leftoverSteps,
-                             gAllowedSubsetVertices: firstOutsiders,
-                             hAllowedSubsetVertices: secondOutsiders
-                        ).Recurse(ref bestScore);
+                        // choose the candidate with largest degree within the graph of outsiders
+                        // if there is an ambiguity then choose the vertex with the largest degree in the original graph
+                        var firstMatchingCandidate = firstOutsiders.ArgMax(v => subgraphsSwapped ? hNeighbourCount[v] : gNeighbourCount[v]);
+
+                        foreach (var secondMatchingCandidate in secondOutsiders)
+                        {
+                            new CoreAlgorithm().InternalStateSetup(
+                                 firstMatchingCandidate,
+                                 secondMatchingCandidate,
+                                 subgraphsSwapped ? h : g,
+                                 subgraphsSwapped ? g : h,
+                                 (int vertices, int edges) => subgraphScoringFunction(vertices + mappingCount, edges + totalNumberOfEdgesInSubgraph),
+                                 (newScore, ghMap, hgMap, edges) => newSolutionFoundNotificationAction?.Invoke(
+                                     newScore,
+                                     () =>
+                                     {
+                                         var ghExtended = subgraphsSwapped ? hgMap() : ghMap();
+                                         for (int i = 0; i < mappingCount; i += 1)
+                                             ghExtended.Add(gMapping[i], hMapping[i]);
+                                         return ghExtended;
+                                     },
+                                     () =>
+                                     {
+                                         var hgExtended = subgraphsSwapped ? ghMap() : hgMap();
+                                         for (int i = 0; i < mappingCount; i += 1)
+                                             hgExtended.Add(hMapping[i], gMapping[i]);
+                                         return hgExtended;
+                                     },
+                                     edges + totalNumberOfEdgesInSubgraph
+                                     ),
+                                 analyzeDisconnected: analyzeDisconnected,
+                                 findGraphGinH: findGraphGinH,
+                                 approximationRatio: approximationRatio,
+                                 gConnectionExistence: subgraphsSwapped ? hConnectionExistence : gConnectionExistence,
+                                 hConnectionExistence: subgraphsSwapped ? gConnectionExistence : hConnectionExistence,
+                                 deepnessTakeawaySteps: Math.Max(0, deepnessTakeawaySteps - deepness),
+                                 leftoverSteps: leftoverSteps,
+                                 gAllowedSubsetVertices: firstOutsiders,
+                                 hAllowedSubsetVertices: secondOutsiders
+                            ).Recurse(ref bestScore);
+                        }
+
+                        if (findGraphGinH)
+                            break;
+
+                        foreach (var vertex1 in firstOutsiders)
+                        {
+                            foreach (var vertex2 in firstOutsiders)
+                            {
+                                if (vertex1 == vertex2)
+                                    break;
+
+                                if (subgraphsSwapped ? hConnectionExistence[vertex1, vertex2] : gConnectionExistence[vertex1, vertex2])
+                                    firstEdges -= 1;
+                            }
+                        }
+
+                        firstOutsiders.Remove(firstMatchingCandidate);
                     }
-
-                    if (findGraphGinH)
-                        break;
-
-                    firstOutsiders.Remove(firstMatchingCandidate);
                 }
 
             }
