@@ -141,7 +141,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         .InternalStateSetup(
                             gInitialVertices[gIndex],
                             hClassesOfAbstraction[hIndex][0],
-                            gGraphs[gIndex].DeepClone(),
+                            gGraphs[gIndex],
                             h,
                             graphScoringFunction,
                             (newScore, ghMap, hgMap, edges) =>

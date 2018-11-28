@@ -39,10 +39,44 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int[] gEnvelopeHashes;
         public int[] hEnvelopeHashes;
 
-        private int[][] isomorphicH;
-        private int[][] isomorphicHIndices;
-        private int[][] isomorphicCandidates;
-        private int[][] isomorphicCandidatesIndices;
+        public int[][] isomorphicH;
+        public int[][] isomorphicHIndices;
+        public int[][] isomorphicCandidates;
+        public int[][] isomorphicCandidatesIndices;
+
+        public int[][] neighbours;
+        public int[] neighbourCount;
+        public int[][] neighbourIndices;
+
+        private int gVertexCount;
+        private int gEdgeCount;
+
+        private int Remove(int vertex)
+        {
+            int i = 0;
+            for (; i < neighbourCount[vertex]; i++)
+            {
+                var neighbour = neighbours[vertex][i];
+                // exchange vertices
+                var last = neighbours[neighbour][neighbourCount[neighbour] - 1];
+                neighbours[neighbour][neighbourCount[neighbour] - 1] = vertex;
+                neighbours[neighbour][neighbourIndices[neighbour][vertex]] = last;
+                //update indices
+                neighbourIndices[neighbour][last] = neighbourIndices[neighbour][vertex];
+                neighbourIndices[neighbour][vertex] = neighbourCount[neighbour] - 1;
+                // finalize
+                neighbourCount[neighbour] -= 1;
+            }
+
+            return i;
+        }
+        private void Restore(int vertex)
+        {
+            for (int i = 0; i < neighbourCount[vertex]; i++)
+            {
+                neighbourCount[neighbours[vertex][i]] += 1;
+            }
+        }
 
         public CoreAlgorithm InternalStateSetup(
             int gInitialMatchingVertex,
@@ -70,7 +104,11 @@ namespace SubgraphIsomorphismExactAlgorithm
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
             this.approximationRatio = approximationRatio;
 
-            gMapping = new int[Math.Min(g.Vertices.Count, h.Vertices.Count)];
+            // TODO: make it possible to import via optional parameters & configure with disconnected components...
+            gVertexCount = g.Vertices.Count;
+            gEdgeCount = g.EdgeCount;
+
+            gMapping = new int[Math.Min(gVertexCount, h.Vertices.Count)];
             hMapping = new int[gMapping.Length];
             mappingCount = 0;
             // for simplicity insert initial isomorphic vertices into the envelope
@@ -144,18 +182,39 @@ namespace SubgraphIsomorphismExactAlgorithm
             isomorphicHIndices = new int[hVerticesCount][];
             isomorphicCandidates = new int[hVerticesCount][];
             isomorphicCandidatesIndices = new int[hVerticesCount][];
-            for (int i = 0; i < isomorphicH.GetLength(0); i++)
+            for (int i = 0; i < hVerticesCount; i++)
             {
-                isomorphicH[i] = new int[hVerticesCount];
-                isomorphicHIndices[i] = new int[hVerticesCount];
-                isomorphicCandidates[i] = new int[hVerticesCount];
-                isomorphicCandidatesIndices[i] = new int[hVerticesCount];
+                isomorphicH[i] = new int[hVerticesCount - i];
+                isomorphicHIndices[i] = new int[hVerticesCount - i];
+                isomorphicCandidates[i] = new int[hVerticesCount - i];
+                isomorphicCandidatesIndices[i] = new int[hVerticesCount - i];
             }
 
             if (gConnectionExistence == null && hConnectionExistence == null)
             {
                 gEnvelopeHashes = new int[gMax + 1];
                 hEnvelopeHashes = new int[hMax + 1];
+            }
+
+            neighbours = new int[gMax + 1][];
+            neighbourIndices = new int[gMax + 1][];
+            neighbourCount = new int[gMax + 1];
+
+
+            // TODO: filter out only wanted vertices in case of disconnected components!
+            foreach (var gVertex in g.Vertices)
+            {
+                var degree = g.VertexDegree(gVertex);
+                neighbourCount[gVertex] = degree;
+                neighbours[gVertex] = new int[degree];
+                neighbourIndices[gVertex] = new int[gMax + 1];
+                int i = 0;
+                foreach (var neighbour in g.VertexNeighbours(gVertex))
+                {
+                    neighbours[gVertex][i] = neighbour;
+                    neighbourIndices[gVertex][neighbour] = i;
+                    i += 1;
+                }
             }
 
             return this;
@@ -294,7 +353,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         );
                 }
             }
-            else if (subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore)
+            else if (subgraphScoringFunction(gVertexCount, gEdgeCount) * approximationRatio > bestScore)
             {
                 // if there is hope for a larger score then recurse further
 
@@ -374,9 +433,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                     else if (score == minScore)
                     {
-                        var thisDegree = g.VertexDegree(gCan);
+                        var thisDegree = neighbourCount[gCan];
                         if (degree == -1)
-                            degree = g.VertexDegree(gMatchingCandidate);
+                            degree = neighbourCount[gMatchingCandidate];
 
                         if (thisDegree < degree)
                         {
@@ -435,7 +494,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     #endregion
                     var hOutsidersOriginalLimit = hOutsidersLimit;
                     // a necessary in-place copy to an array since hEnvelope is modified during recursion
-                    for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(g.Vertices.Count, g.EdgeCount) * approximationRatio > bestScore; hCandidate += 1)
+                    for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && subgraphScoringFunction(gVertexCount, gEdgeCount) * approximationRatio > bestScore; hCandidate += 1)
                     {
                         var hMatchingCandidate = isomorphicH[mappingCount][hCandidate];
                         // verify mutual agreement connections of neighbours
@@ -504,15 +563,19 @@ namespace SubgraphIsomorphismExactAlgorithm
                 // remove the candidate from the graph and recurse
                 // then restore the removed vertex along with all the neighbours
                 // if an exact match is required then - obviously - do not remove any verices from the G graph
-                if (!findGraphGinH && subgraphScoringFunction(g.Vertices.Count - 1, g.EdgeCount - g.VertexDegree(gMatchingCandidate)) * approximationRatio > bestScore)
+                if (!findGraphGinH && subgraphScoringFunction(gVertexCount - 1, gEdgeCount - neighbourCount[gMatchingCandidate]) * approximationRatio > bestScore)
                 {
-                    var gRestoreOperation = g.RemoveVertex(gMatchingCandidate);
+                    var takeaway = Remove(gMatchingCandidate);
+                    gVertexCount -= 1;
+                    gEdgeCount -= takeaway;
                     deepness += 1;
 
                     Recurse(ref bestScore);
 
                     deepness -= 1;
-                    g.AddVertex(gMatchingCandidate, gRestoreOperation);
+                    gVertexCount += 1;
+                    gEdgeCount += takeaway;
+                    Restore(gMatchingCandidate);
                 }
                 gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
                 gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
@@ -563,7 +626,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             localNumberOfCandidates = 0;
                             score = 0;
                             var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
-                            var gDegree = g.VertexDegree(gCan);
+                            var gDegree = neighbourCount[gCan];
                             for (int he = 0; he < hEnvelopeLimit; he++)
                             {
                                 var hCan = hEnvelope[he];
@@ -617,9 +680,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                             else if (score == minScore)
                             {
-                                var thisDegree = g.VertexDegree(gCan);
+                                var thisDegree = neighbourCount[gCan];
                                 if (degree == -1)
-                                    degree = g.VertexDegree(gMatchingCandidate);
+                                    degree = neighbourCount[gMatchingCandidate];
 
                                 if (thisDegree < degree)
                                 {
