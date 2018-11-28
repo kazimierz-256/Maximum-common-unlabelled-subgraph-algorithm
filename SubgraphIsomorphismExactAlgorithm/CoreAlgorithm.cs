@@ -533,11 +533,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 else
                 {
-                    //var gDegree = g.VertexDegree(gCan);
-                    //foreach (var hCan in hEnvelope)
-                    //{
-                    //    if (h.VertexDegree(hCan) != gDegree)
-                    //        continue;
                     {
                         // if there is hope for a larger score then recurse further
 
@@ -570,9 +565,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                             localNumberOfCandidates = 0;
                             score = 0;
                             var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
+                            var gDegree = g.VertexDegree(gCan);
                             for (int he = 0; he < hEnvelopeLimit; he++)
                             {
                                 var hCan = hEnvelope[he];
+                                if (h.VertexDegree(hCan) != gDegree)
+                                    continue;
                                 if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                                     continue;
 
