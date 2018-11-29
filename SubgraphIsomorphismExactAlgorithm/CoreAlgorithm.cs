@@ -429,12 +429,16 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var gCan = gEnvelope[ge];
                     localNumberOfCandidates = 0;
                     score = 0;
+#if induced
                     var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
+#endif
                     for (int he = 0; he < hEnvelopeLimit; he += 1)
                     {
                         var hCan = hEnvelope[he];
+#if induced
                         if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                             continue;
+#endif
 
                         locallyIsomorphic = true;
                         var localEdges = gHash > 0 ? 1 : 0;
@@ -501,17 +505,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                         }
                     }
                 }
-                for (i = 0; i < mappingCount; i += 1)
-                {
-                    if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
-                        newEdges += 1;
-                }
                 #endregion
 
                 gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
                 gEnvelopeLimit -= 1;
                 if (totalNumberOfCandidates > 0)
                 {
+                    for (i = 0; i < mappingCount; i += 1)
+                    {
+                        if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
+                            newEdges += 1;
+                    }
                     #region G setup
 
                     var gEnvelopeOriginalSize = gEnvelopeLimit;
@@ -632,6 +636,9 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
         }
 
+        // degrees of hCandidates must match
+        // check for !found
+        // check for exact edge match
         public void RecurseAutomorphism(ref bool found)
         {
             if (gEnvelopeLimit == hEnvelopeLimit && !found)
@@ -737,17 +744,17 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
                     }
-                    for (i = 0; i < mappingCount; i += 1)
-                    {
-                        if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
-                            newEdges += 1;
-                    }
                     #endregion
 
-                    gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
-                    gEnvelopeLimit -= 1;
                     if (totalNumberOfCandidates > 0)
                     {
+                        for (i = 0; i < mappingCount; i += 1)
+                        {
+                            if (gConnectionExistence[gMatchingCandidate, gMapping[i]])
+                                newEdges += 1;
+                        }
+                        gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
+                        gEnvelopeLimit -= 1;
                         #region G setup
 
                         var gEnvelopeOriginalSize = gEnvelopeLimit;
@@ -841,11 +848,11 @@ namespace SubgraphIsomorphismExactAlgorithm
                         gEnvelopeLimit = gEnvelopeOriginalSize;
                         gOutsidersLimit = gOutsidersOriginalLimit;
                         #endregion
+                        gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
+                        gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
+                        gEnvelopeLimit += 1;
+                        // the procedure has left the recursion step having the internal state unchanged
                     }
-                    gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
-                    gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
-                    gEnvelopeLimit += 1;
-                    // the procedure has left the recursion step having the internal state unchanged
                 }
             }
         }
