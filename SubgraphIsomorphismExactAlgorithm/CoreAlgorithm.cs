@@ -288,7 +288,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 #if induced
                     if (gConnection != hConnection)
 #else
-                            if (gConnection && gConnection != hConnection)
+                    if (gConnection && gConnection != hConnection)
 #endif
                     {
                         candidatesTrulyIsomorphic = false;
@@ -680,11 +680,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                             var localEdges = gHash > 0 ? 1 : 0;
                             for (i = gHash; i < mappingCount; i += 1)
                             {
-#if induced
                                 if (gConnectionExistence[gCan, gMapping[i]] != hConnectionExistence[hCan, hMapping[i]])
-#else
-                            if (gConnectionExistence[gCan, gMapping[i]] && !hConnectionExistence[hCan, hMapping[i]])
-#endif
                                 {
                                     locallyIsomorphic = false;
                                     break;
