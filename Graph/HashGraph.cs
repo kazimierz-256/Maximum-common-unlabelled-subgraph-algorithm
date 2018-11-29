@@ -94,25 +94,5 @@ namespace GraphDataStructure
             }
         }
 
-        public Graph DeepCloneHavingVerticesIntersectedWith(HashSet<int> intersection)
-        {
-            var neighboursCopy = new Dictionary<int, HashSet<int>>();
-            var directedEdgesInClone = 0;
-            foreach (var connection in Neighbours)
-            {
-                if (intersection.Contains(connection.Key))
-                {
-                    var newHashSet = new HashSet<int>();
-                    foreach (var vertex in connection.Value)
-                    {
-                        if (intersection.Contains(vertex))
-                            newHashSet.Add(vertex);
-                    }
-                    neighboursCopy.Add(connection.Key, newHashSet);
-                    directedEdgesInClone += newHashSet.Count;
-                }
-            }
-            return new Graph(neighboursCopy, new HashSet<int>(intersection), directedEdgesInClone / 2);
-        }
     }
 }
