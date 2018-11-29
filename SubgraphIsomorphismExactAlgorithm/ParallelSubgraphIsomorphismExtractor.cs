@@ -25,7 +25,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             bool findGraphGinH,
             int heuristicStepsAvailable = -1,
             int heuristicDeepnessToStartCountdown = 0,
-            double approximationRatio = 1d
+            double approximationRatio = 1d,
+            bool induced = true
             )
         {
             if (!analyzeDisconnectedComponents && findGraphGinH)
@@ -36,7 +37,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             Graph g;
             Graph h;
 
-            if (!findGraphGinH && hArgument.EdgeCount < gArgument.EdgeCount)
+            if (!induced && !findGraphGinH && hArgument.EdgeCount < gArgument.EdgeCount)
             {
                 swappedGraphs = true;
                 h = gArgument;
@@ -166,7 +167,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                             findGraphGinH,
                             heuristicStepsAvailable,
                             heuristicDeepnessToStartCountdown,
-                            approximationRatio: approximationRatio
+                            approximationRatio: approximationRatio,
+                            induced: induced
                         )
                         .Recurse(ref localBestScore);
                     }

@@ -35,6 +35,7 @@ namespace SubgraphIsomorphismExactAlgorithm
         public int deepnessTakeawaySteps;
         public int originalLeftoverSteps;
         public double approximationRatio;
+        private bool induced = true;
         private Random random = new Random(0);
         public int[] gEnvelopeHashes;
         public int[] hEnvelopeHashes;
@@ -102,7 +103,8 @@ namespace SubgraphIsomorphismExactAlgorithm
             int[][] neighbourIndices = null,
             int gEdgeCount = -1,
             HashSet<int> gAllowedSubsetVertices = null,
-            HashSet<int> hAllowedSubsetVertices = null
+            HashSet<int> hAllowedSubsetVertices = null,
+            bool induced = true
             )
         {
             this.g = g;
@@ -115,6 +117,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             originalLeftoverSteps = leftoverSteps;
             this.deepnessTakeawaySteps = deepnessTakeawaySteps;
             this.approximationRatio = approximationRatio;
+            this.induced = induced;
 
             gVertexCount = gAllowedSubsetVertices == null ? g.Vertices.Count : gAllowedSubsetVertices.Count;
             hVertexCount = hAllowedSubsetVertices == null ? h.Vertices.Count : hAllowedSubsetVertices.Count;
@@ -186,7 +189,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 hMax = this.hConnectionExistence.GetLength(0);
             }
 
-            /// TOCONSIDER: should this be limited at any time?
             gEnvelopeHashes = new int[gMax + 1];
             hEnvelopeHashes = new int[hMax + 1];
 
@@ -228,9 +230,12 @@ namespace SubgraphIsomorphismExactAlgorithm
 
             if (neighbours == null)
             {
+                if (!optimizeForAutomorphism)
+                {
+                    this.neighbours = new int[gMax + 1][];
+                    this.neighbourIndices = new int[gMax + 1][];
+                }
                 this.gEdgeCount = 0;
-                this.neighbours = new int[gMax + 1][];
-                this.neighbourIndices = new int[gMax + 1][];
                 this.gNeighbourCount = new int[gMax + 1];
 
                 foreach (var gVertex in g.Vertices)
@@ -279,24 +284,44 @@ namespace SubgraphIsomorphismExactAlgorithm
                 var candidatesTrulyIsomorphic = true;
                 var potentialNumberOfNewEdges = 0;
 
-                for (int i = 0; i < mappingCount; i += 1)
+                if (induced)
                 {
-                    var gVertexInSubgraph = gMapping[i];
-                    var hVertexInSubgraph = hMapping[i];
-                    var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
-                    var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
-#if induced
-                    if (gConnection != hConnection)
-#else
-                    if (gConnection && gConnection != hConnection)
-#endif
+                    for (int i = 0; i < mappingCount; i += 1)
                     {
-                        candidatesTrulyIsomorphic = false;
-                        break;
+                        var gVertexInSubgraph = gMapping[i];
+                        var hVertexInSubgraph = hMapping[i];
+                        var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
+                        var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+
+                        if (gConnection != hConnection)
+                        {
+                            candidatesTrulyIsomorphic = false;
+                            break;
+                        }
+                        else if (gConnection)
+                        {
+                            potentialNumberOfNewEdges += 1;
+                        }
                     }
-                    else if (gConnection)
+                }
+                else
+                {
+                    for (int i = 0; i < mappingCount; i += 1)
                     {
-                        potentialNumberOfNewEdges += 1;
+                        var gVertexInSubgraph = gMapping[i];
+                        var hVertexInSubgraph = hMapping[i];
+                        var gConnection = gConnectionExistence[gMatchingCandidate, gVertexInSubgraph];
+                        var hConnection = hConnectionExistence[hMatchingCandidate, hVertexInSubgraph];
+
+                        if (gConnection && gConnection != hConnection)
+                        {
+                            candidatesTrulyIsomorphic = false;
+                            break;
+                        }
+                        else if (gConnection)
+                        {
+                            potentialNumberOfNewEdges += 1;
+                        }
                     }
                 }
 
@@ -429,31 +454,36 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var gCan = gEnvelope[ge];
                     localNumberOfCandidates = 0;
                     score = 0;
-#if induced
                     var gHash = gEnvelopeHashes == null ? 0 : gEnvelopeHashes[gCan];
-#endif
+
                     for (int he = 0; he < hEnvelopeLimit; he += 1)
                     {
                         var hCan = hEnvelope[he];
-#if induced
-                        if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
+                        if (induced && gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
                             continue;
-#endif
 
                         locallyIsomorphic = true;
-#if induced
-                        var localEdges = gHash > 0 ? 1 : 0;
-                        for (i = gHash; i < mappingCount; i += 1)
+                        if (induced)
                         {
-                            if (gConnectionExistence[gCan, gMapping[i]] != hConnectionExistence[hCan, hMapping[i]])
-#else
-                        for (i = 0; i < mappingCount; i += 1)
-                        {
-                            if (gConnectionExistence[gCan, gMapping[i]] && !hConnectionExistence[hCan, hMapping[i]])
-#endif
+                            var localEdges = gHash > 0 ? 1 : 0;
+                            for (i = gHash; i < mappingCount; i += 1)
                             {
-                                locallyIsomorphic = false;
-                                break;
+                                if (gConnectionExistence[gCan, gMapping[i]] != hConnectionExistence[hCan, hMapping[i]])
+                                {
+                                    locallyIsomorphic = false;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (i = 0; i < mappingCount; i += 1)
+                            {
+                                if (gConnectionExistence[gCan, gMapping[i]] && !hConnectionExistence[hCan, hMapping[i]])
+                                {
+                                    locallyIsomorphic = false;
+                                    break;
+                                }
                             }
                         }
 
