@@ -126,52 +126,51 @@ namespace SubgraphIsomorphismExactAlgorithm
 #endif
             // don't check for automorphism when there might be disconnected components!
 
-            if (graphScoringFunction(h.Vertices.Count, h.EdgeCount) * approximationRatio > localBestScore)
-            {
-#if parallel
-                Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
-#else
-                for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i++)
-#endif
-                {
-                    var gIndex = i % gGraphs.Count;
-                    var hIndex = i / gGraphs.Count;
 
-                    if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) * approximationRatio > localBestScore)
-                    {
-                        new CoreAlgorithm()
-                        .InternalStateSetup(
-                            gInitialVertices[gIndex],
-                            hClassesOfAbstraction[hIndex][0],
-                            gGraphs[gIndex],
-                            h,
-                            graphScoringFunction,
-                            (newScore, ghMap, hgMap, edges) =>
-                              {
-                                  if (newScore > localBestScore)
+#if parallel
+            Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
+#else
+                for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i += 1)
+#endif
+            {
+                var gIndex = i % gGraphs.Count;
+                var hIndex = i / gGraphs.Count;
+
+                if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) * approximationRatio > localBestScore)
+                {
+                    new CoreAlgorithm()
+                    .InternalStateSetup(
+                        gInitialVertices[gIndex],
+                        hClassesOfAbstraction[hIndex][0],
+                        gGraphs[gIndex],
+                        h,
+                        graphScoringFunction,
+                        (newScore, ghMap, hgMap, edges) =>
+                          {
+                              if (newScore > localBestScore)
                                       // to increase the performance lock is performed only if there is a chance to improve the local result
                                       lock (threadSynchronizingObject)
-                                          if (newScore > localBestScore)
-                                          {
+                                      if (newScore > localBestScore)
+                                      {
 #if debug
                                               Console.WriteLine($"New score: {newScore} (previously {localBestScore})");
 #endif
                                               localBestScore = newScore;
                                               // lazy evaluation for best performance
                                               ghLocalOptimalMapping = ghMap();
-                                              hgLocalOptimalMapping = hgMap();
-                                              localSubgraphEdges = edges;
-                                          }
-                              },
-                            analyzeDisconnectedComponents,
-                            findGraphGinH,
-                            heuristicStepsAvailable,
-                            heuristicDeepnessToStartCountdown,
-                            approximationRatio: approximationRatio,
-                            induced: induced
-                        )
-                        .Recurse(ref localBestScore);
-                    }
+                                          hgLocalOptimalMapping = hgMap();
+                                          localSubgraphEdges = edges;
+                                      }
+                          },
+                        analyzeDisconnectedComponents,
+                        findGraphGinH,
+                        heuristicStepsAvailable,
+                        heuristicDeepnessToStartCountdown,
+                        approximationRatio: approximationRatio,
+                        induced: induced
+                    )
+                    .Recurse(ref localBestScore);
+                }
 #if debug
                     lock (leftSync)
                     {
@@ -191,7 +190,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 #else
                 }
 #endif
-            }
+
 
             // if requested to find G within H and could not find such then quit with dummy results
             if (findGraphGinH && ghLocalOptimalMapping.Count < gArgument.Vertices.Count)

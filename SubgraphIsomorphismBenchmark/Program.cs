@@ -205,8 +205,7 @@ namespace SubgraphIsomorphismBenchmark
                     out gToH,
                     out hToG,
                     disconnected,
-                    false,
-                    approximationRatio: 1d
+                    false
                     );
                 sw.Stop();
 
