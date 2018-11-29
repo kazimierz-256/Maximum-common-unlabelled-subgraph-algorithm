@@ -441,12 +441,14 @@ namespace SubgraphIsomorphismExactAlgorithm
 #endif
 
                         locallyIsomorphic = true;
+#if induced
                         var localEdges = gHash > 0 ? 1 : 0;
                         for (i = gHash; i < mappingCount; i += 1)
                         {
-#if induced
                             if (gConnectionExistence[gCan, gMapping[i]] != hConnectionExistence[hCan, hMapping[i]])
 #else
+                        for (i = 0; i < mappingCount; i += 1)
+                        {
                             if (gConnectionExistence[gCan, gMapping[i]] && !hConnectionExistence[hCan, hMapping[i]])
 #endif
                             {
