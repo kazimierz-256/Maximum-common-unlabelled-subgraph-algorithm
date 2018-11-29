@@ -203,7 +203,7 @@ namespace SubgraphIsomorphismExactAlgorithm
             }
 
 
-            this.hNeighbourCount = new int[hMax + 1];
+            hNeighbourCount = new int[hMax + 1];
             if (hAllowedSubsetVertices == null)
             {
                 foreach (var hVertex in h.Vertices)
@@ -642,7 +642,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                 }
                 else
                 {
-
                     // if there is hope for a larger score then recurse further
 
                     // the following is for the approximation algorithm part
@@ -656,14 +655,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                     var gMatchingCandidate = -1;
                     var gMatchingCandidateIndex = -1;
                     var totalNumberOfCandidates = int.MaxValue;
-                    var isomorphicH = new int[hEnvelopeLimit];
-                    var isomorphicHIndices = new int[hEnvelopeLimit];
                     var newEdges = 0;
                     var minScore = int.MaxValue;
                     var degree = -1;
-                    var isomorphicCandidates = new int[hEnvelopeLimit];
-                    var isomorphicCandidatesIndices = new int[hEnvelopeLimit];
-                    var tmp = isomorphicH;
+                    var tmp = isomorphicH[mappingCount];
                     var localNumberOfCandidates = 0;
                     var score = 0;
                     var locallyIsomorphic = true;
@@ -678,9 +673,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                         for (int he = 0; he < hEnvelopeLimit; he += 1)
                         {
                             var hCan = hEnvelope[he];
-                            if (hNeighbourCount[hCan] != gDegree)
-                                continue;
-                            if (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan])
+                            if (hNeighbourCount[hCan] != gDegree || (gEnvelopeHashes != null && gHash != hEnvelopeHashes[hCan]))
                                 continue;
 
                             locallyIsomorphic = true;
@@ -700,8 +693,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                             if (locallyIsomorphic)
                             {
-                                isomorphicCandidates[localNumberOfCandidates] = hCan;
-                                isomorphicCandidatesIndices[localNumberOfCandidates] = he;
+                                isomorphicCandidates[mappingCount][localNumberOfCandidates] = hCan;
+                                isomorphicCandidatesIndices[mappingCount][localNumberOfCandidates] = he;
                                 localNumberOfCandidates += 1;
                                 score += hNeighbourCount[hCan];
                                 if (score > minScore)
@@ -717,12 +710,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                             gMatchingCandidate = gCan;
                             gMatchingCandidateIndex = ge;
 
-                            tmp = isomorphicCandidates;
-                            isomorphicCandidates = isomorphicH;
-                            isomorphicH = tmp;
-                            tmp = isomorphicCandidatesIndices;
-                            isomorphicCandidatesIndices = isomorphicHIndices;
-                            isomorphicHIndices = tmp;
+                            tmp = isomorphicCandidates[mappingCount];
+                            isomorphicCandidates[mappingCount] = isomorphicH[mappingCount];
+                            isomorphicH[mappingCount] = tmp;
+                            tmp = isomorphicCandidatesIndices[mappingCount];
+                            isomorphicCandidatesIndices[mappingCount] = isomorphicHIndices[mappingCount];
+                            isomorphicHIndices[mappingCount] = tmp;
                             if (totalNumberOfCandidates == 0)
                                 break;
                         }
@@ -739,12 +732,12 @@ namespace SubgraphIsomorphismExactAlgorithm
                                 gMatchingCandidate = gCan;
                                 gMatchingCandidateIndex = ge;
 
-                                tmp = isomorphicCandidates;
-                                isomorphicCandidates = isomorphicH;
-                                isomorphicH = tmp;
-                                tmp = isomorphicCandidatesIndices;
-                                isomorphicCandidatesIndices = isomorphicHIndices;
-                                isomorphicHIndices = tmp;
+                                tmp = isomorphicCandidates[mappingCount];
+                                isomorphicCandidates[mappingCount] = isomorphicH[mappingCount];
+                                isomorphicH[mappingCount] = tmp;
+                                tmp = isomorphicCandidatesIndices[mappingCount];
+                                isomorphicCandidatesIndices[mappingCount] = isomorphicHIndices[mappingCount];
+                                isomorphicHIndices[mappingCount] = tmp;
                             }
                         }
                     }
@@ -755,15 +748,14 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
                     #endregion
 
+                    gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
+                    gEnvelopeLimit -= 1;
                     if (totalNumberOfCandidates > 0)
                     {
-                        gEnvelope[gMatchingCandidateIndex] = gEnvelope[gEnvelopeLimit - 1];
-                        gEnvelopeLimit -= 1;
                         #region G setup
-                        var gVerticesToRemoveFromEnvelope = new int[gOutsidersLimit];
-                        var gVerticesToRemoveFromEnvelopeLimit = 0;
 
                         var gEnvelopeOriginalSize = gEnvelopeLimit;
+                        var gOutsidersOriginalLimit = gOutsidersLimit;
                         for (int go = 0; go < gOutsidersLimit;)
                         {
                             var gOutsider = gOutsiders[go];
@@ -776,9 +768,8 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                                 gEnvelope[gEnvelopeLimit] = gOutsider;
                                 gEnvelopeLimit += 1;
-                                gVerticesToRemoveFromEnvelope[gVerticesToRemoveFromEnvelopeLimit] = gOutsider;
-                                gVerticesToRemoveFromEnvelopeLimit += 1;
                                 gOutsiders[go] = gOutsiders[gOutsidersLimit - 1];
+                                gOutsiders[gOutsidersLimit - 1] = gOutsider;
                                 gOutsidersLimit -= 1;
                             }
                             else
@@ -789,23 +780,19 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         totalNumberOfEdgesInSubgraph += newEdges;
                         #endregion
-
-                        var hVerticesToRemoveFromEnvelope = new int[hOutsidersLimit];
-                        var hVerticesToRemoveFromEnvelopeLimit = 0;
-
+                        var hOutsidersOriginalLimit = hOutsidersLimit;
                         // a necessary in-place copy to an array since hEnvelope is modified during recursion
                         for (int hCandidate = 0; hCandidate < totalNumberOfCandidates && !found; hCandidate += 1)
                         {
-                            var hMatchingCandidate = isomorphicH[hCandidate];
+                            var hMatchingCandidate = isomorphicH[mappingCount][hCandidate];
                             // verify mutual agreement connections of neighbours
 
                             #region H setup
 
-                            hEnvelope[isomorphicHIndices[hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
+                            hEnvelope[isomorphicHIndices[mappingCount][hCandidate]] = hEnvelope[hEnvelopeLimit - 1];
                             hEnvelopeLimit -= 1;
 
-                            var hOriginalSize = hEnvelopeLimit;
-                            hVerticesToRemoveFromEnvelopeLimit = 0;
+                            var hEnvelopeOriginalLimit = hEnvelopeLimit;
                             for (int ho = 0; ho < hOutsidersLimit;)
                             {
                                 var hNeighbour = hOutsiders[ho];
@@ -815,9 +802,8 @@ namespace SubgraphIsomorphismExactAlgorithm
                                         hEnvelopeHashes[hNeighbour] = mappingCount + 1;
                                     hEnvelope[hEnvelopeLimit] = hNeighbour;
                                     hEnvelopeLimit += 1;
-                                    hVerticesToRemoveFromEnvelope[hVerticesToRemoveFromEnvelopeLimit] = hNeighbour;
-                                    hVerticesToRemoveFromEnvelopeLimit += 1;
                                     hOutsiders[ho] = hOutsiders[hOutsidersLimit - 1];
+                                    hOutsiders[hOutsidersLimit - 1] = hNeighbour;
                                     hOutsidersLimit -= 1;
                                 }
                                 else
@@ -839,20 +825,16 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                             #region H cleanup
                             deepness -= 1;
-                            for (i = 0; i < hVerticesToRemoveFromEnvelopeLimit; i += 1)
-                            {
-                                hOutsiders[hOutsidersLimit] = hVerticesToRemoveFromEnvelope[i];
-                                hOutsidersLimit += 1;
-                            }
 
+                            mappingCount -= 1;
+                            hOutsidersLimit = hOutsidersOriginalLimit;
                             // restore hEnvelope to original state
-                            hEnvelopeLimit = hOriginalSize;
-                            hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[hCandidate]];
-                            hEnvelope[isomorphicHIndices[hCandidate]] = hMatchingCandidate;
+                            hEnvelopeLimit = hEnvelopeOriginalLimit;
+                            hEnvelope[hEnvelopeLimit] = hEnvelope[isomorphicHIndices[mappingCount][hCandidate]];
+                            hEnvelope[isomorphicHIndices[mappingCount][hCandidate]] = hMatchingCandidate;
                             hEnvelopeLimit += 1;
 
 
-                            mappingCount -= 1;
 
                             #endregion
 
@@ -861,17 +843,13 @@ namespace SubgraphIsomorphismExactAlgorithm
                         totalNumberOfEdgesInSubgraph -= newEdges;
                         // restore gEnvelope to original state
                         gEnvelopeLimit = gEnvelopeOriginalSize;
-                        for (i = 0; i < gVerticesToRemoveFromEnvelopeLimit; i += 1)
-                        {
-                            gOutsiders[gOutsidersLimit] = gVerticesToRemoveFromEnvelope[i];
-                            gOutsidersLimit += 1;
-                        }
+                        gOutsidersLimit = gOutsidersOriginalLimit;
                         #endregion
-                        gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
-                        gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
-                        gEnvelopeLimit += 1;
-                        // the procedure has left the recursion step having the internal state unchanged
                     }
+                    gEnvelope[gEnvelopeLimit] = gEnvelope[gMatchingCandidateIndex];
+                    gEnvelope[gMatchingCandidateIndex] = gMatchingCandidate;
+                    gEnvelopeLimit += 1;
+                    // the procedure has left the recursion step having the internal state unchanged
                 }
             }
         }
