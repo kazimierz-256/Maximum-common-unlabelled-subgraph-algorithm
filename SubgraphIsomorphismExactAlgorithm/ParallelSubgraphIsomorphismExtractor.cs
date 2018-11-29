@@ -153,7 +153,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                                           if (newScore > localBestScore)
                                           {
 #if debug
-                                              Console.WriteLine($"New score: {newScore} ({localBestScore})");
+                                              Console.WriteLine($"New score: {newScore} (previously {localBestScore})");
 #endif
                                               localBestScore = newScore;
                                               // lazy evaluation for best performance
