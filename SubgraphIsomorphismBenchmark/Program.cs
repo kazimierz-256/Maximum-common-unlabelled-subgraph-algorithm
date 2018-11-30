@@ -35,7 +35,7 @@ namespace SubgraphIsomorphismBenchmark
             File.WriteAllText(csvApprox2Path, string.Empty);
             File.WriteAllText(texApprox2Path, string.Empty);
 
-            PrintBenchmark(1);
+            PrintBenchmark(35);
         }
         private const int iterations = 0;
         private static void PrintBenchmark(int n)
@@ -224,7 +224,7 @@ namespace SubgraphIsomorphismBenchmark
                     out hToG,
                     disconnected,
                     false,
-                    1000
+                    100000
                     , timeout
                     );
                 sw.Stop();

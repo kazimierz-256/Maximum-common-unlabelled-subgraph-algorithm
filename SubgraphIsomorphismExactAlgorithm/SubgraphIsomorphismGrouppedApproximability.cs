@@ -71,37 +71,139 @@ namespace SubgraphIsomorphismExactAlgorithm
             void batchDo(int batch)
             {
                 var part = (max + batches - 1) / batches;
-                for (int valuationIndex = part * batch; valuationIndex < part * (batch + 1); valuationIndex += 1)
+                var random = new Random(-batch);
+                for (int k = 0; k < part; k += 1)
                 {
-                    ApproximateOptimalSubgraph(
-                        gArgument.Vertices,
-                        hArgument.Vertices,
-                        gConnectionExistence,
-                        hConnectionExistence,
-                        graphScoringFunction,
-                        new Random(valuationIndex),
-                        out var localScore,
-                        out var localEdges,
-                        out var ghLocalMapping,
-                        out var hgLocalMapping,
-                        analyzeDisconnected,
-                        findExactMatch
-                        );
+                    #region Approximate
 
-                    if (localScore > maxScore)
+                    if (!analyzeDisconnected && findExactMatch)
+                        throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
+                    if (findExactMatch)
+                        throw new Exception("Feature not yet supported.");
+
+                    // make the best local choice
+                    var currentAlgorithmHoldingState = new CoreAlgorithm()
                     {
-                        lock (synchronizingObject)
-                        {
+                        g = null,
+                        h = null,
+                        findGraphGinH = findExactMatch,
+                        analyzeDisconnected = analyzeDisconnected,
+                        subgraphScoringFunction = graphScoringFunction,
+                        gMapping = new int[Math.Min(gArgument.Vertices.Count, hArgument.Vertices.Count)],
+                        hMapping = new int[Math.Min(gArgument.Vertices.Count, hArgument.Vertices.Count)],
+                        gEnvelope = new int[gArgument.Vertices.Count],
+                        hEnvelope = new int[hArgument.Vertices.Count],
+                        gOutsiders = new int[gArgument.Vertices.Count],
+                        hOutsiders = new int[hArgument.Vertices.Count],
+                        gConnectionExistence = gConnectionExistence,
+                        hConnectionExistence = hConnectionExistence,
+                    };
+                    // while there is an increase in result continue to approximate
 
-                            if (localScore > maxScore)
+                    var step = 0;
+#if true
+                    // quit the loop once a local maximum (scoring function) is reached
+                    while (true)
+                    {
+                        if (step == 0)
+                        {
+                            var gSkip = random.Next(gArgument.Vertices.Count);
+                            var hSkip = random.Next(hArgument.Vertices.Count);
+
+                            var i = 0;
+                            foreach (var gVertex in gArgument.Vertices)
                             {
-                                localBestScore = maxScore = localScore;
-                                localSubgraphEdges = localEdges;
-                                ghLocalOptimalMapping = new Dictionary<int, int>(ghLocalMapping);
-                                hgLocalOptimalMapping = new Dictionary<int, int>(hgLocalMapping);
+                                if (i == gSkip)
+                                {
+                                    currentAlgorithmHoldingState.gEnvelope[0] = gVertex;
+                                    gSkip = -1;
+                                }
+                                else
+                                {
+                                    currentAlgorithmHoldingState.gOutsiders[i] = gVertex;
+                                    i += 1;
+                                }
+                            }
+                            i = 0;
+                            foreach (var hVertex in hArgument.Vertices)
+                            {
+                                if (i == hSkip)
+                                {
+                                    currentAlgorithmHoldingState.hEnvelope[0] = hVertex;
+                                    hSkip = -1;
+                                }
+                                else
+                                {
+                                    currentAlgorithmHoldingState.hOutsiders[i] = hVertex;
+                                    i += 1;
+                                }
+                            }
+
+                            currentAlgorithmHoldingState.mappingCount = 0;
+                            currentAlgorithmHoldingState.gEnvelopeLimit = 1;
+                            currentAlgorithmHoldingState.hEnvelopeLimit = 1;
+                            currentAlgorithmHoldingState.gOutsidersLimit = gArgument.Vertices.Count - 1;
+                            currentAlgorithmHoldingState.hOutsidersLimit = hArgument.Vertices.Count - 1;
+                            currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph = 0;
+                            currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(0, 0);
+                        }
+                        else
+                        {
+                            var gRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.gEnvelopeLimit).ToArray();
+                            var hRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.hEnvelopeLimit).ToArray();
+
+                            var randomizingArray = Enumerable.Range(0, gRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
+                            Array.Sort(randomizingArray, gRandomizedIndexOrder);
+                            randomizingArray = Enumerable.Range(0, hRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
+                            Array.Sort(randomizingArray, hRandomizedIndexOrder);
+
+                            var stopIteration = false;
+                            // the greedy step
+                            foreach (var gCandidateIndex in gRandomizedIndexOrder)
+                            {
+                                foreach (var hCandidateIndex in hRandomizedIndexOrder)
+                                    if (currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidateIndex, hCandidateIndex))
+                                    {
+                                        // once the prediction turns out successful only then will the internal state be modified
+                                        stopIteration = true;
+                                        break;
+                                    }
+                                // successful matching, skip all other possible matchings
+                                if (stopIteration)
+                                    break;
+                            }
+                            // no successful matching, reached local maximum
+                            if (!stopIteration)
+                                break;
+                        }
+
+                        step += 1;
+                    }
+                    if (findExactMatch && currentAlgorithmHoldingState.mappingCount < gArgument.Vertices.Count)
+                    {
+#endif
+#if true
+                    }
+                    else
+                    {
+                        var localScore = graphScoringFunction(currentAlgorithmHoldingState.mappingCount, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
+                        if (localScore > maxScore)
+                        {
+                            lock (synchronizingObject)
+                            {
+                                if (localScore > maxScore)
+                                {
+                                    localBestScore = maxScore = localScore;
+                                    localSubgraphEdges = currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph;
+                                    ghLocalOptimalMapping = new Dictionary<int, int>(currentAlgorithmHoldingState.gGetDictionaryOutOfMapping());
+                                    hgLocalOptimalMapping = new Dictionary<int, int>(currentAlgorithmHoldingState.hGetDictionaryOutOfMapping());
+                                }
                             }
                         }
                     }
+#endif
+                    #endregion
+
                     if (localBestScore == theoreticalMaximumScoreValue || getElapsedTimespan().CompareTo(timespanlimit) > 0)
                     {
                         break;
@@ -119,119 +221,6 @@ namespace SubgraphIsomorphismExactAlgorithm
             subgraphEdges = localSubgraphEdges;
             ghOptimalMapping = ghLocalOptimalMapping;
             hgOptimalMapping = hgLocalOptimalMapping;
-        }
-
-        private static void ApproximateOptimalSubgraph(
-            HashSet<int> gVertices,
-            HashSet<int> hVertices,
-            bool[,] gConnectionExistence,
-            bool[,] hConnectionExistence,
-            Func<int, int, double> graphScoringFunction,
-            Random random,
-            out double bestScore,
-            out int subgraphEdges,
-            out Dictionary<int, int> ghOptimalMapping,
-            out Dictionary<int, int> hgOptimalMapping,
-            bool analyzeDisconnected = false,
-            bool findExactMatch = false
-            )
-        {
-            if (!analyzeDisconnected && findExactMatch)
-                throw new Exception("Cannot analyze only connected components if seeking exact matches. Please change the parameter 'analyzeDisconnected' to true.");
-            if (findExactMatch)
-                throw new Exception("Feature not yet supported.");
-
-            // make the best local choice
-            CoreAlgorithm currentAlgorithmHoldingState = null;
-            // while there is an increase in result continue to approximate
-
-            var step = 0;
-#if true
-            // quit the loop once a local maximum (scoring function) is reached
-            while (true)
-            {
-                if (step == 0)
-                {
-                    var gSkip = random.Next(gVertices.Count);
-                    var hSkip = random.Next(hVertices.Count);
-                    var gCandidate = gVertices.Skip(gSkip).First();
-                    var hCandidate = hVertices.Skip(hSkip).First();
-                    currentAlgorithmHoldingState = new CoreAlgorithm()
-                    {
-                        g = null,
-                        h = null,
-                        findGraphGinH = findExactMatch,
-                        analyzeDisconnected = analyzeDisconnected,
-                        subgraphScoringFunction = graphScoringFunction,
-                        gMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
-                        hMapping = new int[Math.Min(gVertices.Count, hVertices.Count)],
-                        gEnvelope = new int[gVertices.Count],
-                        gEnvelopeLimit = 1,
-                        hEnvelope = new int[hVertices.Count],
-                        hEnvelopeLimit = 1,
-                        gOutsiders = gVertices.Where(v => v != gCandidate).ToArray(),
-                        gOutsidersLimit = gVertices.Count - 1,
-                        hOutsiders = hVertices.Where(v => v != hCandidate).ToArray(),
-                        hOutsidersLimit = hVertices.Count - 1,
-                        totalNumberOfEdgesInSubgraph = 0,
-
-                        gConnectionExistence = gConnectionExistence,
-                        hConnectionExistence = hConnectionExistence,
-                    };
-                    currentAlgorithmHoldingState.gEnvelope[0] = gCandidate;
-                    currentAlgorithmHoldingState.hEnvelope[0] = hCandidate;
-                    currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(0, 0);
-                }
-                else
-                {
-                    var gRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.gEnvelopeLimit).ToArray();
-                    var hRandomizedIndexOrder = Enumerable.Range(0, currentAlgorithmHoldingState.hEnvelopeLimit).ToArray();
-
-                    var randomizingArray = Enumerable.Range(0, gRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
-                    Array.Sort(randomizingArray, gRandomizedIndexOrder);
-                    randomizingArray = Enumerable.Range(0, hRandomizedIndexOrder.Length).Select(i => random.Next()).ToArray();
-                    Array.Sort(randomizingArray, hRandomizedIndexOrder);
-
-                    var stopIteration = false;
-                    // the greedy step
-                    foreach (var gCandidateIndex in gRandomizedIndexOrder)
-                    {
-                        foreach (var hCandidateIndex in hRandomizedIndexOrder)
-                            if (currentAlgorithmHoldingState.TryMatchFromEnvelopeMutateInternalState(gCandidateIndex, hCandidateIndex))
-                            {
-                                // once the prediction turns out successful only then will the internal state be modified
-                                stopIteration = true;
-                                break;
-                            }
-                        // successful matching, skip all other possible matchings
-                        if (stopIteration)
-                            break;
-                    }
-                    // no successful matching, reached local maximum
-                    if (!stopIteration)
-                        break;
-                }
-
-                step += 1;
-            }
-            if (findExactMatch && currentAlgorithmHoldingState.mappingCount < gVertices.Count)
-            {
-#endif
-                // did not find an exact match, simply return initial values
-                bestScore = double.MinValue;
-                subgraphEdges = 0;
-                ghOptimalMapping = new Dictionary<int, int>();
-                hgOptimalMapping = new Dictionary<int, int>();
-#if true
-            }
-            else
-            {
-                bestScore = graphScoringFunction(currentAlgorithmHoldingState.mappingCount, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
-                subgraphEdges = currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph;
-                ghOptimalMapping = currentAlgorithmHoldingState.gGetDictionaryOutOfMapping();
-                hgOptimalMapping = currentAlgorithmHoldingState.hGetDictionaryOutOfMapping();
-            }
-#endif
         }
     }
 }
