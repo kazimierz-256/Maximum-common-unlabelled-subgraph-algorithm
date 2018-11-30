@@ -101,7 +101,6 @@ namespace SubgraphIsomorphismExactAlgorithm
                     // while there is an increase in result continue to approximate
 
                     var step = 0;
-#if true
                     // quit the loop once a local maximum (scoring function) is reached
                     while (true)
                     {
@@ -179,12 +178,7 @@ namespace SubgraphIsomorphismExactAlgorithm
 
                         step += 1;
                     }
-                    if (findExactMatch && currentAlgorithmHoldingState.mappingCount < gArgument.Vertices.Count)
-                    {
-#endif
-#if true
-                    }
-                    else
+                    if (!findExactMatch || currentAlgorithmHoldingState.mappingCount == gArgument.Vertices.Count)
                     {
                         var localScore = graphScoringFunction(currentAlgorithmHoldingState.mappingCount, currentAlgorithmHoldingState.totalNumberOfEdgesInSubgraph);
                         if (localScore > maxScore)
@@ -201,13 +195,10 @@ namespace SubgraphIsomorphismExactAlgorithm
                             }
                         }
                     }
-#endif
                     #endregion
 
                     if (localBestScore == theoreticalMaximumScoreValue || getElapsedTimespan().CompareTo(timespanlimit) > 0)
-                    {
                         break;
-                    }
                 }
             }
 
