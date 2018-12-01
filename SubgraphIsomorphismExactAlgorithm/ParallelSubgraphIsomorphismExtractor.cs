@@ -60,11 +60,10 @@ namespace SubgraphIsomorphismExactAlgorithm
             while (gToDeconstruct.Vertices.Count > 0)
             {
                 // choose a vertex that has the smallest degree, in case of ambiguity choose the one that has the least connections to those already removed
-                var gMatchingCandidate = ClassesOfAbstraction(gToDeconstruct).ArgMax(
-                        classOfAbstraction => classOfAbstraction.Count,
-                        classOfAbstraction => -gToDeconstruct.VertexDegree(classOfAbstraction[0]),
-                        classOfAbstraction => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, classOfAbstraction[0]) : gArgument.AreVerticesConnected(r, classOfAbstraction[0]))
-                        )[0];
+                var gMatchingCandidate = gToDeconstruct.Vertices.ArgMax(
+                        v => -gToDeconstruct.VertexDegree(v),
+                        v => -removedVertices.Count(r => g.AreVerticesConnected(r, v))
+                        );
 
                 if (analyzeDisconnectedComponents)
                 {
