@@ -49,8 +49,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                 h = hArgument;
             }
 
-            var gGraphs = new List<Graph>();
             var gInitialVertices = new List<int>();
+            var allowed = new List<HashSet<int>>();
+            var allowedEdgesUpperBound = new List<int>();
             var removedVertices = new HashSet<int>();
 
             // repeat until the resulting graph is nonempty
@@ -65,7 +66,15 @@ namespace SubgraphIsomorphismExactAlgorithm
                         classOfAbstraction => -removedVertices.Count(r => swappedGraphs ? hArgument.AreVerticesConnected(r, classOfAbstraction[0]) : gArgument.AreVerticesConnected(r, classOfAbstraction[0]))
                         )[0];
 
-                gGraphs.Add(gToDeconstruct.DeepClone());
+                if (analyzeDisconnectedComponents)
+                {
+                    allowed.Add(new HashSet<int>(gToDeconstruct.Vertices));
+                }
+                else
+                {
+                    allowed.Add(gToDeconstruct.ExtractConnectedComponent(gMatchingCandidate));
+                }
+                allowedEdgesUpperBound.Add(gToDeconstruct.EdgeCount);
                 gInitialVertices.Add(gMatchingCandidate);
 
                 // do not remove vertices from G if requested to find G within H
@@ -128,36 +137,35 @@ namespace SubgraphIsomorphismExactAlgorithm
 
 
 #if parallel
-            Parallel.For(0, gGraphs.Count * hClassesOfAbstraction.Count, i =>
+            Parallel.For(0, allowed.Count * hClassesOfAbstraction.Count, i =>
 #else
                 for (int i = 0; i < gGraphs.Count * hClassesOfAbstraction.Count; i += 1)
 #endif
             {
-                var gIndex = i % gGraphs.Count;
-                var hIndex = i / gGraphs.Count;
+                var gIndex = i % allowed.Count;
+                var hIndex = i / allowed.Count;
 
-                if (graphScoringFunction(gGraphs[gIndex].Vertices.Count, gGraphs[gIndex].EdgeCount) * approximationRatio > localBestScore)
+                if (graphScoringFunction(allowed[gIndex].Count, allowedEdgesUpperBound[gIndex]) * approximationRatio > localBestScore)
                 {
-                    new CoreAlgorithm()
-                    .InternalStateSetup(
+                    new CoreAlgorithm().InternalStateSetup(
                         gInitialVertices[gIndex],
                         hClassesOfAbstraction[hIndex][0],
-                        gGraphs[gIndex],
+                        g,
                         h,
                         graphScoringFunction,
                         (newScore, ghMap, hgMap, edges) =>
                           {
                               if (newScore > localBestScore)
-                                      // to increase the performance lock is performed only if there is a chance to improve the local result
-                                      lock (threadSynchronizingObject)
+                                  // to increase the performance lock is performed only if there is a chance to improve the local result
+                                  lock (threadSynchronizingObject)
                                       if (newScore > localBestScore)
                                       {
 #if debug
                                               Console.WriteLine($"New score: {newScore} (previously {localBestScore})");
 #endif
-                                              localBestScore = newScore;
-                                              // lazy evaluation for best performance
-                                              ghLocalOptimalMapping = ghMap();
+                                          localBestScore = newScore;
+                                          // lazy evaluation for best performance
+                                          ghLocalOptimalMapping = ghMap();
                                           hgLocalOptimalMapping = hgMap();
                                           localSubgraphEdges = edges;
                                       }
@@ -167,9 +175,9 @@ namespace SubgraphIsomorphismExactAlgorithm
                         heuristicStepsAvailable,
                         heuristicDeepnessToStartCountdown,
                         approximationRatio: approximationRatio,
-                        induced: induced
-                    )
-                    .Recurse(ref localBestScore);
+                        induced: induced,
+                        gAllowedSubsetVertices: allowed[gIndex]
+                    ).Recurse(ref localBestScore);
                 }
 #if debug
                     lock (leftSync)
@@ -186,7 +194,7 @@ namespace SubgraphIsomorphismExactAlgorithm
                     }
 #endif
 #if parallel
-                });
+            });
 #else
                 }
 #endif

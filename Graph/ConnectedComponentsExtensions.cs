@@ -25,6 +25,13 @@ namespace GraphDataStructure
             }
             return connectedComponents;
         }
+        public static HashSet<int> ExtractConnectedComponent(this Graph g, int vertex)
+        {
+            var analyzed = new HashSet<int>() { vertex };
+            var cc = new HashSet<int>() { vertex };
+            BFSSearch(g, vertex, cc, analyzed);
+            return analyzed;
+        }
 
         private static void BFSSearch(Graph g, int vertex, HashSet<int> cc, HashSet<int> analyzed)
         {
