@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.28010.2046
+VisualStudioVersion = 15.0.26730.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismBenchmark", "SubgraphIsomorphismBenchmark\SubgraphIsomorphismBenchmark.csproj", "{550B98DF-33F0-4569-B654-99C1B50E6BFC}"
 EndProject
@@ -9,7 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphDataStructure", "Graph
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismExactAlgorithm", "SubgraphIsomorphismExactAlgorithm\SubgraphIsomorphismExactAlgorithm.csproj", "{942636B2-40B6-4018-8B7C-D075863CAD26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubgraphIsomorphismTests", "SubgraphIsomorphismTests\SubgraphIsomorphismTests.csproj", "{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubgraphIsomorphismTests", "SubgraphIsomorphismTests\SubgraphIsomorphismTests.csproj", "{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathParser", "MathParser\MathParser.csproj", "{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application itself\Application.csproj", "{D694009C-B822-41C0-A943-E26718E0105F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphManualExporter", "GraphManualExporter\GraphManualExporter.csproj", "{20E2F37D-2500-4591-9405-8393D5C9B461}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +39,18 @@ Global
 		{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FCA2148-2ED7-4FC3-B81A-E2A7D4AB2F5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{972FC4C1-D5B5-4E78-AAAC-A8B65ED45C89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D694009C-B822-41C0-A943-E26718E0105F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D694009C-B822-41C0-A943-E26718E0105F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D694009C-B822-41C0-A943-E26718E0105F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D694009C-B822-41C0-A943-E26718E0105F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20E2F37D-2500-4591-9405-8393D5C9B461}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20E2F37D-2500-4591-9405-8393D5C9B461}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20E2F37D-2500-4591-9405-8393D5C9B461}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20E2F37D-2500-4591-9405-8393D5C9B461}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
